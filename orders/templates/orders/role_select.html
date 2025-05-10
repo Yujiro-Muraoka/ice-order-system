@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>役割選択</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 14px 24px;
+            font-size: 18px;
+            margin: 10px;
+            border-radius: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            width: 80%;
+        }
+        .logout-bottom {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>あなたの役割を選択してください</h1>
+    <form>
+        <button formaction="/register">レジ担当</button><br>
+        <button formaction="/ice">アイス担当</button>
+    </form>
+    <div class="logout-bottom">
+        <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+    </div>
+</body>
+</html>

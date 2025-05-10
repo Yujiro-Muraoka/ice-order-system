@@ -1,0 +1,167 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>レジ担当 - アイス注文</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 10px;
+      max-width: 480px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .btn {
+      margin: 6px 0;
+      padding: 12px;
+      width: 32%;
+      font-size: 14px;
+      background-color: #eee;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      box-sizing: border-box;
+      border-radius: 8px;
+    }
+    .btn.selected {
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #0056b3;
+    }
+    .btn-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: space-between;
+    }
+    .ice-list {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #888;
+      font-size: 16px;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .add-button {
+      margin: 10px 0;
+      padding: 16px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+    }
+  </style>
+  <script>
+    let selected = {};
+    function selectOption(group, value, button) {
+      selected[group] = value;
+      document.querySelectorAll(`[data-group="${group}"]`).forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      if (group === 'size') toggleFlavor2();
+    }
+    function toggleFlavor2() {
+      const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
+      if (selected['size'] === 'S') {
+        selected['flavor2'] = null;
+        flavor2Btns.forEach(btn => { btn.disabled = true; btn.classList.remove('selected'); });
+      } else {
+        flavor2Btns.forEach(btn => btn.disabled = false);
+      }
+    }
+    async function addIce() {
+      if (!selected.size || !selected.container || !selected.flavor1) {
+        alert("サイズ・容器・アイス（1つ目）を選択してください。");
+        return;
+      }
+      if (selected.size === 'W' && !selected.flavor2) {
+        alert("ダブルサイズの場合は2つ目のアイスも選んでください。");
+        return;
+      }
+      const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': '{{ csrf_token }}'
+      };
+      const params = new URLSearchParams({
+        size: selected.size,
+        container: selected.container,
+        flavor1: selected.flavor1,
+        flavor2: selected.flavor2 || ""
+      });
+      await fetch('/add_temp_ice/', {
+        method: 'POST', headers: headers, body: params.toString()
+      });
+      location.reload();
+    }
+  </script>
+</head>
+<body>
+  <h1>アイス注文入力</h1>
+  <button class="add-button" onclick="addIce()">アイスを追加</button>
+
+  <form onsubmit="event.preventDefault(); addIce();">
+    <label>サイズ:</label><br>
+    <button type="button" class="btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
+    <button type="button" class="btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button><br><br>
+
+    <label>容器:</label><br>
+    <button type="button" class="btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
+    <button type="button" class="btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button><br><br>
+
+    <label>アイス（1つ目）:</label>
+    <div class="btn-grid">
+      {% for flavor in flavors %}
+      <button type="button" class="btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
+      {% endfor %}
+    </div>
+
+    <br>
+    <label>アイス（2つ目） ※Wのみ:</label>
+    <div class="btn-grid">
+      {% for flavor in flavors %}
+      <button type="button" class="btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
+      {% endfor %}
+    </div>
+
+    <br>
+    <button type="submit" class="add-button">アイスを追加</button>
+  </form>
+
+<div class="ice-list">
+    <h3>現在の仮オーダー内容</h3>
+    {% if temp_ice %}
+    <ul>
+      {% for ice in temp_ice %}
+      <li style="margin-bottom: 6px;">
+        <div><strong>サイズ:</strong> {{ ice.size }} ／ <strong>容器:</strong> {{ container_map|get_item:ice.container }}</div>
+        <div>
+          <strong>アイス:</strong> {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
+          <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="/submit_order_group/">
+      {% csrf_token %}
+      <button type="submit" class="add-button">オーダーを送信</button>
+    </form>
+    {% else %}
+    <p>まだ何も追加されていません。</p>
+    {% endif %}
+</div>
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+</body>
+</html>

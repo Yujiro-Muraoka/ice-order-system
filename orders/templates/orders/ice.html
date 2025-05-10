@@ -1,0 +1,127 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アイス担当画面</title>
+  <meta http-equiv="refresh" content="5">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 10px;
+      max-width: 480px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: normal;
+    }
+    .order-group {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      background-color: #fff;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+    }
+    .completed {
+      color: gray;
+      border-color: #ddd;
+      background-color: #f9f9f9;
+    }
+    .order-line {
+      margin-bottom: 10px;
+      line-height: 1.4em;
+    }
+    .order-line .info {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    .order-line .flavors {
+      padding-left: 1em;
+    }
+    button {
+      font-size: 16px;
+      padding: 12px;
+      width: 100%;
+      margin-top: 6px;
+      border-radius: 8px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-delete {
+      background-color: #dc3545 !important;
+      color: white !important;
+      font-weight: bold;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>アイス注文一覧（5秒ごとに更新）</h1>
+  <p>未完了オーダー数: {{ active_count }}</p>
+  <p>最終更新：{{ now|date:"H:i:s" }}</p>
+
+  {% for group_id, orders in grouped_orders.items %}
+    {% if not orders.0.is_completed %}
+    <div class="order-group">
+      <h3>🧾 オーダー番号: {{ group_id }}</h3>
+      <ul>
+        {% for order in orders|dictsort:"container" %}
+        <li class="order-line">
+          <div class="info">{{ order.size }}サイズ ｜ {% if order.container == "cup" %}カップ🍨{% elif order.container == "cone" %}コーン🍦{% endif %}</div>
+          <div class="flavors">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      <form method="post" action="/complete_group/{{ group_id }}/">
+        {% csrf_token %}
+        <button type="submit">このオーダーを完了</button>
+      </form>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <hr>
+  <h2>完了済み注文</h2>
+  {% for group_id, orders in grouped_orders.items %}
+    {% if orders.0.is_completed %}
+    <div class="order-group completed">
+      <h3>🧾 オーダー番号: {{ group_id }}</h3>
+      <ul>
+        {% for order in orders|dictsort:"container" %}
+        <li class="order-line">
+          <div class="info">{{ order.size }}サイズ ｜ {% if order.container == "cup" %}カップ🍨{% elif order.container == "cone" %}コーン🍦{% endif %}</div>
+          <div class="flavors">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      <form method="post" action="/delete_group/{{ group_id }}/">
+        {% csrf_token %}
+        <button type="submit" class="btn-delete">この完了済みオーダーを削除</button>
+      </form>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+
+</body>
+</html>
