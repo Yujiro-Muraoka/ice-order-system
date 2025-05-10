@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ice-order-system
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn config.wsgi
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: SECRET_KEY
+        value: django-insecure-6ox6xy4q1mlro#_kngpxe3!5y8z6j-j6%*!^a%u_ozd%3$^&$g
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
