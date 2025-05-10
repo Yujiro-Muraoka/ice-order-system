@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '192.168.68.59',
+    '.onrender.com',
+    'localhost',
 ]
 
 
