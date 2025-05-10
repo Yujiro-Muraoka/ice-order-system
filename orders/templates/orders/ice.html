@@ -73,7 +73,7 @@
 
   <h1>アイス注文一覧（5秒ごとに更新）</h1>
   <p>未完了オーダー数: {{ active_count }}</p>
-  <p>最終更新：{{ now|date:"H:i:s" }}</p>
+  <p>最終更新：<span id="last-updated">--:--:--</span></p>
 
   {% for group_id, orders in grouped_orders.items %}
     {% if not orders.0.is_completed %}
@@ -122,6 +122,17 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('ja-JP', { hour12: false });
+      document.getElementById("last-updated").textContent = timeString;
+    }
+
+    updateClock(); // 初期表示
+    setInterval(updateClock, 5000); // 5秒ごとに更新
+  </script>
 
 </body>
 </html>
