@@ -1,0 +1,112 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デシャップ担当画面</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    .order-card {
+      border: 1px solid #ccc; padding: 12px; margin-bottom: 20px;
+      border-radius: 10px;
+    }
+    .status-ok { color: green; font-weight: bold; }
+    .status-stop { color: red; font-weight: bold; }
+    .complete-button {
+      background-color: #007bff; color: white;
+      border: none; padding: 10px 16px;
+      font-size: 16px; border-radius: 6px;
+      cursor: pointer; width: 100%; margin-top: 10px;
+    }
+    .logout-bottom { text-align: center; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <h2>デシャップ担当画面（3秒ごとに更新）</h2>
+  <p>未完了オーダー数: {{ active_count }}</p>
+  <p>最終更新: {{ now|time:"H:i:s" }}</p>
+
+  {% for group_id, orders in grouped_orders.items %}
+  <div class="order-card">
+    <p>🧾 オーダー番号: {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}</p>
+    <p>
+      状態:
+      {% if orders.0.status == 'ok' %}
+        <span class="status-ok">🟢 アイス作成OK</span>
+      {% elif orders.0.status == 'stop' %}
+        <span class="status-stop">🔴 アイス作成STOP</span>
+      {% endif %}
+    </p>
+    <ul>
+      {% for order in orders %}
+      <li>
+        ・{{ order.size }}サイズ | {{ order.container }} 🍦<br>
+        → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="/update_status/{{ group_id }}/ok/">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">✅ OK にする</button>
+    </form>
+    <form method="post" action="/update_status/{{ group_id }}/stop/">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">⛔ STOP にする</button>
+    </form>
+  </div>
+  {% endfor %}
+  <hr>
+  <p>完了済みオーダー（30秒後に自動で非表示）</p>
+
+  {% for group_id, orders in completed_orders.items %}
+    {% with latest=orders|last %}
+    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+      <p>🧾 オーダー番号: {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}</p>
+      <p>✅ 完了済み（残り <span class="countdown">30</span> 秒）</p>
+
+      <ul>
+        {% for order in orders %}
+        <li>
+          ・{{ order.size }}サイズ | {% if order.container == 'cup' %}カップ{% else %}コーン{% endif %} 🍦<br>
+          → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endwith %}
+  {% endfor %}
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+
+  <script>
+    // 完了済みオーダーの非表示ロジック
+  function updateCountdowns() {
+    const now = new Date().getTime();
+    document.querySelectorAll('.order-card.completed').forEach(card => {
+      const completedAt = new Date(card.dataset.completed.replace(' ', 'T') + '+09:00').getTime();
+      const elapsed = Math.floor((now - completedAt) / 1000);
+      const remaining = 30 - elapsed;
+
+      const countdownEl = card.querySelector('.countdown');
+      if (countdownEl) {
+        countdownEl.textContent = remaining > 0 ? remaining : 0;
+      }
+
+      if (remaining <= 0) {
+        card.remove();
+      }
+    });
+  }
+
+    setInterval(updateCountdowns, 1000);
+
+    // 全体リロード
+    setInterval(() => { location.reload(); }, 3000);
+  </script>
+</body>
+</html>

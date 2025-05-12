@@ -3,135 +3,107 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>アイス担当画面</title>
-  <meta http-equiv="refresh" content="5">
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 10px;
-      max-width: 480px;
-      margin: auto;
+    body { font-family: sans-serif; padding: 10px; max-width: 480px; margin: auto; }
+    .order-card {
+      border: 1px solid #ccc; border-radius: 10px;
+      padding: 12px; margin: 12px 0;
     }
-    h1 {
-      font-size: 20px;
-      margin-bottom: 10px;
+    .complete-button {
+      background-color: #007bff; color: white;
+      border: none; padding: 10px 16px;
+      font-size: 16px; border-radius: 6px;
+      cursor: pointer; width: 100%; margin-top: 10px;
     }
-    h2 {
-      font-size: 18px;
-    }
-    h3 {
-      font-size: 16px;
-      font-weight: normal;
-    }
-    .order-group {
-      margin-bottom: 20px;
-      padding: 10px;
-      border: 2px solid #ccc;
-      border-radius: 12px;
-      background-color: #fff;
-      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
-    }
-    .completed {
-      color: gray;
-      border-color: #ddd;
-      background-color: #f9f9f9;
-    }
-    .order-line {
-      margin-bottom: 10px;
-      line-height: 1.4em;
-    }
-    .order-line .info {
-      font-weight: bold;
-      margin-bottom: 2px;
-    }
-    .order-line .flavors {
-      padding-left: 1em;
-    }
-    button {
-      font-size: 16px;
-      padding: 12px;
-      width: 100%;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-    }
-    .btn-delete {
-      background-color: #dc3545 !important;
-      color: white !important;
-      font-weight: bold;
-    }
-    .logout-bottom {
-      text-align: center;
-      margin-top: 30px;
-    }
+    .logout-bottom { text-align: center; margin-top: 30px; }
+    .status-ok { color: green; font-weight: bold; }
+    .status-stop { color: red; font-weight: bold; }
+    .dimmed { opacity: 0.5; }
+    .countdown-text { font-size: 12px; color: gray; }
   </style>
 </head>
 <body>
-
-  <h1>アイス注文一覧（5秒ごとに更新）</h1>
+  <h2>アイス注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
-  <p>最終更新：<span id="last-updated">--:--:--</span></p>
+  <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
   {% for group_id, orders in grouped_orders.items %}
-    {% if not orders.0.is_completed %}
-    <div class="order-group">
-      <h3>🧾 オーダー番号: {{ group_id }}</h3>
+  <div class="order-card">
+    <p>🧾 オーダー番号:
+      {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
+    </p>
+    <p>
+      状態:
+      {% if orders.0.status == 'ok' %}
+        <span class="status-ok">🟢 作成OK</span>
+      {% elif orders.0.status == 'stop' %}
+        <span class="status-stop">🔴 STOP中</span>
+      {% endif %}
+    </p>
+    <p class="countdown-text">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分 {{ orders.0.elapsed_seconds|divisibleby:60|yesno:"0,秒" }}</p>
+    <ul>
+      {% for order in orders %}
+      <li>
+        ・{{ order.size }}サイズ | {{ order.container|yesno:"カップ,コーン" }} 🍦<br>
+        → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if orders.0.status != 'stop' %}
+    <form method="post" action="/complete_group/{{ group_id }}/">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">このオーダーを完了</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+  <hr>
+  <p>完了済み注文（30秒後に自動で非表示）</p>
+
+  {% for group_id, orders in completed_orders.items %}
+    {% with latest=orders|last %}
+    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+      <p>🧾 オーダー番号:
+        {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
+      </p>
+      <p>✅ 完了済み</p>
+      <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
       <ul>
-        {% for order in orders|dictsort:"container" %}
-        <li class="order-line">
-          <div class="info">{{ order.size }}サイズ ｜ {% if order.container == "cup" %}カップ🍨{% elif order.container == "cone" %}コーン🍦{% endif %}</div>
-          <div class="flavors">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</div>
+        {% for order in orders %}
+        <li>
+          ・{{ order.size }}サイズ | {{ order.container|yesno:"カップ,コーン" }} 🍦<br>
+          → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
         </li>
         {% endfor %}
       </ul>
-      <form method="post" action="/complete_group/{{ group_id }}/">
-        {% csrf_token %}
-        <button type="submit">このオーダーを完了</button>
-      </form>
     </div>
-    {% endif %}
+    {% endwith %}
   {% endfor %}
 
-  <hr>
-  <h2>完了済み注文</h2>
-  {% for group_id, orders in grouped_orders.items %}
-    {% if orders.0.is_completed %}
-    <div class="order-group completed">
-      <h3>🧾 オーダー番号: {{ group_id }}</h3>
-      <ul>
-        {% for order in orders|dictsort:"container" %}
-        <li class="order-line">
-          <div class="info">{{ order.size }}サイズ ｜ {% if order.container == "cup" %}カップ🍨{% elif order.container == "cone" %}コーン🍦{% endif %}</div>
-          <div class="flavors">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</div>
-        </li>
-        {% endfor %}
-      </ul>
-      <form method="post" action="/delete_group/{{ group_id }}/">
-        {% csrf_token %}
-        <button type="submit" class="btn-delete">この完了済みオーダーを削除</button>
-      </form>
-    </div>
-    {% endif %}
-  {% endfor %}
-
-  <hr>
   <a href="/">← 役割選択へ戻る</a>
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
 
   <script>
-    function updateClock() {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('ja-JP', { hour12: false });
-      document.getElementById("last-updated").textContent = timeString;
+    // ⏳ 完了済み注文のカウントダウン表示＆非表示
+    function updateCountdowns() {
+      const now = new Date().getTime();
+      document.querySelectorAll('.order-card.completed').forEach(card => {
+        const completedAt = new Date(card.dataset.completed + 'Z').getTime();
+        const elapsed = Math.floor((now - completedAt) / 1000);
+        const remaining = 30 - elapsed;
+        const countdownEl = card.querySelector('.countdown');
+        if (remaining > 0) {
+          countdownEl.textContent = remaining;
+        } else {
+          card.style.display = 'none';
+        }
+      });
     }
-
-    updateClock(); // 初期表示
-    setInterval(updateClock, 5000); // 5秒ごとに更新
+    setInterval(updateCountdowns, 1000);
+    setInterval(() => { location.reload(); }, 3000);  // 3秒おきにリロード
   </script>
 
 </body>

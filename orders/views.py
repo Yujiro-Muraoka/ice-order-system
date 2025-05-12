@@ -2,12 +2,15 @@ from django.shortcuts import render, redirect, get_object_or_404, get_list_or_40
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.utils import timezone
-from .models import IceOrder
-import uuid
-from datetime import timedelta
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.utils.timezone import localtime
 from django.db.models import Count
+from .models import Order
+import uuid
+from datetime import timedelta
+import time
+from django.utils.timezone import now as tz_now
+from django.utils.timezone import now as timezone_now
 
 
 SHARED_PASSCODE = "1234"  # 任意の共有パスコード
@@ -23,11 +26,9 @@ def login_view(request):
             messages.error(request, "パスコードが間違っています")
     return render(request, 'orders/login.html')
 
-
 def logout_view(request):
     request.session.flush()
     return redirect('/login')
-
 
 # ロール選択
 def role_select(request):
@@ -35,13 +36,13 @@ def role_select(request):
         return redirect('/login')
     return render(request, 'orders/role_select.html')
 
-
-# アイスクリームの種類
+# アイスの種類
 FLAVORS = [
     "ジャージー牛乳", "抹茶", "マンゴー", "チョコミント", "黒豆", "塩キャラ",
     "いちご", "いちごミルク", "井田塩", "カシス", "ショコラ", "さくらもち"
 ]
 
+@csrf_exempt
 def add_temp_ice(request):
     if request.method == 'POST':
         flavor1 = request.POST.get('flavor1')
@@ -49,55 +50,59 @@ def add_temp_ice(request):
         size = request.POST.get('size')
         container = request.POST.get('container')
 
+        if not (flavor1 and size and container):
+            return JsonResponse({'status': 'error', 'message': '必要な情報が不足しています'}, status=400)
+
         ice = {
             'flavor1': flavor1,
             'flavor2': flavor2,
             'size': size,
             'container': container
         }
-
         temp_ice = request.session.get('temp_ice', [])
         temp_ice.append(ice)
         request.session['temp_ice'] = temp_ice
+
+        clip_color = request.POST.get('clip_color')
+        clip_number = request.POST.get('clip_number')
+
+        if clip_color and clip_number:
+            request.session['clip_color'] = clip_color
+            request.session['clip_number'] = clip_number
+
         return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'error', 'message': 'POST以外は許可されていません'}, status=405)
 
-
-
-# 仮アイス一覧送信（まとめて保存）
 def submit_order_group(request):
     temp_ice = request.session.get('temp_ice', [])
     if not temp_ice:
         return redirect('/register')
 
-    now = localtime()
-    hour_start = now.replace(minute=0, second=0, microsecond=0)
-
-    # この1時間に登録済みの件数を数える
-    order_count = IceOrder.objects.filter(timestamp__gte=hour_start).count() + 1
-
-    # オーダー番号：2025-0509-14-03
-    group_id = now.strftime('%Y-%m%d-%H') + f'-{order_count:02d}'
+    clip_color = request.POST.get('clip_color')
+    clip_number = request.POST.get('clip_number')
+    
+    # 🆕 ここで group_id を作成
+    group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
 
     for item in temp_ice:
-        IceOrder.objects.create(
+        Order.objects.create(
             size=item['size'],
             container=item['container'],
             flavor1=item['flavor1'],
             flavor2=item.get('flavor2'),
-            order_group=group_id
+            group_id=group_id,
+            status='ok',
+            clip_color=clip_color,
+            clip_number=clip_number
         )
 
     request.session['temp_ice'] = []
     return redirect('/register')
 
-
-
 def register_view(request):
     if not request.session.get('logged_in'):
         return redirect('/login')
-
     temp_ice = request.session.get('temp_ice', [])
-
     return render(request, 'orders/register.html', {
         'flavors': FLAVORS,
         'temp_ice': temp_ice,
@@ -107,83 +112,86 @@ def register_view(request):
         }
     })
 
-
-
 def ice_view(request):
     if not request.session.get('logged_in'):
         return redirect('/login')
 
-    all_orders = IceOrder.objects.order_by('timestamp')
+    all_orders = Order.objects.order_by('timestamp')
 
     grouped_orders = {}
     for order in all_orders:
-        grouped_orders.setdefault(order.order_group, []).append(order)
+        grouped_orders.setdefault(order.group_id, []).append(order)
 
-    # ✅ 現在時刻
     now = timezone.localtime()
 
-    # ✅ 未完了数の集計
     active_count = sum(
         1 for orders in grouped_orders.values()
         if any(not o.is_completed for o in orders)
     )
 
-    # ✅ 完了済み注文のうち、完了から1分未満のオーダーだけ残す
     filtered_grouped_orders = {}
+    completed_grouped_orders = {}
+
     for group_id, orders in grouped_orders.items():
+        for o in orders:
+            o.elapsed_seconds = int((now - o.timestamp).total_seconds())
+            o.elapsed_minutes = o.elapsed_seconds // 60
+
         if all(o.is_completed for o in orders):
-            # すべて完了 → completed_at の最も遅い時刻を基準に経過時間を確認
-            latest_completion = max(o.completed_at for o in orders if o.completed_at)
-            if now - latest_completion <= timedelta(minutes=1):
-                filtered_grouped_orders[group_id] = orders
+            latest_completion = max((o.completed_at for o in orders if o.completed_at), default=None)
+            if latest_completion and now - latest_completion <= timedelta(seconds=30):
+                completed_grouped_orders[group_id] = orders
         else:
-            # 未完了のオーダーグループは常に表示
             filtered_grouped_orders[group_id] = orders
 
     return render(request, 'orders/ice.html', {
         'grouped_orders': filtered_grouped_orders,
+        'completed_orders': completed_grouped_orders,
         'now': now,
         'active_count': active_count,
     })
 
 
-
-
-# 注文完了処理
 def complete_order(request, order_id):
     if not request.session.get('logged_in'):
         return redirect('/login')
-
-    order = get_object_or_404(IceOrder, id=order_id)
+    order = get_object_or_404(Order, id=order_id)
     order.is_completed = True
     order.completed_at = timezone.now()
+    order.status = 'hold'
     order.save()
     return HttpResponseRedirect('/ice')
 
-@csrf_protect
+@csrf_exempt
 def complete_group(request, group_id):
-    orders = get_list_or_404(IceOrder, order_group=group_id)
-    now = timezone.now()
-    for order in orders:
-        order.is_completed = True
-        order.completed_at = now
-        order.save()
+    if request.method == 'POST':
+        orders = Order.objects.filter(group_id=group_id)
+        now = timezone.now()
+        for order in orders:
+            order.is_completed = True
+            order.completed_at = now
+            order.status = 'hold'
+            order.save()
     return redirect('/ice')
 
 @csrf_protect
 def delete_group(request, group_id):
     if request.method == 'POST':
-        IceOrder.objects.filter(order_group=group_id).delete()
+        Order.objects.filter(group_id=group_id).delete()
     return redirect('/ice')
 
-# 注文詳細画面
+@csrf_protect
+def delete_group_from_deshap(request, group_id):
+    if request.method == 'POST':
+        Order.objects.filter(group_id=group_id).delete()
+    return redirect('/deshap')
+
+
 def order_detail(request, order_id):
     if not request.session.get('logged_in'):
         return redirect('/login')
-
-    order = get_object_or_404(IceOrder, id=order_id)
+    order = get_object_or_404(Order, id=order_id)
     return render(request, 'orders/detail.html', {'order': order})
-
 
 def delete_temp_ice(request, index):
     temp_ice = request.session.get('temp_ice', [])
@@ -192,3 +200,54 @@ def delete_temp_ice(request, index):
         request.session['temp_ice'] = temp_ice
     return redirect('/register')
 
+
+
+def deshap_view(request):
+    # 自動ステータス切り替え
+    pending = Order.objects.filter(is_completed=False).exclude(status='hold')
+    count = pending.values('group_id').distinct().count()
+
+    target_groups = pending.values_list('group_id', flat=True).distinct()
+    for group_id in target_groups:
+        group_orders = Order.objects.filter(group_id=group_id)
+        if group_orders.exists():
+            if group_orders.first().status in ['ok', 'stop']:
+                continue
+            new_status = 'ok' if count <= 3 else 'stop'
+            group_orders.update(status=new_status)
+
+    # グループごとに分ける（完了／未完了）
+    all_orders = Order.objects.order_by('timestamp')
+    grouped = {}
+    for order in all_orders:
+        grouped.setdefault(order.group_id, []).append(order)
+
+    now = localtime()
+    active_orders = {}
+    completed_orders = {}
+
+    for group_id, orders in grouped.items():
+        if all(o.is_completed for o in orders):
+            completed_times = [o.completed_at for o in orders if o.completed_at]
+            if completed_times and now - max(completed_times) <= timedelta(seconds=30):
+                completed_orders[group_id] = orders
+        else:
+            active_orders[group_id] = orders
+
+    active_count = sum(
+        1 for orders in active_orders.values()
+        if any(not o.is_completed for o in orders)
+    )
+
+    return render(request, 'orders/deshap.html', {
+        'grouped_orders': active_orders,
+        'completed_orders': completed_orders,
+        'now': now,
+        'active_count': active_count,
+    })
+
+@csrf_exempt
+def update_status(request, group_id, new_status):
+    if request.method == 'POST' and new_status in ['ok', 'stop']:
+        Order.objects.filter(group_id=group_id).update(status=new_status)
+    return redirect('/deshap')

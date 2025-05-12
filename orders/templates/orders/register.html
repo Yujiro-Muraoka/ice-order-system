@@ -6,59 +6,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レジ担当 - アイス注文</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 10px;
-      max-width: 480px;
-      margin: auto;
-    }
-    h1 {
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 8px;
-    }
-    .btn {
-      margin: 6px 0;
-      padding: 12px;
-      width: 32%;
-      font-size: 14px;
-      background-color: #eee;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      box-sizing: border-box;
+    body { font-family: sans-serif; padding: 10px; max-width: 480px; margin: auto; }
+    h1 { font-size: 18px; text-align: center; margin-bottom: 8px; }
+    .btn, .clip-btn {
+      margin: 6px 0; padding: 12px; font-size: 14px;
+      background-color: #eee; border: 1px solid #ccc;
+      cursor: pointer; box-sizing: border-box;
       border-radius: 8px;
     }
-    .btn.selected {
-      background-color: #007bff;
-      color: white;
-      border: 2px solid #0056b3;
+    .btn { width: 32%; }
+    .btn.selected, .clip-btn.selected {
+      background-color: #007bff; color: white; border: 2px solid #0056b3;
     }
-    .btn-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: space-between;
+    .btn-grid, .clip-grid {
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; margin-bottom: 10px;
     }
-    .ice-list {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px dashed #888;
-      font-size: 16px;
-    }
-    .logout-bottom {
-      text-align: center;
-      margin-top: 30px;
-    }
+    .ice-list { margin-top: 20px; padding: 10px; border: 1px dashed #888; font-size: 16px; }
+    .logout-bottom { text-align: center; margin-top: 30px; }
     .add-button {
-      margin: 10px 0;
-      padding: 16px;
-      font-size: 18px;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      width: 100%;
+      margin: 10px 0; padding: 16px; font-size: 18px; background-color: #28a745; color: white;
+      border: none; border-radius: 8px; width: 100%;
     }
+    .clip-section {
+      margin-top: 12px;
+    }
+    .clip-color-row {
+      display: flex;
+      gap: 12px;
+      margin: 8px 0 16px;
+      justify-content: center;
+    }
+    .clip-color-row .btn-grid {
+      display: flex;
+      gap: 10px;
+    }
+    .clip-number-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .clip-btn {
+      width: 100%;
+      min-width: 40px;
+      padding: 10px;
+      text-align: center;
+    }
+
+
   </style>
   <script>
     let selected = {};
@@ -76,6 +71,25 @@
       } else {
         flavor2Btns.forEach(btn => btn.disabled = false);
       }
+    }
+    function selectClipColor(color, button) {
+      document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      document.getElementById('clip_color_input').value = color;
+    }
+    function selectClipNumber(number, button) {
+      document.querySelectorAll('.clip-grid button').forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      document.getElementById('clip_number_input').value = number;
+    }
+    function validateClipSelection() {
+      const color = document.getElementById('clip_color_input').value;
+      const number = document.getElementById('clip_number_input').value;
+      if (!color || !number) {
+        alert("オーダー表の色と番号を選んでください。");
+        return false;
+      }
+      return true;
     }
     async function addIce() {
       if (!selected.size || !selected.container || !selected.flavor1) {
@@ -105,7 +119,6 @@
 </head>
 <body>
   <h1>アイス注文入力</h1>
-  <button class="add-button" onclick="addIce()">アイスを追加</button>
 
   <form onsubmit="event.preventDefault(); addIce();">
     <label>サイズ:</label><br>
@@ -135,28 +148,45 @@
     <button type="submit" class="add-button">アイスを追加</button>
   </form>
 
-<div class="ice-list">
-    <h3>現在の仮オーダー内容</h3>
-    {% if temp_ice %}
-    <ul>
-      {% for ice in temp_ice %}
-      <li style="margin-bottom: 6px;">
-        <div><strong>サイズ:</strong> {{ ice.size }} ／ <strong>容器:</strong> {{ container_map|get_item:ice.container }}</div>
-        <div>
-          <strong>アイス:</strong> {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
-          <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
-        </div>
-      </li>
+  {% if temp_ice %}
+  <form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
+    {% csrf_token %}
+    <div class="ice-list">
+      <h3>現在の仮オーダー内容</h3>
+      <ul>
+        {% for ice in temp_ice %}
+        <li style="margin-bottom: 6px;">
+          <div><strong>サイズ:</strong> {{ ice.size }} ／ <strong>容器:</strong> {{ container_map|get_item:ice.container }}</div>
+          <div><strong>アイス:</strong> {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
+            <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  <h3>オーダー表 クリップ情報</h3>
+  <strong>色:</strong>
+  <div class="clip-color-row">
+    <button type="button" class="clip-btn" data-clip="yellow" onclick="selectClipColor('yellow', this)">🟡 黄色</button>
+    <button type="button" class="clip-btn" data-clip="white" onclick="selectClipColor('white', this)">⚪️ 白色</button>
+  </div>
+    </div>
+    <br>
+    <strong>番号:</strong><br>
+    <div class="clip-number-grid">
+      {% for i in 1|to:17 %}
+        <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
       {% endfor %}
-    </ul>
-    <form method="post" action="/submit_order_group/">
-      {% csrf_token %}
-      <button type="submit" class="add-button">オーダーを送信</button>
-    </form>
-    {% else %}
+    </div>
+  </div>
+  <input type="hidden" name="clip_color" id="clip_color_input" required>
+  <input type="hidden" name="clip_number" id="clip_number_input" required>
+  <button type="submit" class="add-button">オーダーを送信</button>
+
+  </form>
+  {% else %}
     <p>まだ何も追加されていません。</p>
-    {% endif %}
-</div>
+  {% endif %}
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>

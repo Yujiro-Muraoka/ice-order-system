@@ -14,6 +14,9 @@ urlpatterns = [
     path('delete_temp_ice/<int:index>/', views.delete_temp_ice, name='delete_temp_ice'),
     path('complete_group/<str:group_id>/', views.complete_group, name='complete_group'),
     path('delete_group/<str:group_id>/', views.delete_group, name='delete_group'),
+    path('deshap/', views.deshap_view, name='deshap'),
+    path('update_status/<str:group_id>/<str:new_status>/', views.update_status, name='update_status'),
+    path('delete_group_from_deshap/<str:group_id>/', views.delete_group_from_deshap, name='delete_group_from_deshap'),
 
 
 ]
