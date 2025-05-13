@@ -168,7 +168,8 @@
 </div>
 
   {% for group_id, orders in grouped_orders.items %}
-  <div class="order-card">
+<div class="order-card {% if orders.0.group_id in newly_created_group_ids %}fade-in{% endif %}">
+
 <p class="clip-id">
   🧾 オーダー番号:
   <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
