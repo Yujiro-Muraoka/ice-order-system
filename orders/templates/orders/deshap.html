@@ -199,7 +199,7 @@
   {% endfor %}
 </ul>
 
-<form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
+<form method="post"window.addEventListener('load', ...) が2回書かれていることによる競合」**です。 action="/update_status/{{ orders.0.group_id }}/stop/">
   {% csrf_token %}
   <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
 </form>
@@ -266,18 +266,7 @@
     // 全体リロード
     setInterval(() => { location.reload(); }, 3000);
   </script>
-<script>
-  window.addEventListener('load', () => {
-    document.querySelectorAll('.order-card.fade-in').forEach(el => {
-      el.classList.remove('fade-in');
-      void el.offsetWidth;  // リフローで再トリガー
-      el.classList.add('fade-in');
-      setTimeout(() => {
-        el.classList.remove('fade-in');
-      }, 500);
-    });
-  });
-</script>
+
 
 
   <script>
@@ -309,11 +298,23 @@
   }
 
   window.addEventListener('load', () => {
+    // ✅ アニメーション実行
+    document.querySelectorAll('.order-card.fade-in').forEach(el => {
+      el.classList.remove('fade-in');
+      void el.offsetWidth; // リフローで再トリガー
+      el.classList.add('fade-in');
+      setTimeout(() => {
+        el.classList.remove('fade-in');
+      }, 500);
+    });
+
+    // ✅ ヘルプモーダル表示（必要であれば）
     if (localStorage.getItem('helpVisible') === 'true') {
       document.getElementById('helpModal').style.display = 'block';
     }
   });
 </script>
+
 
 
 
