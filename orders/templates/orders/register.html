@@ -6,14 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レジ担当 - アイス注文</title>
   <style>
-    body { font-family: sans-serif; padding: 10px; max-width: 480px; margin: auto; }
-    h1 { font-size: 18px; text-align: center; margin-bottom: 8px; }
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
     .btn, .clip-btn {
       width: 100%;
       padding: 16px;
       font-size: 16px;
     }
-
+    select, button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
     .btn { width: 32%; }
     .btn.selected, .clip-btn.selected {
       background-color: #007bff; color: white; border: 2px solid #0056b3;
@@ -44,16 +65,48 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
       gap: 8px;
+      margin-top: 8px;
     }
-
+    .size-button, .add-button, .submit-button {
+      background-color: #2196F3;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 18px;
+      margin-top: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
     .clip-btn {
+      margin: 4px;
+      padding: 12px 0;
       width: 100%;
-      min-width: 40px;
-      padding: 10px;
-      text-align: center;
+      font-size: 16px;
+      background-color: #eee;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.2s ease;
     }
-
-
+    .clip-btn:hover {
+      background-color: #ddd;
+    }
+    .size-button:hover, .add-button:hover, .submit-button:hover {
+      background-color: #1976D2;
+      transform: scale(0.98);
+    }
+    ul {
+      margin-top: 16px;
+      padding-left: 20px;
+    }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
   </style>
   <script>
     let selected = {};

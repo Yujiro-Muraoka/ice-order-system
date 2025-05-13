@@ -87,7 +87,7 @@
     <ul>
       {% for order in orders %}
       <li>
-        ・{{ order.size }}サイズ | {{ order.container }} 🍦<br>
+        ・{{ order.size }}サイズ | {{ order.container }} <br>
         → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
       </li>
       {% endfor %}
@@ -117,7 +117,7 @@
       <ul>
         {% for order in orders %}
         <li>
-          ・{{ order.size }}サイズ | {% if order.container == 'cup' %}カップ{% else %}コーン{% endif %} 🍦<br>
+          ・{{ order.size }}サイズ | {% if order.container == 'cup' %}カップ{% else %}コーン{% endif %} <br>
           → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
         </li>
         {% endfor %}

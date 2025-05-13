@@ -263,9 +263,16 @@ def deshap_view(request):
 @csrf_exempt
 def update_status(request, group_id, new_status):
     if request.method == 'POST' and new_status in ['ok', 'stop']:
-        # ✅ group_id をそのままフィルターに使用（タイムスタンプ付き文字列）
-        Order.objects.filter(group_id=group_id, is_completed=False).update(status=new_status)
+        orders = Order.objects.filter(group_id=group_id, is_completed=False)
+
+        if new_status == 'ok':
+            # OKにするときは is_auto_stopped をリセット
+            orders.update(status='ok', is_auto_stopped=False)
+        else:
+            # STOPにするとき、is_auto_stopped を変更しない（前の状態を保持）
+            orders.update(status='stop')
     return redirect('/deshap')
+
 
 
 
