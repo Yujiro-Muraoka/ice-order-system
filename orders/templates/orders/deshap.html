@@ -266,21 +266,19 @@
     // 全体リロード
     setInterval(() => { location.reload(); }, 3000);
   </script>
-  <script>
-window.onload = function() {
-  document.querySelectorAll('.order-card.fade-in').forEach(el => {
-    // 再度付け直すために一旦削除→再追加でもOK
-    el.classList.remove('fade-in');
-    void el.offsetWidth; // リフローで再トリガー
-    el.classList.add('fade-in');
-
-    // アニメーションが終わったらクラス削除（次回も使えるように）
-    setTimeout(() => {
+<script>
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.order-card.fade-in').forEach(el => {
       el.classList.remove('fade-in');
-    }, 500);
+      void el.offsetWidth;  // リフローで再トリガー
+      el.classList.add('fade-in');
+      setTimeout(() => {
+        el.classList.remove('fade-in');
+      }, 500);
+    });
   });
-};
-  </script>
+</script>
+
 
   <script>
   // フォーム送信時のスクロール位置を保存
@@ -319,12 +317,13 @@ window.onload = function() {
     localStorage.setItem('helpVisible', 'false');
   }
 
-  window.onload = function() {
+  window.addEventListener('load', () => {
     if (localStorage.getItem('helpVisible') === 'true') {
       document.getElementById('helpModal').style.display = 'block';
     }
-  }
+  });
 </script>
+
 
 
 <p style="color: gray;">DEBUG: group_id = [{{ group_id }}]</p>
