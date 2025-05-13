@@ -10,6 +10,7 @@
       padding: 8px;
       margin: 0;
       background-color: #f5f5f5;
+      position: relative;
     }
     .header {
       font-size: 20px;
@@ -92,6 +93,43 @@
       display: inline-block;
       margin-top: 4px;
     }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 10%;
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
 
   </style>
@@ -100,6 +138,21 @@
   <h2>アイス注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
+
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+<div id="helpModal">
+  <h3>🧊 アイス作成の流れ</h3>
+  <ul>
+    <li>🟢「作成OK」のオーダーから順に作成してください</li>
+    <li>📦「カップ」「コーン」や「サイズ」「種類」をよく確認</li>
+    <li>✅ 完了後は「このオーダーを完了」ボタンを押す</li>
+    <li>⏱ 完了済みは30秒間表示されます</li>
+    <li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>
+  </ul>
+<button id="closeHelp" onclick="closeHelp()">閉じる</button>
+
+</div>
+
 
   {% for group_id, orders in grouped_orders.items %}
 <div class="order-card">
@@ -213,6 +266,24 @@
       sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
     }
   });
+</script>
+<script>
+  function openHelp() {
+    document.getElementById('helpModal').style.display = 'block';
+    localStorage.setItem('helpVisible', 'true');
+  }
+
+  function closeHelp() {
+    document.getElementById('helpModal').style.display = 'none';
+    localStorage.setItem('helpVisible', 'false');
+  }
+
+  // ページ読み込み時に状態を復元
+  window.onload = function() {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      document.getElementById('helpModal').style.display = 'block';
+    }
+  }
 </script>
 
 
