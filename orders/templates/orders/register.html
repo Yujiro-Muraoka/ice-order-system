@@ -149,32 +149,73 @@
     }
 
 
-    .select-btn {
-      display: inline-block;
-      padding: 12px 20px;
-      margin: 6px 4px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 20px;
-      border: 2px solid #ccc;
-      background-color: #f0f0f0;
-      color: #333;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: auto;
-      min-width: 80px;
-    }
+.select-btn {
+  background-color: #f2f2f2;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 
     .select-btn.selected {
       background-color: #2196F3;
       border-color: #1976D2;
       color: white;
     }
-
+    .flavor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);  /* ✅ 常に3列にする */
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
 
     .select-btn:hover {
       background-color: #e0e0e0;
     }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+      width: auto;
+      max-width: 200px;
+    }
+
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 10%;
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
 
   </style>
   <script>
@@ -296,10 +337,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 </script>
+<script>
+  function openHelp() {
+    document.getElementById('helpModal').style.display = 'block';
+    localStorage.setItem('helpVisible', 'true');
+  }
+
+  function closeHelp() {
+    document.getElementById('helpModal').style.display = 'none';
+    localStorage.setItem('helpVisible', 'false');
+  }
+
+  window.onload = function() {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      document.getElementById('helpModal').style.display = 'block';
+    }
+  }
+</script>
+
 
 </head>
 <body>
   <h1>アイス注文入力</h1>
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+
+<div id="helpModal">
+  <h3>🧾 レジ操作ガイド</h3>
+  <ul>
+    <li>サイズ、容器、フレーバーを選択してください</li>
+    <li>「アイスを追加」で仮注文に追加されます</li>
+    <li>全て追加したら「注文を確定」を押してください</li>
+    <li>クリップ番号と色も忘れずに設定してください</li>
+  </ul>
+  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+</div>
 
   <button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
   <form onsubmit="event.preventDefault(); addIce();">
@@ -314,14 +385,14 @@ document.addEventListener('DOMContentLoaded', () => {
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
 </div>
 <label>アイス（1つ目）:</label>
-<div class="select-group">
+<div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
 
 <label>アイス（2つ目）※Wのみ:</label>
-<div class="select-group">
+<div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}

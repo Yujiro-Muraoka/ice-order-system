@@ -95,6 +95,43 @@
       display: inline-block;
       margin-top: 4px;
     }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 10%;
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
 
     .logout-bottom { text-align: center; margin-top: 30px; }
@@ -104,6 +141,17 @@
   <h2>デシャップ担当画面（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+
+<div id="helpModal">
+  <h3>🧾 デシャップ操作ガイド</h3>
+  <ul>
+    <li>STOP中のオーダーはアイス作成が保留中です</li>
+    <li>「OK」に切り替えるとアイス担当が作成できます</li>
+    <li>作成タイミングはフードと連携して調整してください</li>
+  </ul>
+  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+</div>
 
   {% for group_id, orders in grouped_orders.items %}
   <div class="order-card">
@@ -226,6 +274,23 @@
       setTimeout(() => location.reload(), 100);  // 0.1秒後に再読み込み
     });
   });
+</script>
+<script>
+  function openHelp() {
+    document.getElementById('helpModal').style.display = 'block';
+    localStorage.setItem('helpVisible', 'true');
+  }
+
+  function closeHelp() {
+    document.getElementById('helpModal').style.display = 'none';
+    localStorage.setItem('helpVisible', 'false');
+  }
+
+  window.onload = function() {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      document.getElementById('helpModal').style.display = 'block';
+    }
+  }
 </script>
 
 
