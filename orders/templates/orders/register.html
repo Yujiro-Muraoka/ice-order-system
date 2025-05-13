@@ -63,10 +63,11 @@
     }
     .clip-number-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+      grid-template-columns: repeat(8, 1fr);
       gap: 8px;
       margin-top: 8px;
     }
+
     .size-button, .add-button, .submit-button {
       background-color: #2196F3;
       color: white;
@@ -81,15 +82,15 @@
       transition: background-color 0.2s ease, transform 0.1s ease;
     }
     .clip-btn {
-      margin: 4px;
       padding: 12px 0;
-      width: 100%;
       font-size: 16px;
-      background-color: #eee;
-      border: none;
-      border-radius: 8px;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      color: #333;
       font-weight: bold;
-      transition: background-color 0.2s ease;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
     .clip-btn:hover {
       background-color: #ddd;
@@ -107,7 +108,110 @@
       flex-direction: column;
       gap: 12px;
     }
+    .clip-btn.selected {
+      background-color: #2196F3;
+      color: white;
+      border-color: #1976D2;
+    }
+    .clip-btn:not(.selected):hover {
+      background-color: #e0e0e0;
+    }.number-button {
+      padding: 12px 0;
+      width: 100%;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .number-button.selected {
+      background-color: #2196F3;
+      border-color: #1976D2;
+      color: white;
+    }
+    .item-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .item-value {
+      font-weight: bold;
+      color: #444;
+    }
+    .select-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
+
+    .select-btn {
+      display: inline-block;
+      padding: 12px 20px;
+      margin: 6px 4px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 20px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: auto;
+      min-width: 180px;
+    }
+
+    .select-btn.selected {
+      background-color: #2196F3;
+      border-color: #1976D2;
+      color: white;
+    }
+
+
+    .select-btn:hover {
+      background-color: #e0e0e0;
+    }
+
   </style>
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const numberButtons = document.querySelectorAll('.number-button');
+    let selectedNumber = null;
+
+    numberButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const isSelected = this.classList.contains('selected');
+
+        // すべての選択をクリア
+        numberButtons.forEach(b => b.classList.remove('selected'));
+
+        if (!isSelected) {
+          this.classList.add('selected');
+          selectedNumber = this.dataset.number;
+          document.querySelector('input[name=\"clip_number\"]').value = selectedNumber;
+        } else {
+          selectedNumber = null;
+          document.querySelector('input[name=\"clip_number\"]').value = '';
+        }
+      });
+    });
+  });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input[type=radio][name=size]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('label[for^=size-]').forEach(label => label.classList.remove('selected'));
+      document.querySelector(`label[for='${radio.id}']`).classList.add('selected');
+    });
+  });
+});
+</script>
+
   <script>
     let selected = {};
     function selectOption(group, value, button) {
@@ -131,9 +235,15 @@
       document.getElementById('clip_color_input').value = color;
     }
     function selectClipNumber(number, button) {
-      document.querySelectorAll('.clip-grid button').forEach(btn => btn.classList.remove('selected'));
-      button.classList.add('selected');
-      document.getElementById('clip_number_input').value = number;
+      document.querySelectorAll('.clip-number-grid .clip-btn').forEach(btn => btn.classList.remove('selected'));
+      const input = document.getElementById('clip_number_input');
+      if (button.classList.contains('selected')) {
+        button.classList.remove('selected');
+        input.value = '';
+      } else {
+        button.classList.add('selected');
+        input.value = number;
+      }
     }
     function validateClipSelection() {
       const color = document.getElementById('clip_color_input').value;
@@ -193,14 +303,16 @@
 
   <button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
   <form onsubmit="event.preventDefault(); addIce();">
-    <label>サイズ:</label><br>
-    <button type="button" class="btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
-    <button type="button" class="btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button><br><br>
-
-    <label>容器:</label><br>
-    <button type="button" class="btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
-    <button type="button" class="btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button><br><br>
-
+    <label>サイズ:</label>
+    <div class="select-group">
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
+</div>
+    <label>容器:</label>
+<div class="select-group">
+<button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
+<button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
+</div>
     <label>アイス（1つ目）:</label>
     <div class="btn-grid">
       {% for flavor in flavors %}
@@ -227,12 +339,23 @@
       <h3>現在の仮オーダー内容</h3>
       <ul>
         {% for ice in temp_ice %}
-        <li style="margin-bottom: 6px;">
-          <div><strong>サイズ:</strong> {{ ice.size }} ／ <strong>容器:</strong> {{ container_map|get_item:ice.container }}</div>
-          <div><strong>アイス:</strong> {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
-            <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
-          </div>
-        </li>
+<li style="margin-bottom: 6px;">
+  <div>
+    <strong class="item-label">サイズ:</strong>
+    <span class="item-value">{{ ice.size }}</span>
+    ／
+    <strong class="item-label">容器:</strong>
+    <span class="item-value">{{ container_map|get_item:ice.container }}</span>
+  </div>
+  <div>
+    <strong class="item-label">アイス:</strong>
+    <span class="item-value">
+      {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
+    </span>
+    <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+  </div>
+</li>
+
         {% endfor %}
       </ul>
     </div>
@@ -245,11 +368,20 @@
     </div>
     <br>
     <strong>番号:</strong><br>
-    <div class="clip-number-grid">
-      {% for i in 1|to:17 %}
-        <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
-      {% endfor %}
-    </div>
+<!-- 1〜8 -->
+<div class="clip-number-grid">
+  {% for i in 1|to:9 %}
+    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
+  {% endfor %}
+</div>
+
+<!-- 9〜16 -->
+<div class="clip-number-grid">
+  {% for i in 9|to:17 %}
+    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
+  {% endfor %}
+</div>
+
   </div>
   <input type="hidden" name="clip_color" id="clip_color_input" required>
   <input type="hidden" name="clip_number" id="clip_number_input" required>

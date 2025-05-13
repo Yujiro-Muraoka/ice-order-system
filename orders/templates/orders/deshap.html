@@ -63,6 +63,39 @@
     .complete-button:first-of-type {
       margin-bottom: 8px;
     }
+    .clip-id {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .clip-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: white;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+
+    .clip-badge.yellow {
+      background-color: #f1c40f;
+    }
+
+    .clip-badge.white {
+      background-color: #bdc3c7;
+    }
+    .item-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .flavor-strong {
+      font-weight: bold;
+      color: #444;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
 
     .logout-bottom { text-align: center; margin-top: 30px; }
   </style>
@@ -74,7 +107,13 @@
 
   {% for group_id, orders in grouped_orders.items %}
   <div class="order-card">
-    <p>🧾 オーダー番号: {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}</p>
+<p class="clip-id">
+  🧾 オーダー番号:
+  <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+    {{ orders.0.clip_number }}
+  </span>
+</p>
+
  <p>
   状態:
 {% if orders.0.status == 'ok' %}
@@ -84,14 +123,19 @@
 {% endif %}
 
 </p>
-    <ul>
-      {% for order in orders %}
-      <li>
-        ・{{ order.size }}サイズ | {{ order.container }} <br>
-        → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
+<ul>
+  {% for order in orders %}
+    <li>
+      <span class="item-label">{{ order.size }}サイズ</span>｜
+      <span class="item-label">
+        {% if order.container == 'cup' %}カップ{% elif order.container == 'cone' %}コーン{% else %}{{ order.container }}{% endif %}
+      </span> 🍦
+      <br>
+      <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+    </li>
+  {% endfor %}
+</ul>
+
 <form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
   {% csrf_token %}
   <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
