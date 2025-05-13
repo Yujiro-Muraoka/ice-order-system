@@ -132,6 +132,20 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    .fade-in {
+      animation: fadeIn 0.4s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
 
     .logout-bottom { text-align: center; margin-top: 30px; }
@@ -223,6 +237,8 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
+  <div class="order-card {% if orders.0.group_id in newly_created_group_ids %}fade-in{% endif %}">
+
 
   <script>
     // 完了済みオーダーの非表示ロジック
@@ -249,6 +265,22 @@
     // 全体リロード
     setInterval(() => { location.reload(); }, 3000);
   </script>
+  <script>
+window.onload = function() {
+  document.querySelectorAll('.order-card.fade-in').forEach(el => {
+    // 再度付け直すために一旦削除→再追加でもOK
+    el.classList.remove('fade-in');
+    void el.offsetWidth; // リフローで再トリガー
+    el.classList.add('fade-in');
+
+    // アニメーションが終わったらクラス削除（次回も使えるように）
+    setTimeout(() => {
+      el.classList.remove('fade-in');
+    }, 500);
+  });
+};
+  </script>
+
   <script>
   // フォーム送信時のスクロール位置を保存
   document.querySelectorAll('form').forEach(form => {
