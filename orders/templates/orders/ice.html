@@ -5,16 +5,30 @@
   <meta charset="UTF-8">
   <title>アイス担当画面</title>
   <style>
-    body { font-family: sans-serif; padding: 10px; max-width: 480px; margin: auto; }
+    body {
+      max-width: 100%;
+      padding: 16px;
+    }
     .order-card {
       border: 1px solid #ccc; border-radius: 10px;
       padding: 12px; margin: 12px 0;
     }
     .complete-button {
-      background-color: #007bff; color: white;
-      border: none; padding: 10px 16px;
-      font-size: 16px; border-radius: 6px;
-      cursor: pointer; width: 100%; margin-top: 10px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      width: 100%;
+      background-color: #2196F3; /* 🔵 ブルー */
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+    .complete-button:hover {
+      background-color: #1976D2;
+      transform: scale(0.98);
     }
     .logout-bottom { text-align: center; margin-top: 30px; }
     .status-ok { color: green; font-weight: bold; }
@@ -30,18 +44,20 @@
 
   {% for group_id, orders in grouped_orders.items %}
   <div class="order-card">
-    <p>🧾 オーダー番号:
-      {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
-    </p>
-    <p>
-      状態:
-      {% if orders.0.status == 'ok' %}
-        <span class="status-ok">🟢 作成OK</span>
-      {% elif orders.0.status == 'stop' %}
-        <span class="status-stop">🔴 STOP中</span>
-      {% endif %}
-    </p>
-    <p class="countdown-text">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分 {{ orders.0.elapsed_seconds|divisibleby:60|yesno:"0,秒" }}</p>
+<p>🧾 オーダー番号:
+  {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
+</p>
+
+  <p>
+    状態:
+    {% if orders.0.status == 'ok' %}
+      <span class="status-ok">🟢 作成OK</span>
+    {% elif orders.0.status == 'stop' %}
+      <span class="status-stop">🔴 STOP中{% if orders.0.is_auto_stopped %}（自動）{% endif %}</span>
+    {% endif %}
+  </p>
+
+    <p class="countdown-text">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分 </p>
     <ul>
       {% for order in orders %}
       <li>
@@ -51,7 +67,9 @@
       {% endfor %}
     </ul>
     {% if orders.0.status != 'stop' %}
-    <form method="post" action="/complete_group/{{ group_id }}/">
+    <form method="post" action="/complete_group/{{ orders.0.group_id }}/">
+
+
       {% csrf_token %}
       <button type="submit" class="complete-button">このオーダーを完了</button>
     </form>
@@ -86,25 +104,45 @@
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
 
-  <script>
-    // ⏳ 完了済み注文のカウントダウン表示＆非表示
-    function updateCountdowns() {
-      const now = new Date().getTime();
-      document.querySelectorAll('.order-card.completed').forEach(card => {
-        const completedAt = new Date(card.dataset.completed + 'Z').getTime();
-        const elapsed = Math.floor((now - completedAt) / 1000);
-        const remaining = 30 - elapsed;
-        const countdownEl = card.querySelector('.countdown');
-        if (remaining > 0) {
-          countdownEl.textContent = remaining;
-        } else {
-          card.style.display = 'none';
-        }
-      });
+<script>
+  function updateCountdowns() {
+    const now = new Date().getTime();
+    document.querySelectorAll('.order-card.completed').forEach(card => {
+      const completedAtStr = card.dataset.completed.replace(' ', 'T'); // "2025-05-13 13:10:00"
+      const completedAt = new Date(completedAtStr).getTime();
+
+      const elapsed = Math.floor((now - completedAt) / 1000);
+      const remaining = 30 - elapsed;
+      const countdownEl = card.querySelector('.countdown');
+
+      if (remaining > 0) {
+        countdownEl.textContent = remaining;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+  setInterval(updateCountdowns, 1000);
+  setInterval(() => { location.reload(); }, 3000);
+</script>
+<script>
+  // フォーム送信時のスクロール位置を保存
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+  });
+
+  // リロード後にスクロール位置を復元
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos) {
+      window.scrollTo(0, parseInt(pos));
+      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
     }
-    setInterval(updateCountdowns, 1000);
-    setInterval(() => { location.reload(); }, 3000);  // 3秒おきにリロード
-  </script>
+  });
+</script>
+
 
 </body>
 </html>

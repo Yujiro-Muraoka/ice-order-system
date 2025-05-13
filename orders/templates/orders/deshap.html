@@ -8,17 +8,62 @@
   <style>
     body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
     .order-card {
-      border: 1px solid #ccc; padding: 12px; margin-bottom: 20px;
-      border-radius: 10px;
+      background-color: #ffffff;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 💡 影で浮き上がり効果 */
     }
-    .status-ok { color: green; font-weight: bold; }
-    .status-stop { color: red; font-weight: bold; }
+    .order-card p {
+      margin: 4px 0;
+    }
+    .order-header {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .status-ok {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .status-stop {
+      color: #dc3545;
+      font-weight: bold;
+    }
     .complete-button {
-      background-color: #007bff; color: white;
-      border: none; padding: 10px 16px;
-      font-size: 16px; border-radius: 6px;
-      cursor: pointer; width: 100%; margin-top: 10px;
+      padding: 14px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 10px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      transition: background-color 0.2s, transform 0.1s;
     }
+    /* STOPボタン */
+    .stop-button {
+      background-color: #f44336;
+      color: #fff;
+    }
+    .stop-button:hover {
+      background-color: #d32f2f;
+      transform: scale(0.98);
+    }
+    /* OKボタン */
+    .ok-button {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    .ok-button:hover {
+      background-color: #388e3c;
+      transform: scale(0.98);
+    }
+    .complete-button:first-of-type {
+      margin-bottom: 8px;
+    }
+
     .logout-bottom { text-align: center; margin-top: 30px; }
   </style>
 </head>
@@ -30,14 +75,15 @@
   {% for group_id, orders in grouped_orders.items %}
   <div class="order-card">
     <p>🧾 オーダー番号: {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}</p>
-    <p>
-      状態:
-      {% if orders.0.status == 'ok' %}
-        <span class="status-ok">🟢 アイス作成OK</span>
-      {% elif orders.0.status == 'stop' %}
-        <span class="status-stop">🔴 アイス作成STOP</span>
-      {% endif %}
-    </p>
+ <p>
+  状態:
+{% if orders.0.status == 'ok' %}
+  <span class="status-ok">🟢 <strong>アイス作成OK</strong></span>
+{% elif orders.0.status == 'stop' %}
+  <span class="status-stop">🔴 <strong>アイス作成STOP</strong></span>
+{% endif %}
+
+</p>
     <ul>
       {% for order in orders %}
       <li>
@@ -46,14 +92,17 @@
       </li>
       {% endfor %}
     </ul>
-    <form method="post" action="/update_status/{{ group_id }}/ok/">
-      {% csrf_token %}
-      <button type="submit" class="complete-button">✅ OK にする</button>
-    </form>
-    <form method="post" action="/update_status/{{ group_id }}/stop/">
-      {% csrf_token %}
-      <button type="submit" class="complete-button">⛔ STOP にする</button>
-    </form>
+<form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
+  {% csrf_token %}
+  <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
+</form>
+
+<form method="post" action="/update_status/{{ orders.0.group_id }}/ok/">
+  {% csrf_token %}
+  <button type="submit" class="complete-button ok-button">✅ OK にする</button>
+</form>
+
+
   </div>
   {% endfor %}
   <hr>
@@ -108,5 +157,36 @@
     // 全体リロード
     setInterval(() => { location.reload(); }, 3000);
   </script>
+  <script>
+  // フォーム送信時のスクロール位置を保存
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+  });
+
+  // リロード後にスクロール位置を復元
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos) {
+      window.scrollTo(0, parseInt(pos));
+      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
+    }
+  });
+</script>
+
+<script>
+  // フォーム送信後にページを即時リロード
+  document.querySelectorAll('form[action^="/update_status/"]').forEach(form => {
+    form.addEventListener('submit', () => {
+      setTimeout(() => location.reload(), 100);  // 0.1秒後に再読み込み
+    });
+  });
+</script>
+
+
+<p style="color: gray;">DEBUG: group_id = [{{ group_id }}]</p>
+
+
 </body>
 </html>

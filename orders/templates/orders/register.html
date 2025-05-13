@@ -9,11 +9,11 @@
     body { font-family: sans-serif; padding: 10px; max-width: 480px; margin: auto; }
     h1 { font-size: 18px; text-align: center; margin-bottom: 8px; }
     .btn, .clip-btn {
-      margin: 6px 0; padding: 12px; font-size: 14px;
-      background-color: #eee; border: 1px solid #ccc;
-      cursor: pointer; box-sizing: border-box;
-      border-radius: 8px;
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
     }
+
     .btn { width: 32%; }
     .btn.selected, .clip-btn.selected {
       background-color: #007bff; color: white; border: 2px solid #0056b3;
@@ -42,10 +42,10 @@
     }
     .clip-number-grid {
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
-      margin-top: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+      gap: 8px;
     }
+
     .clip-btn {
       width: 100%;
       min-width: 40px;
@@ -116,10 +116,29 @@
       location.reload();
     }
   </script>
+  <script>
+  // フォーム送信時のスクロール位置を保存
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+  });
+
+  // リロード後にスクロール位置を復元
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos) {
+      window.scrollTo(0, parseInt(pos));
+      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
+    }
+  });
+</script>
+
 </head>
 <body>
   <h1>アイス注文入力</h1>
 
+  <button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
   <form onsubmit="event.preventDefault(); addIce();">
     <label>サイズ:</label><br>
     <button type="button" class="btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>

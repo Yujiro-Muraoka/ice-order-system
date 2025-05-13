@@ -38,7 +38,7 @@ class Order(models.Model):
     clip_color = models.CharField(max_length=10, choices=CLIP_COLOR_CHOICES)
     clip_number = models.IntegerField()
     completed_at = models.DateTimeField(null=True, blank=True)
-
+    is_auto_stopped = models.BooleanField(default=False)  # ← 自動STOPかどうか
 
     def __str__(self):
         return f"{self.group_id} - {self.size} - {self.flavor1}"

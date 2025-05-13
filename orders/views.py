@@ -73,31 +73,34 @@ def add_temp_ice(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'POST以外は許可されていません'}, status=405)
 
+@csrf_exempt
 def submit_order_group(request):
-    temp_ice = request.session.get('temp_ice', [])
-    if not temp_ice:
-        return redirect('/register')
+    if request.method == 'POST':
+        temp_ice_list = request.session.get('temp_ice', [])
+        clip_color = request.POST['clip_color']
+        clip_number = int(request.POST['clip_number'])
 
-    clip_color = request.POST.get('clip_color')
-    clip_number = request.POST.get('clip_number')
-    
-    # 🆕 ここで group_id を作成
-    group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
+        group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
 
-    for item in temp_ice:
-        Order.objects.create(
-            size=item['size'],
-            container=item['container'],
-            flavor1=item['flavor1'],
-            flavor2=item.get('flavor2'),
-            group_id=group_id,
-            status='ok',
-            clip_color=clip_color,
-            clip_number=clip_number
-        )
+        has_stop = Order.objects.filter(is_completed=False, status='stop').exists()
+        status = 'stop' if has_stop else 'ok'
+        auto_stopped = has_stop
 
-    request.session['temp_ice'] = []
-    return redirect('/register')
+        for ice in temp_ice_list:
+            Order.objects.create(
+                size=ice['size'],
+                container=ice['container'],
+                flavor1=ice['flavor1'],
+                flavor2=ice.get('flavor2'),
+                clip_color=clip_color,
+                clip_number=clip_number,
+                group_id=group_id,  # ✅ ←絶対に必要！
+                status=status,
+                is_auto_stopped=auto_stopped
+            )
+
+        request.session['temp_ice'] = []
+        return redirect('register')
 
 def register_view(request):
     if not request.session.get('logged_in'):
@@ -116,21 +119,18 @@ def ice_view(request):
     if not request.session.get('logged_in'):
         return redirect('/login')
 
+    now = timezone.localtime()
+
+    # 全ての注文を取得（完了・未完了を含む）
     all_orders = Order.objects.order_by('timestamp')
 
+    # group_id = clip_color_clip_number で統一
     grouped_orders = {}
     for order in all_orders:
         grouped_orders.setdefault(order.group_id, []).append(order)
 
-    now = timezone.localtime()
-
-    active_count = sum(
-        1 for orders in grouped_orders.values()
-        if any(not o.is_completed for o in orders)
-    )
-
-    filtered_grouped_orders = {}
-    completed_grouped_orders = {}
+    active_orders = {}
+    completed_orders = {}
 
     for group_id, orders in grouped_orders.items():
         for o in orders:
@@ -140,13 +140,16 @@ def ice_view(request):
         if all(o.is_completed for o in orders):
             latest_completion = max((o.completed_at for o in orders if o.completed_at), default=None)
             if latest_completion and now - latest_completion <= timedelta(seconds=30):
-                completed_grouped_orders[group_id] = orders
+                completed_orders[group_id] = orders  # ✅ 30秒以内のものだけ表示
         else:
-            filtered_grouped_orders[group_id] = orders
+            active_orders[group_id] = orders
+
+
+    active_count = len(active_orders)
 
     return render(request, 'orders/ice.html', {
-        'grouped_orders': filtered_grouped_orders,
-        'completed_orders': completed_grouped_orders,
+        'grouped_orders': active_orders,
+        'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
     })
@@ -165,14 +168,23 @@ def complete_order(request, order_id):
 @csrf_exempt
 def complete_group(request, group_id):
     if request.method == 'POST':
-        orders = Order.objects.filter(group_id=group_id)
-        now = timezone.now()
-        for order in orders:
-            order.is_completed = True
-            order.completed_at = now
-            order.status = 'hold'
-            order.save()
+        try:
+            # ✅ group_idは保存済みのもの（例: yellow-2-1747123456789）そのまま使う
+            orders = Order.objects.filter(group_id=group_id, is_completed=False)
+
+            now = timezone.now()
+            for order in orders:
+                order.is_completed = True
+                order.completed_at = now
+                order.status = 'hold'
+                order.save()
+        except Exception as e:
+            print("[complete_group error]", e)
     return redirect('/ice')
+
+
+
+
 
 @csrf_protect
 def delete_group(request, group_id):
@@ -201,39 +213,40 @@ def delete_temp_ice(request, index):
     return redirect('/register')
 
 
-
 def deshap_view(request):
-    # 自動ステータス切り替え
-    pending = Order.objects.filter(is_completed=False).exclude(status='hold')
-    count = pending.values('group_id').distinct().count()
-
-    target_groups = pending.values_list('group_id', flat=True).distinct()
-    for group_id in target_groups:
-        group_orders = Order.objects.filter(group_id=group_id)
-        if group_orders.exists():
-            if group_orders.first().status in ['ok', 'stop']:
-                continue
-            new_status = 'ok' if count <= 3 else 'stop'
-            group_orders.update(status=new_status)
-
-    # グループごとに分ける（完了／未完了）
-    all_orders = Order.objects.order_by('timestamp')
-    grouped = {}
-    for order in all_orders:
-        grouped.setdefault(order.group_id, []).append(order)
-
     now = localtime()
+
+    # 最新の全オーダーを取得
+    all_orders = list(Order.objects.order_by('timestamp'))
+
+    # group_id: clip_color_clip_number 形式でグループ化
+    grouped_orders = {}
+    for order in all_orders:
+        grouped_orders.setdefault(order.group_id, []).append(order)
     active_orders = {}
     completed_orders = {}
 
-    for group_id, orders in grouped.items():
-        if all(o.is_completed for o in orders):
-            completed_times = [o.completed_at for o in orders if o.completed_at]
+    for group_id, orders in grouped_orders.items():
+        sorted_orders = sorted(orders, key=lambda o: o.timestamp)
+        if all(o.is_completed for o in sorted_orders):
+            completed_times = [o.completed_at for o in sorted_orders if o.completed_at]
             if completed_times and now - max(completed_times) <= timedelta(seconds=30):
-                completed_orders[group_id] = orders
+                completed_orders[group_id] = sorted_orders
         else:
-            active_orders[group_id] = orders
+            active_orders[group_id] = sorted_orders
 
+    # 自動状態更新（status='hold' のみを対象とする）
+    pending = Order.objects.filter(is_completed=False, status='hold')
+    count = pending.values('group_id').distinct().count()
+    target_groups = pending.values_list('group_id', flat=True).distinct()
+
+    for group_id in target_groups:
+        group_orders = Order.objects.filter(group_id=group_id)
+        if group_orders.exists():
+            new_status = 'ok' if count <= 3 else 'stop'
+            group_orders.update(status=new_status)
+
+    # 表示用の未完了グループ数
     active_count = sum(
         1 for orders in active_orders.values()
         if any(not o.is_completed for o in orders)
@@ -246,8 +259,18 @@ def deshap_view(request):
         'active_count': active_count,
     })
 
+
 @csrf_exempt
 def update_status(request, group_id, new_status):
     if request.method == 'POST' and new_status in ['ok', 'stop']:
-        Order.objects.filter(group_id=group_id).update(status=new_status)
+        # ✅ group_id をそのままフィルターに使用（タイムスタンプ付き文字列）
+        Order.objects.filter(group_id=group_id, is_completed=False).update(status=new_status)
     return redirect('/deshap')
+
+
+
+
+
+
+
+
