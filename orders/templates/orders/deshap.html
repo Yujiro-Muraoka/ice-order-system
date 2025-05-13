@@ -155,6 +155,7 @@
   </ul>
   <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
+{% for group_id, orders in grouped_orders.items %}
 <div class="order-card">
   <p class="clip-id">
     🧾 オーダー番号:
@@ -181,8 +182,20 @@
     </li>
     {% endfor %}
   </ul>
+
   <!-- OK / STOP 切替ボタン -->
+  <form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
+    {% csrf_token %}
+    <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
+  </form>
+
+  <form method="post" action="/update_status/{{ orders.0.group_id }}/ok/">
+    {% csrf_token %}
+    <button type="submit" class="complete-button ok-button">✅ OK にする</button>
+  </form>
 </div>
+{% endfor %}
+
 
 
 <form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
