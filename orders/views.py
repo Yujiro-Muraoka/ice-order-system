@@ -251,6 +251,23 @@ def deshap_view(request):
         1 for orders in active_orders.values()
         if any(not o.is_completed for o in orders)
     )
+    # 例：新着オーダー判定用 group_id を取得
+    newly_created_group_ids = []
+
+    for group_id, orders in grouped_orders.items():
+        if all(not o.is_completed for o in orders):  # 未完了のみ
+            created_within_3s = any((timezone.now() - o.timestamp).total_seconds() < 3 for o in orders)
+            if created_within_3s:
+                newly_created_group_ids.append(group_id)
+
+    context = {
+        'grouped_orders': active_orders,
+        'completed_orders': completed_orders,
+        'now': now,
+        'active_count': active_count,
+        'newly_created_group_ids': newly_created_group_ids  # ✅ これを追加
+    }
+
 
     return render(request, 'orders/deshap.html', {
         'grouped_orders': active_orders,
