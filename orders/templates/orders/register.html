@@ -162,7 +162,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       width: auto;
-      min-width: 180px;
+      min-width: 100px;
     }
 
     .select-btn.selected {
@@ -313,20 +313,20 @@ document.addEventListener('DOMContentLoaded', () => {
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
 </div>
-    <label>アイス（1つ目）:</label>
-    <div class="btn-grid">
-      {% for flavor in flavors %}
-      <button type="button" class="btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
-      {% endfor %}
-    </div>
+<label>アイス（1つ目）:</label>
+<div class="select-group">
+  {% for flavor in flavors %}
+    <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
+  {% endfor %}
+</div>
 
-    <br>
-    <label>アイス（2つ目） ※Wのみ:</label>
-    <div class="btn-grid">
-      {% for flavor in flavors %}
-      <button type="button" class="btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
-      {% endfor %}
-    </div>
+<label>アイス（2つ目）※Wのみ:</label>
+<div class="select-group">
+  {% for flavor in flavors %}
+    <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
+  {% endfor %}
+</div>
+
 
     <br>
     <button type="submit" class="add-button">アイスを追加</button>

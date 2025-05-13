@@ -266,11 +266,13 @@ def update_status(request, group_id, new_status):
         orders = Order.objects.filter(group_id=group_id, is_completed=False)
 
         if new_status == 'ok':
-            # OKにするときは is_auto_stopped をリセット
+            # OKにする時、自動フラグを必ずリセット
             orders.update(status='ok', is_auto_stopped=False)
-        else:
-            # STOPにするとき、is_auto_stopped を変更しない（前の状態を保持）
-            orders.update(status='stop')
+
+        elif new_status == 'stop':
+            # STOPにする時、自動判定ではないので is_auto_stopped を False にしておく
+            orders.update(status='stop', is_auto_stopped=False)
+
     return redirect('/deshap')
 
 
