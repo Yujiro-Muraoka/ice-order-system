@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <title>アイス担当画面</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 8px;
-      margin: 0;
-      background-color: #f5f5f5;
-      position: relative;
-    }
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        margin: auto;
+        max-width: 600px;
+        background-color: #f5f5f5;
+      }
     .header {
       font-size: 20px;
       font-weight: bold;
@@ -138,7 +138,6 @@
   <h2>アイス注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
-  
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">

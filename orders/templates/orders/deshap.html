@@ -8,15 +8,18 @@
   <style>
     body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
     .order-card {
-      background-color: #ffffff;
-      border: 2px solid #ccc;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 24px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 💡 影で浮き上がり効果 */
+      background: #f9f9f9 ;
+      border: 2px solid #999 ;
+      border-radius: 12px ;
+      margin-bottom: 24px ;
+      padding: 16px ;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) ;
     }
     .order-card p {
       margin: 4px 0;
+    }
+    .order-card:hover {
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
     }
     .order-header {
       font-weight: bold;
@@ -132,20 +135,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-    .fade-in {
-      animation: fadeIn 0.4s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
 
 
     .logout-bottom { text-align: center; margin-top: 30px; }
@@ -166,39 +155,37 @@
   </ul>
   <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
-
-  {% for group_id, orders in grouped_orders.items %}
-
-<p class="clip-id">
-  🧾 オーダー番号:
-  <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
-    {{ orders.0.clip_number }}
-  </span>
-</p>
-
- <p>
-  状態:
-{% if orders.0.status == 'ok' %}
-  <span class="status-ok">🟢 <strong>アイス作成OK</strong></span>
-{% elif orders.0.status == 'stop' %}
-  <span class="status-stop">🔴 <strong>アイス作成STOP</strong></span>
-{% endif %}
-
-</p>
-<ul>
-  {% for order in orders %}
+<div class="order-card">
+  <p class="clip-id">
+    🧾 オーダー番号:
+    <span class="clip-badge {{ orders.0.clip_color }}">
+      {{ orders.0.clip_number }}
+    </span>
+  </p>
+  <p class="status-line">
+    状態:
+    {% if orders.0.status == 'ok' %}
+      🟢 作成OK
+    {% elif orders.0.status == 'stop' %}
+      🔴 STOP中{% if orders.0.is_auto_stopped %}（自動）{% endif %}
+    {% endif %}
+  </p>
+  <ul>
+    {% for order in orders %}
     <li>
       <span class="item-label">{{ order.size }}サイズ</span>｜
       <span class="item-label">
         {% if order.container == 'cup' %}カップ{% elif order.container == 'cone' %}コーン{% else %}{{ order.container }}{% endif %}
-      </span> 🍦
-      <br>
+      </span><br>
       <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
     </li>
-  {% endfor %}
-</ul>
+    {% endfor %}
+  </ul>
+  <!-- OK / STOP 切替ボタン -->
+</div>
 
-<form method="post"window.addEventListener('load', ...) が2回書かれていることによる競合」**です。 action="/update_status/{{ orders.0.group_id }}/stop/">
+
+<form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
   {% csrf_token %}
   <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
 </form>
@@ -237,8 +224,6 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
-  <div class="order-card {% if orders.0.group_id in newly_created_group_ids %}fade-in{% endif %}">
-
 
   <script>
     // 完了済みオーダーの非表示ロジック
@@ -265,15 +250,21 @@
     // 全体リロード
     setInterval(() => { location.reload(); }, 3000);
   </script>
-
-
-
   <script>
   // フォーム送信時のスクロール位置を保存
   document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', () => {
       sessionStorage.setItem('scrollPos', window.scrollY);
     });
+  });
+
+  // リロード後にスクロール位置を復元
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos) {
+      window.scrollTo(0, parseInt(pos));
+      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
+    }
   });
 </script>
 
@@ -296,29 +287,11 @@
     localStorage.setItem('helpVisible', 'false');
   }
 
-  window.addEventListener('load', () => {
-    // ✅ アニメーション実行
-    document.querySelectorAll('.order-card.fade-in').forEach(el => {
-      el.classList.remove('fade-in');
-      void el.offsetWidth; // リフローで再トリガー
-      el.classList.add('fade-in');
-      setTimeout(() => {
-        el.classList.remove('fade-in');
-      }, 500);
-    });
-
-    // ✅ ヘルプモーダル表示（必要であれば）
+  window.onload = function() {
     if (localStorage.getItem('helpVisible') === 'true') {
       document.getElementById('helpModal').style.display = 'block';
     }
-  });
+  }
 </script>
-
-
-
-
-<p style="color: gray;">DEBUG: group_id = [{{ group_id }}]</p>
-
-
 </body>
 </html>
