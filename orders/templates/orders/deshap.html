@@ -287,15 +287,6 @@
       sessionStorage.setItem('scrollPos', window.scrollY);
     });
   });
-
-  // リロード後にスクロール位置を復元
-  window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos) {
-      window.scrollTo(0, parseInt(pos));
-      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
-    }
-  });
 </script>
 
 <script>
