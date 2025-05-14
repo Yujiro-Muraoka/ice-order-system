@@ -157,9 +157,11 @@
       padding: 12px;
       font-size: 16px;
       font-weight: bold;
-      min-width: 100px;
+      flex: 1; /* 横に並び均等幅にする */
+      min-width: 0; /* 最小幅制限を解除 */
       transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease;
     }
+
 
     /* 選択された状態（選択完了後） */
     .select-btn.selected {
