@@ -1,4 +1,6 @@
 {% load custom_filters %}
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -283,15 +285,22 @@
       button.classList.add('selected');
       if (group === 'size') toggleFlavor2();
     }
-    function toggleFlavor2() {
-      const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
-      if (selected['size'] === 'S') {
-        selected['flavor2'] = null;
-        flavor2Btns.forEach(btn => { btn.disabled = true; btn.classList.remove('selected'); });
-      } else {
-        flavor2Btns.forEach(btn => btn.disabled = false);
-      }
-    }
+function toggleFlavor2() {
+  const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
+  const flavor2Section = document.getElementById('flavor2-section');
+  if (selected['size'] === 'S') {
+    selected['flavor2'] = null;
+    flavor2Btns.forEach(btn => {
+      btn.disabled = true;
+      btn.classList.remove('selected');
+    });
+    flavor2Section.style.display = 'none';
+  } else {
+    flavor2Btns.forEach(btn => btn.disabled = false);
+    flavor2Section.style.display = 'block';
+  }
+}
+
     function selectClipColor(color, button) {
       document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
       button.classList.add('selected');
@@ -339,6 +348,7 @@
       await fetch('/add_temp_ice/', {
         method: 'POST', headers: headers, body: params.toString()
       });
+      playSound('notify'); // 通知音を鳴らす
       location.reload();
     }
   </script>
@@ -414,11 +424,12 @@
 </div>
 
 <label>アイス（2つ目）※Wのみ:</label>
-<div class="flavor-grid">
+<div class="flavor-grid" id="flavor2-section">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
+
 
 
     <br>
@@ -481,14 +492,27 @@
   <button type="submit" class="add-button">オーダーを送信</button>
 
   </form>
-  {% else %}
-    <p>まだ何も追加されていません。</p>
-  {% endif %}
+{% else %}
+  <div style="margin-top: 16px; font-size: 16px; color: #666;">
+    仮オーダーがまだありません。<br>
+    サイズ・容器・アイスを選んで「アイスを追加」してください。
+  </div>
+{% endif %}
+
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
+  <audio id="notify-sound" src="/static/sounds/notify.mp3"></audio>
+<audio id="complete-sound" src="/static/sounds/complete.mp3"></audio>
+<script>
+function playSound(type) {
+  const sound = document.getElementById(type === 'complete' ? 'complete-sound' : 'notify-sound');
+  if (sound) sound.play();
+}
+</script>
+
 </body>
 </html>

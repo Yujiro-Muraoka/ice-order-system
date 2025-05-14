@@ -1,4 +1,6 @@
 {% load custom_filters %}
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -22,8 +24,12 @@
       margin-bottom: 24px;
       padding: 16px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      animation: fadeIn 0.3s ease;
     }
-
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     .order-card p {
       margin: 4px 0;
     }
@@ -231,10 +237,11 @@
 </ul>
 
     {% if orders.0.status != 'stop' %}
-      <form method="post" action="/complete_group/{{ orders.0.group_id }}/">
-        {% csrf_token %}
-        <button type="submit" class="complete-button">✅ このオーダーを完了</button>
-      </form>
+<form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
+  {% csrf_token %}
+  <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+</form>
+
     {% else %}
       <p style="color: red; font-weight: bold; margin-top: 12px;">
         🔒 STOP中のため完了できません
@@ -327,7 +334,28 @@
     }
   }
 </script>
+<div id="complete-toast" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+ background: #4caf50; color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; z-index: 999;">
+  ✅ 完了しました
+</div>
 
+<script>
+function showCompleteMessage() {
+  const toast = document.getElementById('complete-toast');
+  toast.style.display = 'block';
+  playSound('notify'); 
+  setTimeout(() => { toast.style.display = 'none'; }, 2000);
+  return true; // そのまま送信
+}
+</script>
+<audio id="notify-sound" src="/static/sounds/notify.mp3"></audio>
+<audio id="complete-sound" src="/static/sounds/complete.mp3"></audio>
+<script>
+function playSound(type) {
+  const sound = document.getElementById(type === 'complete' ? 'complete-sound' : 'notify-sound');
+  if (sound) sound.play();
+}
+</script>
 
 </body>
 </html>
