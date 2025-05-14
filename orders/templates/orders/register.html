@@ -149,7 +149,6 @@
       margin-bottom: 12px;
     }
 
-
     .select-btn {
       background-color: #f2f2f2;
       color: #333;
@@ -158,32 +157,23 @@
       padding: 12px;
       font-size: 16px;
       font-weight: bold;
-      width: auto; 
       min-width: 100px;
-    }
-    .select-btn:focus,
-    .select-btn:active {
-      background-color: #2196F3 !important;
-      color: white !important;
-      outline: none;
+      transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease;
     }
 
-
+    /* 選択された状態（選択完了後） */
     .select-btn.selected {
       background-color: #2196F3;
-      border-color: #1976D2;
       color: white;
+      border-color: #1976D2;
     }
+
     .flavor-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);  /* ✅ 常に3列にする */
       gap: 10px;
       margin-top: 8px;
       margin-bottom: 16px;
-    }
-
-    .select-btn:hover {
-      background-color: #e0e0e0;
     }
     #helpButton {
       position: fixed;
@@ -224,38 +214,14 @@
       border-radius: 8px;
       cursor: pointer;
     }
-    button {
-      -webkit-tap-highlight-color: transparent;
-      -webkit-appearance: none;
-      appearance: none;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 18px;
-    }
 
-    button:focus,
-    button:active {
-      outline: none;
-      background-color: #0062cc;
-      color: white;
-    }
-
-    /* カスタムボタンにも同様の適用 */
-    .select-btn,
-    .clip-btn {
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
     .select-btn:focus,
     .select-btn:active {
-      background-color: inherit !important;
-      color: inherit !important;
+      background-color: #2196F3 !important;
+      color: white !important;
+      border-color: #1976D2 !important;
       outline: none !important;
-      box-shadow: none !important;
     }
-
 
   </style>
   <script>
@@ -283,18 +249,24 @@
   });
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('input[type=radio][name=size]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.querySelectorAll('label[for^=size-]').forEach(label => label.classList.remove('selected'));
-      document.querySelector(`label[for='${radio.id}']`).classList.add('selected');
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectButtons = document.querySelectorAll('.select-btn');
+    selectButtons.forEach(btn => {
+      btn.addEventListener('mousedown', () => {
+        // グループ単位で選択解除
+        const group = btn.getAttribute('data-group');
+        document.querySelectorAll(`.select-btn[data-group="${group}"]`)
+                .forEach(b => b.classList.remove('selected'));
+
+        btn.classList.add('selected');
+      });
     });
   });
-});
 </script>
+
 <script>
   document.querySelectorAll('.select-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('pointerdown', () => {
       document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
