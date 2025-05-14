@@ -272,18 +272,6 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
-<div id="orders-container">
-  {% include 'partials/ice_orders.html' %}
-</div>
-<script>
-setInterval(() => {
-  fetch('/ice/partial')
-    .then(response => response.text())
-    .then(html => {
-      document.getElementById('orders-container').innerHTML = html;
-    });
-}, 3000);
-</script>
 
 <script>
   function updateCountdowns() {
@@ -306,22 +294,26 @@ setInterval(() => {
 
 </script>
 <script>
-  // フォーム送信時のスクロール位置を保存
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', () => {
+  // スクロール位置を保存（次回復元用）
+  setInterval(() => {
+    requestAnimationFrame(() => {
       sessionStorage.setItem('scrollPos', window.scrollY);
+      location.reload();
     });
-  });
+  }, 3000);
 
-  // リロード後にスクロール位置を復元
+  // 読み込み後にスクロール位置を復元（0.15秒後に）
   window.addEventListener('load', () => {
     const pos = sessionStorage.getItem('scrollPos');
-    if (pos) {
-      window.scrollTo(0, parseInt(pos));
-      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
+    if (pos !== null) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(pos));
+        sessionStorage.removeItem('scrollPos');
+      }, 150);
     }
   });
 </script>
+
 <script>
   function openHelp() {
     document.getElementById('helpModal').style.display = 'block';

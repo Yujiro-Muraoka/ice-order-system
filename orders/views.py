@@ -9,6 +9,9 @@ from .models import Order
 import uuid
 from datetime import timedelta
 import time
+from django.utils.timezone import now
+from collections import defaultdict
+
 from django.utils.timezone import now as tz_now
 from django.utils.timezone import now as timezone_now
 from django.http import HttpResponse
@@ -184,6 +187,29 @@ def complete_group(request, group_id):
 
 
 
+def get_grouped_active_orders():
+    from collections import defaultdict
+    from .models import Order
+    import datetime
+
+    grouped = defaultdict(list)
+    now_time = now()
+
+    active_orders = Order.objects.filter(is_completed=False).order_by('timestamp')
+    for order in active_orders:
+        # 経過分数を追加
+        delta = now_time - order.timestamp
+        order.elapsed_minutes = int(delta.total_seconds() // 60)
+        grouped[order.group_id].append(order)
+
+    return grouped
+
+def get_grouped_completed_orders():
+    completed_orders = Order.objects.filter(is_completed=True).order_by('-completed_at')
+    grouped = defaultdict(list)
+    for order in completed_orders:
+        grouped[order.group_id].append(order)
+    return grouped
 
 
 @csrf_protect
@@ -292,15 +318,6 @@ def update_status(request, group_id, new_status):
 
     return redirect('/deshap')
 
-def ice_partial_view(request):
-    # grouped_orders を再構成（既存の /ice と同じロジックを流用）
-    grouped_orders = get_grouped_active_orders()
-    completed_orders = get_grouped_completed_orders()
-    return render(request, 'partials/ice_orders.html', {
-        'grouped_orders': grouped_orders,
-        'completed_orders': completed_orders,
-        'now': now(),
-    })
 
 def health_check(request):
     return HttpResponse("OK")
