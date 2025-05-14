@@ -11,7 +11,7 @@ from datetime import timedelta
 import time
 from django.utils.timezone import now as tz_now
 from django.utils.timezone import now as timezone_now
-
+from django.http import HttpResponse
 
 SHARED_PASSCODE = "1234"  # 任意の共有パスコード
 
@@ -302,7 +302,8 @@ def ice_partial_view(request):
         'now': now(),
     })
 
-
+def health_check(request):
+    return HttpResponse("OK")
 
 
 

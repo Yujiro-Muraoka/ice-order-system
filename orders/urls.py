@@ -18,4 +18,6 @@ urlpatterns = [
     path('update_status/<str:group_id>/<str:new_status>/', views.update_status, name='update_status'),
     path('delete_group_from_deshap/<str:group_id>/', views.delete_group_from_deshap, name='delete_group_from_deshap'),
     path('ice/partial', views.ice_partial_view, name='ice_partial'),
+    path('', views.health_check),
+
 ]
