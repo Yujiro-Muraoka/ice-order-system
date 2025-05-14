@@ -253,10 +253,14 @@
     });
   }
 
-    setInterval(updateCountdowns, 1000);
+// 上書きする
+setInterval(() => {
+  const pos = window.scrollY;
+  sessionStorage.setItem('scrollPos', pos);
+  location.reload();
+}, 3000);
 
-    // 全体リロード
-    setInterval(() => { location.reload(); }, 3000);
+
   </script>
   <script>
   // フォーム送信時のスクロール位置を保存
