@@ -256,25 +256,31 @@
   </script>
 
 <script>
-  // スクロール位置を保存（確実に）
+  // 3秒ごとに現在位置を保存してリロード
   setInterval(() => {
     requestAnimationFrame(() => {
       sessionStorage.setItem('scrollPos', window.scrollY);
-      location.reload();
+      window.location.reload();
     });
   }, 3000);
 
-  // 復元は描画完了後に実行
+  // ロード後に描画が落ち着いてから scroll を復元（遅延＆非アニメ）
   window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos !== null) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(pos));
-        sessionStorage.removeItem('scrollPos');
-      }, 150); // ← レンダリング完了後に実行（重要）
+    const savedY = sessionStorage.getItem('scrollPos');
+    if (savedY !== null) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: parseInt(savedY),
+            behavior: 'auto'  // ← ← ← アニメーション無しで即座に移動
+          });
+          sessionStorage.removeItem('scrollPos');
+        }, 100);  // 遅延させることでDOMが落ち着いた後にスクロール
+      });
     }
   });
 </script>
+
 
 
 
