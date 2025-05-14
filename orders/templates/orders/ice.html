@@ -294,25 +294,31 @@
 
 </script>
 <script>
-  // スクロール位置を保存（次回復元用）
+  // 3秒ごとに現在位置を保存してリロード
   setInterval(() => {
     requestAnimationFrame(() => {
       sessionStorage.setItem('scrollPos', window.scrollY);
-      location.reload();
+      window.location.reload();
     });
   }, 3000);
 
-  // 読み込み後にスクロール位置を復元（0.15秒後に）
+  // ロード後に描画が落ち着いてから scroll を復元（遅延＆非アニメ）
   window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos !== null) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(pos));
-        sessionStorage.removeItem('scrollPos');
-      }, 150);
+    const savedY = sessionStorage.getItem('scrollPos');
+    if (savedY !== null) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: parseInt(savedY),
+            behavior: 'auto'  // ← ← ← アニメーション無しで即座に移動
+          });
+          sessionStorage.removeItem('scrollPos');
+        }, 100);  // 遅延させることでDOMが落ち着いた後にスクロール
+      });
     }
   });
 </script>
+
 
 <script>
   function openHelp() {

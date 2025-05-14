@@ -342,23 +342,32 @@
       location.reload();
     }
   </script>
-  <script>
-  // フォーム送信時のスクロール位置を保存
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', () => {
+<script>
+  // 3秒ごとに現在位置を保存してリロード
+  setInterval(() => {
+    requestAnimationFrame(() => {
       sessionStorage.setItem('scrollPos', window.scrollY);
+      window.location.reload();
     });
-  });
+  }, 3000);
 
-  // リロード後にスクロール位置を復元
+  // ロード後に描画が落ち着いてから scroll を復元（遅延＆非アニメ）
   window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos) {
-      window.scrollTo(0, parseInt(pos));
-      sessionStorage.removeItem('scrollPos');  // 一度使ったら削除
+    const savedY = sessionStorage.getItem('scrollPos');
+    if (savedY !== null) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: parseInt(savedY),
+            behavior: 'auto'  // ← ← ← アニメーション無しで即座に移動
+          });
+          sessionStorage.removeItem('scrollPos');
+        }, 100);  // 遅延させることでDOMが落ち着いた後にスクロール
+      });
     }
   });
 </script>
+
 <script>
   function openHelp() {
     document.getElementById('helpModal').style.display = 'block';
