@@ -196,21 +196,6 @@
 </div>
 {% endfor %}
 
-
-
-<form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
-  {% csrf_token %}
-  <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
-</form>
-
-<form method="post" action="/update_status/{{ orders.0.group_id }}/ok/">
-  {% csrf_token %}
-  <button type="submit" class="complete-button ok-button">✅ OK にする</button>
-</form>
-
-
-  </div>
-  {% endfor %}
   <hr>
   <p>完了済みオーダー（30秒後に自動で非表示）</p>
 
