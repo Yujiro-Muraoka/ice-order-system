@@ -329,20 +329,7 @@
     }
   }
 </script>
-<div id="complete-toast" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
- background: #4caf50; color: white; padding: 12px 20px; border-radius: 8px; font-weight: bold; z-index: 999;">
-  ✅ 完了しました
-</div>
 
-<script>
-function showCompleteMessage() {
-  const toast = document.getElementById('complete-toast');
-  toast.style.display = 'block';
-  playSound('notify'); 
-  setTimeout(() => { toast.style.display = 'none'; }, 2000);
-  return true; // そのまま送信
-}
-</script>
 <audio id="notify-sound" src="/static/sounds/notify.mp3"></audio>
 <audio id="complete-sound" src="/static/sounds/complete.mp3"></audio>
 <script>

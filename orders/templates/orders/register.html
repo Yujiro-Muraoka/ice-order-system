@@ -173,10 +173,11 @@
     }
 
     .flavor-grid {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);  /* ✅ 常に3列にする */
       gap: 10px;
-      justify-content: space-between;
+      margin-top: 8px;
+      margin-bottom: 16px;
     }
     #helpButton {
       position: fixed;
