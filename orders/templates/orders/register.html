@@ -224,12 +224,32 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    button {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 18px;
+    }
+
     button:focus,
-    button:active,
+    button:active {
+      outline: none;
+      background-color: #0062cc;
+      color: white;
+    }
+
+    /* カスタムボタンにも同様の適用 */
+    .select-btn,
+    .clip-btn {
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
     .select-btn:focus,
-    .select-btn:active,
-    .clip-btn:focus,
-    .clip-btn:active {
+    .select-btn:active {
       background-color: inherit !important;
       color: inherit !important;
       outline: none !important;
@@ -271,6 +291,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+</script>
+<script>
+  document.querySelectorAll('.select-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
 </script>
 
   <script>
