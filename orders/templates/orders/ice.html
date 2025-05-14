@@ -294,30 +294,27 @@
 
 </script>
 <script>
-  // 3秒ごとに現在位置を保存してリロード
+  // スクロール位置を保存（次のリロード用）
   setInterval(() => {
-    requestAnimationFrame(() => {
-      sessionStorage.setItem('scrollPos', window.scrollY);
-      window.location.reload();
-    });
+    sessionStorage.setItem('scrollPos', window.scrollY);
+    location.reload();
   }, 3000);
 
-  // ロード後に描画が落ち着いてから scroll を復元（遅延＆非アニメ）
+  // 完全描画完了後に scroll を復元（←ここが決め手）
   window.addEventListener('load', () => {
     const savedY = sessionStorage.getItem('scrollPos');
     if (savedY !== null) {
-      requestAnimationFrame(() => {
+      // DOM描画が完全に終わってから復元（遅延させてジャンプ抑制）
+      window.requestAnimationFrame(() => {
         setTimeout(() => {
-          window.scrollTo({
-            top: parseInt(savedY),
-            behavior: 'auto'  // ← ← ← アニメーション無しで即座に移動
-          });
+          window.scrollTo({ top: parseInt(savedY), behavior: 'auto' });
           sessionStorage.removeItem('scrollPos');
-        }, 100);  // 遅延させることでDOMが落ち着いた後にスクロール
+        }, 300);  // ← 300msが最も安定します（短いとジャンプ残る）
       });
     }
   });
 </script>
+
 
 
 <script>
