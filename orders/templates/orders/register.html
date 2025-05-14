@@ -1,6 +1,4 @@
 {% load custom_filters %}
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -151,18 +149,18 @@
       margin-bottom: 12px;
     }
 
-    .select-btn {
-      background-color: #f2f2f2;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      flex: 1; /* 横に並び均等幅にする */
-      min-width: 0; /* 最小幅制限を解除 */
-      transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease;
-    }
+  .select-btn {
+    background-color: #f2f2f2;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    flex: 1; /* 横に並び均等幅にする */
+    min-width: 0; /* 最小幅制限を解除 */
+    transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+  }
 
 
     /* 選択された状態（選択完了後） */
@@ -285,22 +283,15 @@
       button.classList.add('selected');
       if (group === 'size') toggleFlavor2();
     }
-function toggleFlavor2() {
-  const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
-  const flavor2Section = document.getElementById('flavor2-section');
-  if (selected['size'] === 'S') {
-    selected['flavor2'] = null;
-    flavor2Btns.forEach(btn => {
-      btn.disabled = true;
-      btn.classList.remove('selected');
-    });
-    flavor2Section.style.display = 'none';
-  } else {
-    flavor2Btns.forEach(btn => btn.disabled = false);
-    flavor2Section.style.display = 'block';
-  }
-}
-
+    function toggleFlavor2() {
+      const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
+      if (selected['size'] === 'S') {
+        selected['flavor2'] = null;
+        flavor2Btns.forEach(btn => { btn.disabled = true; btn.classList.remove('selected'); });
+      } else {
+        flavor2Btns.forEach(btn => btn.disabled = false);
+      }
+    }
     function selectClipColor(color, button) {
       document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
       button.classList.add('selected');
@@ -348,7 +339,6 @@ function toggleFlavor2() {
       await fetch('/add_temp_ice/', {
         method: 'POST', headers: headers, body: params.toString()
       });
-      playSound('notify'); // 通知音を鳴らす
       location.reload();
     }
   </script>
@@ -424,12 +414,11 @@ function toggleFlavor2() {
 </div>
 
 <label>アイス（2つ目）※Wのみ:</label>
-<div class="flavor-grid" id="flavor2-section">
+<div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
-
 
 
     <br>
@@ -492,27 +481,14 @@ function toggleFlavor2() {
   <button type="submit" class="add-button">オーダーを送信</button>
 
   </form>
-{% else %}
-  <div style="margin-top: 16px; font-size: 16px; color: #666;">
-    仮オーダーがまだありません。<br>
-    サイズ・容器・アイスを選んで「アイスを追加」してください。
-  </div>
-{% endif %}
-
+  {% else %}
+    <p>まだ何も追加されていません。</p>
+  {% endif %}
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
-  <audio id="notify-sound" src="/static/sounds/notify.mp3"></audio>
-<audio id="complete-sound" src="/static/sounds/complete.mp3"></audio>
-<script>
-function playSound(type) {
-  const sound = document.getElementById(type === 'complete' ? 'complete-sound' : 'notify-sound');
-  if (sound) sound.play();
-}
-</script>
-
 </body>
 </html>
