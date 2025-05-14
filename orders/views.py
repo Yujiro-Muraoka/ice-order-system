@@ -292,7 +292,15 @@ def update_status(request, group_id, new_status):
 
     return redirect('/deshap')
 
-
+def ice_partial_view(request):
+    # grouped_orders を再構成（既存の /ice と同じロジックを流用）
+    grouped_orders = get_grouped_active_orders()
+    completed_orders = get_grouped_completed_orders()
+    return render(request, 'partials/ice_orders.html', {
+        'grouped_orders': grouped_orders,
+        'completed_orders': completed_orders,
+        'now': now(),
+    })
 
 
 

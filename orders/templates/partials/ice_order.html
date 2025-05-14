@@ -1,0 +1,35 @@
+<!-- templates/partials/ice_orders.html -->
+{% for group_id, orders in grouped_orders.items %}
+  <div class="order-card">
+    <p class="clip-id">🧾 オーダー番号:
+      <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+        {{ orders.0.clip_number }}
+      </span>
+    </p>
+    <p class="status-line">
+      状態:
+      {% if orders.0.status == 'ok' %}🟢 作成OK
+      {% elif orders.0.status == 'stop' %}🔴 STOP中{% endif %}
+    </p>
+    <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+    <ul>
+      {% for order in orders %}
+        <li>
+          <span class="item-label">{{ order.size }}サイズ</span>｜
+          <span class="item-label">
+            {% if order.container == 'cup' %}カップ{% elif order.container == 'cone' %}コーン{% else %}{{ order.container }}{% endif %}
+          </span><br>
+          <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if orders.0.status != 'stop' %}
+    <form method="post" action="/complete_group/{{ orders.0.group_id }}/">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+    </form>
+    {% else %}
+      <p style="color: red; font-weight: bold;">🔒 STOP中のため完了できません</p>
+    {% endif %}
+  </div>
+{% endfor %}

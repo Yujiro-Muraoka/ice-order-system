@@ -272,6 +272,18 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
+<div id="orders-container">
+  {% include 'partials/ice_orders.html' %}
+</div>
+<script>
+setInterval(() => {
+  fetch('/ice/partial')
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('orders-container').innerHTML = html;
+    });
+}, 3000);
+</script>
 
 <script>
   function updateCountdowns() {
@@ -291,12 +303,6 @@
       }
     });
   }
-// 上書きする
-setInterval(() => {
-  const pos = window.scrollY;
-  sessionStorage.setItem('scrollPos', pos);
-  location.reload();
-}, 3000);
 
 </script>
 <script>
