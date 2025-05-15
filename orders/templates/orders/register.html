@@ -267,13 +267,24 @@
 </script>
 
 <script>
-  document.querySelectorAll('.select-btn').forEach(btn => {
-    btn.addEventListener('pointerdown', () => {
-      document.querySelectorAll('.select-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
     });
   });
 </script>
+<script>
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos !== null) {
+      setTimeout(() => {
+        window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
+        sessionStorage.removeItem('scrollPos');
+      }, 100);
+    }
+  });
+</script>
+
 
   <script>
     let selected = {};
@@ -365,23 +376,17 @@
 </head>
 <body>
   <h1>アイス注文入力</h1>
-<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+  <!-- 🍮 アフォガードプリンの個数選択 -->
+<label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">プリンの個数:</label>
+<select id="pudding-quantity" style="padding: 8px; margin-bottom: 12px;">
+  <option value="1">1個</option>
+  <option value="2">2個</option>
+  <option value="3">3個</option>
+  <option value="4">4個</option>
+  <option value="5">5個</option>
+</select>
 
-<div id="helpModal">
-  <h3>🧾 レジ操作ガイド</h3>
-  <ul>
-    <li>サイズ、容器、フレーバーを選択してください</li>
-    <li>「アイスを追加」で仮注文に追加されます</li>
-    <li>全て追加したら「注文を確定」を押してください</li>
-    <li>クリップ番号と色も忘れずに設定してください</li>
-  </ul>
-  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
-</div>
-<!-- 🍨 アイスを追加ボタン（従来通り） -->
-<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
-
-<!-- 🍮 アフォガードプリン追加ボタン（見た目・配置・説明を差別化） -->
-<div style="margin-top: 32px; padding-top: 16px; border-top: 2px dashed #888;">
+<!-- 🍮 追加ボタン（枠付き） -->
   <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
   <button onclick="addPudding()" style="
     background-color: #6B4226;
@@ -395,6 +400,34 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
   ">🍮 アフォガードプリンを追加</button>
 </div>
+<hr style="margin-top: 24px; margin-bottom: 24px;">
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+<div id="helpModal">
+  <h3>🧾 レジ操作ガイド</h3>
+  <ul>
+    <li>サイズ、容器、フレーバーを選択してください</li>
+    <li>「アイスを追加」で仮注文に追加されます</li>
+    <li>全て追加したら「注文を確定」を押してください</li>
+    <li>クリップ番号と色も忘れずに設定してください</li>
+  </ul>
+  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+</div>
+
+
+
+<!-- 🍨 アイスを追加ボタン（従来通り） -->
+<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">アイスの個数:</label>
+<select id="ice-quantity" style="padding: 8px; margin-bottom: 16px;">
+  <option value="1">1個</option>
+  <option value="2">2個</option>
+  <option value="3">3個</option>
+  <option value="4">4個</option>
+  <option value="5">5個</option>
+</select>
+<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
+
+
+
 
   <form onsubmit="event.preventDefault(); addIce();">
     <label>サイズ:</label>
@@ -404,45 +437,66 @@
 </div>
 
 <script>
-async function addPudding() {
-  await fetch('/add_temp_pudding/', {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
+async function addIce() {
+  const quantity = parseInt(document.getElementById('ice-quantity').value);
+  if (!selected.size || !selected.container || !selected.flavor1) {
+    alert('サイズ・容器・アイス（1つ目）を選択してください。');
+    return;
+  }
+
+  for (let i = 0; i < quantity; i++) {
+    await fetch('/add_temp_ice/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        size: selected.size,
+        container: selected.container,
+        flavor1: selected.flavor1,
+        flavor2: selected.flavor2 || ''
+      })
+    });
+  }
+
   location.reload();
 }
+
 </script>
 <script>
 async function addPudding() {
+  const quantity = parseInt(document.getElementById('pudding-quantity').value);
   const btn = event.target;
   btn.disabled = true;
   btn.textContent = "🍮 追加中...";
 
-  const res = await fetch('/add_temp_pudding/', {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
+  for (let i = 0; i < quantity; i++) {
+    const res = await fetch('/add_temp_pudding/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
 
-  if (res.ok) {
-    btn.textContent = "🍮 追加完了！";
-    btn.style.backgroundColor = "#4CAF50"; // 緑で成功感
-    setTimeout(() => location.reload(), 800); // 0.8秒後に更新
-  } else {
-    btn.textContent = "⚠️ 追加失敗";
-    btn.style.backgroundColor = "#f44336"; // 赤でエラー
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = "🍮 アフォガードプリンを追加";
-      btn.style.backgroundColor = "#6B4226";
-    }, 1500);
+    if (!res.ok) {
+      btn.textContent = "⚠️ 追加失敗";
+      btn.style.backgroundColor = "#f44336";
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "🍮 アフォガードプリンを追加";
+        btn.style.backgroundColor = "#6B4226";
+      }, 1500);
+      return;
+    }
   }
+
+  btn.textContent = "🍮 追加完了！";
+  btn.style.backgroundColor = "#4CAF50";
+  setTimeout(() => location.reload(), 800);
 }
+
 </script>
 
 
@@ -476,11 +530,15 @@ async function addPudding() {
     <div class="ice-list">
       <h3>現在の仮オーダー内容</h3>
 <ul>
-  {% if pudding_count > 0 %}
-    <li style="margin-bottom: 6px;">
-      <strong class="item-label" style="color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count }}個</strong>
-    </li>
-  {% endif %}
+{% if pudding_count > 0 %}
+  <li style="margin-bottom: 6px;">
+    <strong class="item-label" style="color: #a52a2a;">
+      🍮 アフォガードプリン × {{ pudding_count }}個
+    </strong>
+    <a href="/delete_all_pudding/" style="color: red; margin-left: 8px;">[すべて削除]</a>
+  </li>
+{% endif %}
+
 
   {% for ice in temp_ice %}
     {% if not ice.is_pudding %}

@@ -19,6 +19,7 @@ urlpatterns = [
     path('delete_group_from_deshap/<str:group_id>/', views.delete_group_from_deshap, name='delete_group_from_deshap'),
     path('', views.health_check),
     path('add_temp_pudding/', views.add_temp_pudding, name='add_temp_pudding'),
+    path('delete_all_pudding/', views.delete_all_pudding, name='delete_all_pudding'),
 
 
 ]

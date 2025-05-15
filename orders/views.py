@@ -360,6 +360,12 @@ def deshap_view(request):
         'pudding_count_completed': pudding_count_completed,
     })
 
+def delete_all_pudding(request):
+    temp_ice = request.session.get('temp_ice', [])
+    temp_ice = [item for item in temp_ice if not item.get('is_pudding')]
+    request.session['temp_ice'] = temp_ice
+    return redirect('/register')
+
 
 @csrf_exempt
 def update_status(request, group_id, new_status):
