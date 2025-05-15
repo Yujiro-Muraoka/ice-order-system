@@ -192,12 +192,12 @@
       width: auto;
       max-width: 200px;
     }
-
     #helpModal {
       display: none;
       position: fixed;
       top: 20%;
-      left: 10%;
+      left: 50%;                      /* 横基準を中央に */
+      transform: translateX(-50%);    /* 横方向に自分の幅の半分だけ左にずらす */
       width: 80%;
       background: white;
       border: 2px solid #ccc;
@@ -206,6 +206,7 @@
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
+
 
     #closeHelp {
       margin-top: 10px;
