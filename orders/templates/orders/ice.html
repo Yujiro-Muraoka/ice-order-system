@@ -331,9 +331,11 @@
 </script>
 
 <script>
-  setInterval(() => {
-    location.reload();
-  }, 3000);  // 3秒ごとにページ全体をリロード
+setInterval(() => {
+  const helpVisible = document.getElementById('helpModal').style.display === 'block';
+  localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
+  location.reload();
+}, 3000);
 </script>
 
 
@@ -372,6 +374,17 @@
   setInterval(updateCountdowns, 1000);  // ← 毎秒1回、カウントダウン更新
 </script>
 
+<script>
+  // 自動更新後、ヘルプが開いていたら再表示
+  window.addEventListener('load', () => {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      const modal = document.getElementById('helpModal');
+      if (modal) {
+        modal.style.display = 'block';
+      }
+    }
+  });
+</script>
 
 </body>
 </html>
