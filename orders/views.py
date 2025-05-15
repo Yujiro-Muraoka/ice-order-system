@@ -93,6 +93,7 @@ def submit_order_group(request):
         temp_ice_list = request.session.get('temp_ice', [])
         clip_color = request.POST['clip_color']
         clip_number = int(request.POST['clip_number'])
+        note = request.POST.get('note', "")  # ← 備考欄を取得
 
         group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
 
@@ -108,7 +109,8 @@ def submit_order_group(request):
                     clip_number=clip_number,
                     group_id=group_id,
                     status=status,
-                    is_auto_stopped=auto_stopped
+                    is_auto_stopped=auto_stopped,
+                    note=note  # ← 備考を保存
                 )
             else:
                 Order.objects.create(
@@ -120,7 +122,8 @@ def submit_order_group(request):
                     clip_number=clip_number,
                     group_id=group_id,
                     status=status,
-                    is_auto_stopped=auto_stopped
+                    is_auto_stopped=auto_stopped,
+                    note=note,  # ← 備考を保存
                 )
 
         request.session['temp_ice'] = []

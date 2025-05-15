@@ -217,6 +217,9 @@
   </p>
 
   <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+{% if orders.0.note %}
+  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+{% endif %}
 
 <ul>
 
@@ -266,6 +269,10 @@
         {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
       </p>
       <p>✅ 完了済み</p>
+      {% if orders.0.note %}
+  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+{% endif %}
+
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
 <ul>
 {% if pudding_count_completed > 0 %}

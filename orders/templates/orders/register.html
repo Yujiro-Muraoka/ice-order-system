@@ -527,6 +527,8 @@ async function addPudding() {
   {% if temp_ice %}
   <form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
     {% csrf_token %}
+
+
     <div class="ice-list">
       <h3>現在の仮オーダー内容</h3>
 <ul>
@@ -561,6 +563,10 @@ async function addPudding() {
   {% endfor %}
 </ul>
 
+
+<!-- 備考欄追加 -->
+<label for="note">備考：</label>
+<textarea id="note" name="note" rows="4" cols="60" style="width: 100%; font-size: 16px; padding: 10px; border-radius: 8px;" placeholder="例：アフォのエスプレッソなし、フード注文大量等"></textarea>
 
 
     </div>
