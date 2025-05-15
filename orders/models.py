@@ -40,5 +40,6 @@ class Order(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     is_auto_stopped = models.BooleanField(default=False)  # ← 自動STOPかどうか
 
+    is_pudding = models.BooleanField(default=False, verbose_name='アフォガードプリン')
     def __str__(self):
         return f"{self.group_id} - {self.size} - {self.flavor1}"

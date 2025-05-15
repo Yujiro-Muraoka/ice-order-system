@@ -219,17 +219,29 @@
   <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
 
 <ul>
+
+{% if pudding_count_active > 0 %}
+  <li style="font-weight: bold; color: #a52a2a;">
+    🍮 アフォガードプリン × {{ pudding_count_active }}個
+  </li>
+{% endif %}
+
+
   {% for order in orders %}
-    <li>
-      <span class="item-label">{{ order.size }}サイズ</span>｜
-      <span class="item-label">
-        {% if order.container == 'cup' %}カップ{% elif order.container == 'cone' %}コーン{% else %}{{ order.container }}{% endif %}
-      </span>
-      <br>
-      <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
-    </li>
+    {% if not order.is_pudding %}
+      <li>
+        <span class="item-label">{{ order.size }}サイズ</span>｜
+        <span class="item-label">
+          {% if order.container == 'cup' %}カップ
+          {% elif order.container == 'cone' %}コーン
+          {% else %}{{ order.container }}{% endif %}
+        </span><br>
+        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+      </li>
+    {% endif %}
   {% endfor %}
 </ul>
+
 
     {% if orders.0.status != 'stop' %}
 <form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
@@ -255,17 +267,34 @@
       </p>
       <p>✅ 完了済み</p>
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
-      <ul>
-        {% for order in orders %}
-        <li>
-          ・{{ order.size }}サイズ | {{ order.container|yesno:"カップ,コーン" }} <br>
-          → {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}
-        </li>
-        {% endfor %}
-      </ul>
+<ul>
+{% if pudding_count_completed > 0 %}
+  <li style="font-weight: bold; color: #a52a2a;">
+    🍮 アフォガードプリン × {{ pudding_count_completed }}個
+  </li>
+{% endif %}
+
+
+
+  {% for order in orders %}
+    {% if not order.is_pudding %}
+      <li>
+        <span class="item-label">{{ order.size }}サイズ</span>｜
+        <span class="item-label">
+          {% if order.container == 'cup' %}カップ
+          {% elif order.container == 'cone' %}コーン
+          {% else %}{{ order.container }}{% endif %}
+        </span><br>
+        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>
+
     </div>
     {% endwith %}
   {% endfor %}
+
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>

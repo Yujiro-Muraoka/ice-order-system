@@ -11,6 +11,7 @@ from datetime import timedelta
 import time
 from django.utils.timezone import now
 from collections import defaultdict
+from django.views.decorators.http import require_POST
 
 from django.utils.timezone import now as tz_now
 from django.utils.timezone import now as timezone_now
@@ -76,6 +77,16 @@ def add_temp_ice(request):
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error', 'message': 'POST以外は許可されていません'}, status=405)
 
+@require_POST
+def add_temp_pudding(request):
+    temp_ice = request.session.get('temp_ice', [])
+    temp_ice.append({'is_pudding': True})
+    request.session['temp_ice'] = temp_ice
+    request.session.modified = True
+    return HttpResponse("ok")
+
+
+
 @csrf_exempt
 def submit_order_group(request):
     if request.method == 'POST':
@@ -90,33 +101,59 @@ def submit_order_group(request):
         auto_stopped = has_stop
 
         for ice in temp_ice_list:
-            Order.objects.create(
-                size=ice['size'],
-                container=ice['container'],
-                flavor1=ice['flavor1'],
-                flavor2=ice.get('flavor2'),
-                clip_color=clip_color,
-                clip_number=clip_number,
-                group_id=group_id,  # ✅ ←絶対に必要！
-                status=status,
-                is_auto_stopped=auto_stopped
-            )
+            if ice.get('is_pudding'):
+                Order.objects.create(
+                    is_pudding=True,
+                    clip_color=clip_color,
+                    clip_number=clip_number,
+                    group_id=group_id,
+                    status=status,
+                    is_auto_stopped=auto_stopped
+                )
+            else:
+                Order.objects.create(
+                    size=ice['size'],
+                    container=ice['container'],
+                    flavor1=ice['flavor1'],
+                    flavor2=ice.get('flavor2'),
+                    clip_color=clip_color,
+                    clip_number=clip_number,
+                    group_id=group_id,
+                    status=status,
+                    is_auto_stopped=auto_stopped
+                )
 
         request.session['temp_ice'] = []
         return redirect('register')
 
+
+
 def register_view(request):
-    if not request.session.get('logged_in'):
-        return redirect('/login')
+    # セッションから仮オーダーを取得（なければ空リスト）
     temp_ice = request.session.get('temp_ice', [])
+
+    # 🍮 アフォガードプリンの数をカウント
+    pudding_count = sum(1 for item in temp_ice if item.get('is_pudding'))
+
+    # フレーバーの一覧（必要に応じて調整）
+    flavors = [
+        "ジャージー", "ショコラ", "いちご", "抹茶", "ミント",
+        "さくら", "マンゴー", "キャラメル", "井田塩", "カシス",
+    ]
+
+    # 表示用の container_map
+    container_map = {
+        'cup': 'カップ',
+        'cone': 'コーン'
+    }
+
     return render(request, 'orders/register.html', {
-        'flavors': FLAVORS,
+        'flavors': flavors,
+        'container_map': container_map,
         'temp_ice': temp_ice,
-        'container_map': {
-            'cup': 'カップ',
-            'cone': 'コーン'
-        }
+        'pudding_count': pudding_count,
     })
+
 
 def ice_view(request):
     if not request.session.get('logged_in'):
@@ -150,11 +187,21 @@ def ice_view(request):
 
     active_count = len(active_orders)
 
+    
+
     return render(request, 'orders/ice.html', {
         'grouped_orders': active_orders,
         'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
+        'pudding_count_active': sum(
+            sum(1 for o in orders if o.is_pudding)
+            for orders in active_orders.values()
+        ),
+        'pudding_count_completed': sum(
+            sum(1 for o in orders if o.is_pudding)
+            for orders in completed_orders.values()
+        ),
     })
 
 
@@ -294,12 +341,23 @@ def deshap_view(request):
         'newly_created_group_ids': newly_created_group_ids  # ✅ これを追加
     }
 
+    pudding_count_active = sum(
+        sum(1 for o in orders if o.is_pudding)
+        for orders in active_orders.values()
+    )
+    pudding_count_completed = sum(
+        sum(1 for o in orders if o.is_pudding)
+        for orders in completed_orders.values()
+    )
+
 
     return render(request, 'orders/deshap.html', {
         'grouped_orders': active_orders,
         'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
+        'pudding_count_active': pudding_count_active,
+        'pudding_count_completed': pudding_count_completed,
     })
 
 

@@ -377,14 +377,75 @@
   </ul>
   <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
+<!-- 🍨 アイスを追加ボタン（従来通り） -->
+<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
 
-  <button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
+<!-- 🍮 アフォガードプリン追加ボタン（見た目・配置・説明を差別化） -->
+<div style="margin-top: 32px; padding-top: 16px; border-top: 2px dashed #888;">
+  <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
+  <button onclick="addPudding()" style="
+    background-color: #6B4226;
+    color: white;
+    padding: 16px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  ">🍮 アフォガードプリンを追加</button>
+</div>
+
   <form onsubmit="event.preventDefault(); addIce();">
     <label>サイズ:</label>
     <div class="select-group">
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
 </div>
+
+<script>
+async function addPudding() {
+  await fetch('/add_temp_pudding/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  location.reload();
+}
+</script>
+<script>
+async function addPudding() {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = "🍮 追加中...";
+
+  const res = await fetch('/add_temp_pudding/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+
+  if (res.ok) {
+    btn.textContent = "🍮 追加完了！";
+    btn.style.backgroundColor = "#4CAF50"; // 緑で成功感
+    setTimeout(() => location.reload(), 800); // 0.8秒後に更新
+  } else {
+    btn.textContent = "⚠️ 追加失敗";
+    btn.style.backgroundColor = "#f44336"; // 赤でエラー
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = "🍮 アフォガードプリンを追加";
+      btn.style.backgroundColor = "#6B4226";
+    }, 1500);
+  }
+}
+</script>
+
+
     <label>容器:</label>
 <div class="select-group">
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
@@ -414,27 +475,36 @@
     {% csrf_token %}
     <div class="ice-list">
       <h3>現在の仮オーダー内容</h3>
-      <ul>
-        {% for ice in temp_ice %}
-<li style="margin-bottom: 6px;">
-  <div>
-    <strong class="item-label">サイズ:</strong>
-    <span class="item-value">{{ ice.size }}</span>
-    ／
-    <strong class="item-label">容器:</strong>
-    <span class="item-value">{{ container_map|get_item:ice.container }}</span>
-  </div>
-  <div>
-    <strong class="item-label">アイス:</strong>
-    <span class="item-value">
-      {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
-    </span>
-    <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
-  </div>
-</li>
+<ul>
+  {% if pudding_count > 0 %}
+    <li style="margin-bottom: 6px;">
+      <strong class="item-label" style="color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count }}個</strong>
+    </li>
+  {% endif %}
 
-        {% endfor %}
-      </ul>
+  {% for ice in temp_ice %}
+    {% if not ice.is_pudding %}
+      <li style="margin-bottom: 6px;">
+        <div>
+          <strong class="item-label">サイズ:</strong>
+          <span class="item-value">{{ ice.size }}</span> ／
+          <strong class="item-label">容器:</strong>
+          <span class="item-value">{{ container_map|get_item:ice.container }}</span>
+        </div>
+        <div>
+          <strong class="item-label">アイス:</strong>
+          <span class="item-value">
+            {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
+          </span>
+          <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+        </div>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>
+
+
+
     </div>
   <h3>オーダー表 クリップ情報</h3>
   <strong>色:</strong>

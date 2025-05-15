@@ -18,5 +18,7 @@ urlpatterns = [
     path('update_status/<str:group_id>/<str:new_status>/', views.update_status, name='update_status'),
     path('delete_group_from_deshap/<str:group_id>/', views.delete_group_from_deshap, name='delete_group_from_deshap'),
     path('', views.health_check),
+    path('add_temp_pudding/', views.add_temp_pudding, name='add_temp_pudding'),
+
 
 ]
