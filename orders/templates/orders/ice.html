@@ -294,6 +294,11 @@
 
 </script>
 
+<script>
+  setInterval(() => {
+    location.reload();
+  }, 3000);  // 3秒ごとにページ全体をリロード
+</script>
 
 
 
@@ -307,23 +312,30 @@
     document.getElementById('helpModal').style.display = 'none';
     localStorage.setItem('helpVisible', 'false');
   }
-
-  // ページ読み込み時に状態を復元
-  window.onload = function() {
-    if (localStorage.getItem('helpVisible') === 'true') {
-      document.getElementById('helpModal').style.display = 'block';
-    }
-  }
 </script>
 
-<audio id="notify-sound" src="/static/sounds/notify.mp3"></audio>
-<audio id="complete-sound" src="/static/sounds/complete.mp3"></audio>
+
 <script>
-function playSound(type) {
-  const sound = document.getElementById(type === 'complete' ? 'complete-sound' : 'notify-sound');
-  if (sound) sound.play();
-}
+  // フォーム送信時にスクロール位置を保存
+  document.querySelectorAll('form[action^="/complete_group/"]').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+  });
+
+  // 読み込み後にスクロール位置を復元（1回だけ）
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos !== null) {
+      window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
+      sessionStorage.removeItem('scrollPos');
+    }
+  });
 </script>
+<script>
+  setInterval(updateCountdowns, 1000);  // ← 毎秒1回、カウントダウン更新
+</script>
+
 
 </body>
 </html>
