@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>フードレジ画面</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+    h1 { font-size: 24px; margin-bottom: 20px; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    select, input[type="number"], input[type="text"] {
+      padding: 8px; font-size: 16px; width: 100%; margin-top: 4px;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+    .primary-button {
+      margin-top: 16px; padding: 14px; font-size: 16px; font-weight: bold;
+      width: 100%; border-radius: 10px; background-color: #2196F3;
+      color: white; border: none; cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .primary-button:hover { background-color: #1976D2; }
+    .order-box {
+      border: 2px dashed #aaa; padding: 16px; border-radius: 12px;
+      margin: 20px 0; background-color: white;
+    }
+    .order-box h3 { margin-top: 0; margin-bottom: 10px; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .clip-number-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .clip-btn {
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .clip-btn:hover { background-color: #ddd; }
+    .clip-color-row {
+      display: flex;
+      gap: 12px;
+      margin: 8px 0 16px;
+      justify-content: center;
+    }
+  </style>
+  <script>
+    function selectClipColor(color, button) {
+      document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
+      button.classList.add('selected');
+      document.getElementById('clip_color_input').value = color;
+    }
+    function selectClipNumber(number, button) {
+      document.querySelectorAll('.clip-number-grid .clip-btn').forEach(btn => btn.classList.remove('selected'));
+      const input = document.getElementById('clip_number_input');
+      if (button.classList.contains('selected')) {
+        button.classList.remove('selected');
+        input.value = '';
+      } else {
+        button.classList.add('selected');
+        input.value = number;
+      }
+    }
+    function validateClipSelection() {
+      const color = document.getElementById('clip_color_input').value;
+      const number = document.getElementById('clip_number_input').value;
+      if (!color || !number) {
+        alert("オーダー表の色と番号を選んでください。");
+        return false;
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+  <h1>🍚 フードレジ画面</h1>
+
+  <form method="post" action="{% url 'add_temp_food' %}">
+    {% csrf_token %}
+    <label>メニュー:</label>
+    <select name="menu">
+      <option value="からあげ丼">からあげ丼</option>
+      <option value="ルーロー飯">ルーロー飯</option>
+    </select>
+
+    <label>数量:</label>
+    <select name="quantity">
+      {% for i in quantity_range %}
+        <option value="{{ i }}">{{ i }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="primary-button">＋ 追加</button>
+  </form>
+
+  <div class="order-box">
+    <h3>現在の仮オーダー</h3>
+    <ul>
+      {% for item in temp_food %}
+        <li>{{ item.menu }} ×{{ item.quantity }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <form method="post" action="{% url 'food_register' %}" onsubmit="return validateClipSelection();">
+    {% csrf_token %}
+    <div class="order-box">
+      <h3>オーダー表 クリップ情報</h3>
+      <strong>色:</strong>
+      <div class="clip-color-row">
+        <button type="button" class="clip-btn" data-clip="yellow" onclick="selectClipColor('yellow', this)">🟡 黄色</button>
+        <button type="button" class="clip-btn" data-clip="white" onclick="selectClipColor('white', this)">⚪️ 白色</button>
+      </div>
+
+      <strong>番号:</strong>
+      <div class="clip-number-grid">
+        {% for i in clip_numbers %}
+          <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
+        {% endfor %}
+      </div>
+
+      <input type="hidden" name="clip_color" id="clip_color_input" required>
+      <input type="hidden" name="clip_number" id="clip_number_input" required>
+    </div>
+    <button type="submit" class="primary-button">✅ オーダー送信</button>
+    </form>
+<form action="/" method="get">
+  <button type="submit" class="primary-button" style="background-color: #ccc; color: #000;">← 役割選択へ戻る</button>
+</form>
+
+
+</body>
+</html>

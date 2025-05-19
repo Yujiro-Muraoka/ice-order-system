@@ -1,0 +1,51 @@
+<h1>🍽 キッチン画面</h1>
+<p>最終更新: {{ now|time:"H:i:s" }}</p>
+
+<h2>🔧 未完了オーダー</h2>
+{% for group_id, orders in active_orders.items %}
+  <div style="border: 2px dashed #999; padding: 12px; margin-bottom: 16px;">
+    <strong>🧾 オーダー番号: {{ orders.0.clip_color }} - {{ orders.0.clip_number }}</strong><br>
+    <ul>
+      {% for order in orders %}
+        <li>{{ order.menu }} ×{{ order.quantity }}</li>
+      {% endfor %}
+    </ul>
+    <form method="post" action="/food/complete_group/{{ group_id }}/">
+      {% csrf_token %}
+      <button type="submit">✅ 作成完了</button>
+    </form>
+  </div>
+{% empty %}
+  <p>現在オーダーはありません。</p>
+{% endfor %}
+
+<h2>✅ 完了済みオーダー（30秒間表示）</h2>
+{% for group_id, orders in completed_orders.items %}
+  <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 12px;" data-completed="{{ orders.0.completed_at|date:'Y-m-d H:i:s' }}">
+    <strong>🧾 {{ orders.0.clip_color }} - {{ orders.0.clip_number }}</strong><br>
+    <ul>
+      {% for order in orders %}
+        <li>{{ order.menu }} ×{{ order.quantity }}</li>
+      {% endfor %}
+    </ul>
+    <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
+  </div>
+{% endfor %}
+
+<script>
+  function updateCountdowns() {
+    const now = new Date().getTime();
+    document.querySelectorAll('[data-completed]').forEach(el => {
+      const completedAt = new Date(el.dataset.completed.replace(' ', 'T')).getTime();
+      const elapsed = Math.floor((now - completedAt) / 1000);
+      const remaining = 30 - elapsed;
+      const countdown = el.querySelector('.countdown');
+      if (countdown) countdown.textContent = remaining > 0 ? remaining : 0;
+      if (remaining <= 0) el.remove();
+    });
+  }
+  setInterval(updateCountdowns, 1000);
+</script>
+<form action="/" method="get">
+  <button type="submit" class="primary-button" style="background-color: #ccc; color: #000;">← 役割選択へ戻る</button>
+</form>

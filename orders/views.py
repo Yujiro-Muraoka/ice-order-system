@@ -288,6 +288,10 @@ def delete_temp_ice(request, index):
         request.session['temp_ice'] = temp_ice
     return redirect('/register')
 
+def mobile_order_entry(request):
+    return render(request, 'orders/mobile_order.html')
+
+
 
 def deshap_view(request):
     now = localtime()

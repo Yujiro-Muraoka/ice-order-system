@@ -20,6 +20,6 @@ urlpatterns = [
     path('', views.health_check),
     path('add_temp_pudding/', views.add_temp_pudding, name='add_temp_pudding'),
     path('delete_all_pudding/', views.delete_all_pudding, name='delete_all_pudding'),
-
+    path('mobile/', views.mobile_order_entry, name='mobile_order'),
 
 ]
