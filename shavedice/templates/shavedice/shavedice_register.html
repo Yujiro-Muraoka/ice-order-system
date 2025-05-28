@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>レジ担当 - フード注文</title>
+  <title>レジ担当 - かき氷注文</title>
   <style>
     body {
       font-family: sans-serif;
@@ -319,17 +319,14 @@
       }
     }
     function validateClipSelection() {
-      const color = document.getElementById("clip_color_input").value;
-      const number = document.getElementById("clip_number_input").value;
+      const color = document.getElementById('clip_color_input').value;
+      const number = document.getElementById('clip_number_input').value;
       if (!color || !number) {
-        alert("クリップの色と番号を選択してください。");
+        alert("オーダー表の色と番号を選んでください。");
         return false;
       }
       return true;
     }
-
-
-
     async function addIce() {
       if (!selected.size || !selected.container || !selected.flavor1) {
         alert("サイズ・容器・アイス（1つ目）を選択してください。");
@@ -377,11 +374,10 @@
 
 </head>
 <body>
-  <h1>フード注文入力</h1>
-  <!-- からあげの個数選択 -->
-<label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">からあげ丼の個数:</label>
-<select id="karaage-quantity">
-
+  <h1>かき氷注文入力</h1>
+  <!-- 🍮 アフォガードプリンの個数選択 -->
+<label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">プリンの個数:</label>
+<select id="pudding-quantity" style="padding: 8px; margin-bottom: 12px;">
   <option value="1">1個</option>
   <option value="2">2個</option>
   <option value="3">3個</option>
@@ -389,11 +385,9 @@
   <option value="5">5個</option>
 </select>
 
-
-
-<!--  追加ボタン（枠付き） -->
-  <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍗🐓 からあげ丼専用の追加はこちら</p>
-  <button onclick="addPudding('からあげ丼')" style="
+<!-- 🍮 追加ボタン（枠付き） -->
+  <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
+  <button onclick="addPudding()" style="
     background-color: #6B4226;
     color: white;
     padding: 16px;
@@ -403,7 +397,7 @@
     width: 100%;
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  ">🍗🐓 からあげ丼を追加</button>
+  ">🍮 アフォガードプリンを追加</button>
 </div>
 <hr style="margin-top: 24px; margin-bottom: 24px;">
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -420,71 +414,153 @@
 
 
 
-<label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">ルーロー飯の個数:</label>
-<select id="lurowfan-quantity">
-
+<!-- 🍨 アイスを追加ボタン（従来通り） -->
+<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">アイスの個数:</label>
+<select id="ice-quantity" style="padding: 8px; margin-bottom: 16px;">
   <option value="1">1個</option>
   <option value="2">2個</option>
   <option value="3">3個</option>
   <option value="4">4個</option>
   <option value="5">5個</option>
 </select>
+<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
 
-<!--  追加ボタン（枠付き） -->
-  <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍚🍜 ルーロー飯専用の追加はこちら</p>
-  <button onclick="addPudding('ルーロー飯')" style="
-    background-color: #6B4226;
-    color: white;
-    padding: 16px;
-    font-size: 18px;
-    border: none;
-    border-radius: 10px;
-    width: 100%;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  ">🍚🍜 ルーロー飯を追加</button>
+
+
+
+  <form onsubmit="event.preventDefault(); addIce();">
+    <label>サイズ:</label>
+    <div class="select-group">
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
 </div>
 
-  {% if temp_food %}
+<script>
+async function addIce() {
+  const quantity = parseInt(document.getElementById('ice-quantity').value);
+  if (!selected.size || !selected.container || !selected.flavor1) {
+    alert('サイズ・容器・アイス（1つ目）を選択してください。');
+    return;
+  }
+
+  for (let i = 0; i < quantity; i++) {
+    await fetch('/add_temp_ice/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        size: selected.size,
+        container: selected.container,
+        flavor1: selected.flavor1,
+        flavor2: selected.flavor2 || ''
+      })
+    });
+  }
+
+  location.reload();
+}
+
+</script>
+<script>
+async function addPudding() {
+  const quantity = parseInt(document.getElementById('pudding-quantity').value);
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = "🍮 追加中...";
+
+  for (let i = 0; i < quantity; i++) {
+    const res = await fetch('/add_temp_pudding/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    if (!res.ok) {
+      btn.textContent = "⚠️ 追加失敗";
+      btn.style.backgroundColor = "#f44336";
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "🍮 アフォガードプリンを追加";
+        btn.style.backgroundColor = "#6B4226";
+      }, 1500);
+      return;
+    }
+  }
+
+  btn.textContent = "🍮 追加完了！";
+  btn.style.backgroundColor = "#4CAF50";
+  setTimeout(() => location.reload(), 800);
+}
+
+</script>
+
+
+    <label>容器:</label>
+<div class="select-group">
+<button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
+<button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
+</div>
+<label>アイス（1つ目）:</label>
+<div class="flavor-grid">
+  {% for flavor in flavors %}
+    <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
+  {% endfor %}
+</div>
+
+<label>アイス（2つ目）※Wのみ:</label>
+<div class="flavor-grid">
+  {% for flavor in flavors %}
+    <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
+  {% endfor %}
+</div>
+
+
+    <br>
+    <button type="submit" class="add-button">アイスを追加</button>
+  </form>
+
+  {% if temp_ice %}
   <form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
     {% csrf_token %}
 
 
     <div class="ice-list">
-<h3>現在の仮オーダー内容</h3>
-{% if temp_food %}
-<!-- ✅ ここにすべて削除ボタン（送信フォームの外） -->
-<form method="post" action="{% url 'delete_all_temp_food' %}" style="margin-bottom: 16px;">
-  {% csrf_token %}
-  <button type="submit" style="color: red; background: none; border: 1px solid #d00; padding: 6px 12px; font-size: 14px; border-radius: 8px; cursor: pointer;">すべて削除</button>
-</form>
-
-<!-- ✅ 外側フォームスタート -->
-<form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
-  {% csrf_token %}
-
-  <div>
-    <p>🍗 からあげ丼：{{ karaage_count }}個</p>
-    <p>🐷 ルーロー飯：{{ lurowfan_count }}個</p>
-  </div>
-
-  <!-- 明細表示 -->
-  <ul style="padding-left: 0; list-style: none;">
-    {% for item in temp_food %}
-      <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 6px 8px; border-bottom: 1px dashed #aaa;">
-        <span>{{ item.menu }} × {{ item.quantity }}個</span>
-        <form method="post" action="{% url 'delete_temp_food' forloop.counter0 %}" style="margin: 0;">
-          {% csrf_token %}
-          <button type="submit" style="font-size: 12px; padding: 4px 8px; background-color: #eee; color: #d00; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;">削除</button>
-        </form>
-      </li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>仮オーダーはまだありません。</p>
+      <h3>現在の仮オーダー内容</h3>
+<ul>
+{% if pudding_count > 0 %}
+  <li style="margin-bottom: 6px;">
+    <strong class="item-label" style="color: #a52a2a;">
+      🍮 アフォガードプリン × {{ pudding_count }}個
+    </strong>
+    <a href="/delete_all_pudding/" style="color: red; margin-left: 8px;">[すべて削除]</a>
+  </li>
 {% endif %}
 
 
+  {% for ice in temp_ice %}
+    {% if not ice.is_pudding %}
+      <li style="margin-bottom: 6px;">
+        <div>
+          <strong class="item-label">サイズ:</strong>
+          <span class="item-value">{{ ice.size }}</span> ／
+          <strong class="item-label">容器:</strong>
+          <span class="item-value">{{ container_map|get_item:ice.container }}</span>
+        </div>
+        <div>
+          <strong class="item-label">アイス:</strong>
+          <span class="item-value">
+            {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
+          </span>
+          <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+        </div>
+      </li>
+    {% endif %}
+  {% endfor %}
+</ul>
 
 
 <!-- 備考欄追加 -->
@@ -533,39 +609,5 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
-
-  <script>
-function addPudding(menuName) {
-  const selectId = menuName === 'ルーロー飯' ? 'lurowfan-quantity' : 'karaage-quantity';
-  const quantity = parseInt(document.getElementById(selectId).value);
-
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = '/food/add_temp_food/';
-
-  const csrf = document.createElement('input');
-  csrf.type = 'hidden';
-  csrf.name = 'csrfmiddlewaretoken';
-  csrf.value = '{{ csrf_token }}';
-
-  const menu = document.createElement('input');
-  menu.type = 'hidden';
-  menu.name = 'menu';
-  menu.value = menuName;
-
-  const qty = document.createElement('input');
-  qty.type = 'hidden';
-  qty.name = 'quantity';
-  qty.value = quantity;
-
-  form.appendChild(csrf);
-  form.appendChild(menu);
-  form.appendChild(qty);
-
-  document.body.appendChild(form);
-  form.submit();
-}
-</script>
-
 </body>
 </html>

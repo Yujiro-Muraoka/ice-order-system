@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>役割選択</title>
+    <style>
+  body {
+    animation: fadeIn 0.4s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 14px 24px;
+            font-size: 18px;
+            margin: 10px;
+            border-radius: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            width: 80%;
+        }
+        .logout-bottom {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>あなたの役割を選択してください</h1>
+<!-- 役割選択画面：新たに追加する部分 -->
+<div style="border: 2px solid #ccc; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+  <h2>🍨 アイス注文</h2>
+  <form>
+    <button formaction="/register" class="common-button">レジ担当</button><br>
+    <button formaction="/ice" class="common-button">アイス担当</button>
+    <button formaction="/deshap" class="common-button">デシャップ担当</button>
+  </form>
+</div>
+
+<div>
+  <h2>🍚 フード注文（開発中）</h2>
+  <form>
+    <button formaction="/food/register" class="common-button">フードレジ</button><br>
+    <button formaction="/food/kitchen" class="common-button">キッチン担当</button>
+  </form>
+</div>
+
+<div>
+  <h2>🍧 かき氷注文（開発中）</h2>
+  <form>
+    <button formaction="/shavedice/register" class="common-button">かき氷レジ</button><br>
+    <button formaction="/shavedice/kitchen" class="common-button">キッチン担当</button>
+  </form>
+</div>
+
+
+<div>
+  <h2>📱 モバイルオーダー（開発中）</h2>
+  <form>
+    <button formaction="/mobile" class="common-button" style="background-color: #9c27b0;">モバイルオーダーへ</button>
+  </form>
+</div>
+
+
+    <div class="logout-bottom">
+        <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>注文詳細</title>
+</head>
+<body>
+    <h1>注文詳細</h1>
+    <ul>
+        <li>注文ID: {{ order.id }}</li>
+        <li>サイズ: {{ order.get_size_display }}</li>
+        <li>容器: {{ order.get_container_display }}</li>
+        <li>アイス1: {{ order.get_flavor1_display }}</li>
+        <li>アイス2: {{ order.get_flavor2_display|default:"なし" }}</li>
+        <li>時間: {{ order.timestamp|date:"Y/m/d H:i:s" }}</li>
+        <li>完了状態: {{ order.is_completed|yesno:"完了,未完了" }}</li>
+    </ul>
+
+    <hr>
+    <a href="/ice">← アイス一覧へ戻る</a> |
+    <a href="/">役割選択へ戻る</a>
+</body>
+</html>
