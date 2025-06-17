@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='ShavedIceOrder',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('flavor', models.CharField(choices=[('いちご', 'いちご'), ('メロン', 'メロン'), ('ブルーハワイ', 'ブルーハワイ')], max_length=20)),
+                ('flavor', models.CharField(choices=[('いちご', 'いちご'), ('ゆず', 'ゆず'), ('ほうじ茶', 'ほうじ茶'), ('抹茶', '抹茶')], max_length=20)),
                 ('quantity', models.PositiveIntegerField()),
                 ('note', models.CharField(blank=True, max_length=100)),
                 ('is_completed', models.BooleanField(default=False)),

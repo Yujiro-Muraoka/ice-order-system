@@ -2,9 +2,10 @@ from django.db import models
 
 class ShavedIceOrder(models.Model):
     FLAVOR_CHOICES = [
+        ('抹茶', '抹茶'),
         ('いちご', 'いちご'),
-        ('メロン', 'メロン'),
-        ('ブルーハワイ', 'ブルーハワイ'),
+        ('ゆず', 'ゆず'),
+        ('ほうじ茶', 'ほうじ茶'),
     ]
 
     flavor = models.CharField(max_length=20, choices=FLAVOR_CHOICES)
