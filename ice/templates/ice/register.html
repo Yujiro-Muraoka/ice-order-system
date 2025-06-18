@@ -375,7 +375,10 @@
 </head>
 <body>
   <h1>アイス注文入力</h1>
-  <!-- 🍮 アフォガードプリンの個数選択 -->
+
+
+
+  <!-- 🍮 アフォガードプリンの個数選択 
 <label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">プリンの個数:</label>
 <select id="pudding-quantity" style="padding: 8px; margin-bottom: 12px;">
   <option value="1">1個</option>
@@ -385,7 +388,7 @@
   <option value="5">5個</option>
 </select>
 
-<!-- 🍮 追加ボタン（枠付き） -->
+
   <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
   <button onclick="addPudding()" style="
     background-color: #6B4226;
@@ -399,6 +402,9 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
   ">🍮 アフォガードプリンを追加</button>
 </div>
+
+-->
+
 <hr style="margin-top: 24px; margin-bottom: 24px;">
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
@@ -429,12 +435,15 @@
 
 
   <form onsubmit="event.preventDefault(); addIce();">
+    <!--
     <label>サイズ:</label>
     <div class="select-group">
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
+    -->
 </div>
 
+<!--
 <script>
 async function addIce() {
   const quantity = parseInt(document.getElementById('ice-quantity').value);
@@ -458,11 +467,38 @@ async function addIce() {
       })
     });
   }
-
   location.reload();
 }
-
 </script>
+-->
+<script>
+async function addIce() {
+  const quantity = parseInt(document.getElementById('ice-quantity').value);
+  if (!selected.flavor1) {
+    alert('アイスを選択してください。');
+    return;
+  }
+
+  for (let i = 0; i < quantity; i++) {
+    await fetch('/add_temp_ice/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        size: selected.size,
+        container: selected.container,
+        flavor1: selected.flavor1,
+        flavor2: selected.flavor2 || ''
+      })
+    });
+  }
+  location.reload();
+}
+</script>
+
+<!--
 <script>
 async function addPudding() {
   const quantity = parseInt(document.getElementById('pudding-quantity').value);
@@ -497,26 +533,30 @@ async function addPudding() {
 }
 
 </script>
+-->
 
-
+<!--
     <label>容器:</label>
 <div class="select-group">
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
 </div>
+-->
+
 <label>アイス（1つ目）:</label>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
-
+<!--
 <label>アイス（2つ目）※Wのみ:</label>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
+-->
 
 
     <br>
