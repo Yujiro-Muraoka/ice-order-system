@@ -1,35 +1,36 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .models import ShavedIceOrder
 
-# 仮オーダー追加・送信画面
+# views.py
+
 def shavedice_register(request):
+    print("--- shavedice_register ---")
+    temp_ice = request.session.get("shavedice_temp", [])
+    print("Session temp_ice (in register view):", temp_ice) # この出力
+    flavors = [f[0] for f in ShavedIceOrder.FLAVOR_CHOICES]
+    return render(request, "shavedice/shavedice_register.html", {
+        "temp_ice": temp_ice,
+        "flavors": flavors
+    })
+
+@csrf_exempt
+def add_temp_ice(request):
     if request.method == "POST":
-        if "add" in request.POST:
-            temp = request.session.get("shavedice_temp", [])
-            temp.append({
-                "flavor": request.POST.get("flavor"),
-                "quantity": int(request.POST.get("quantity", 1)),
-                "note": request.POST.get("note", "")
-            })
-            request.session["shavedice_temp"] = temp
-            return redirect("shavedice_register")
-
-        elif "submit" in request.POST:
-            temp = request.session.get("shavedice_temp", [])
-            for item in temp:
-                ShavedIceOrder.objects.create(
-                    flavor=item["flavor"],
-                    quantity=item["quantity"],
-                    note=item["note"]
-                )
-            request.session["shavedice_temp"] = []
-            return redirect("shavedice_register")
-
-    temp_orders = request.session.get("shavedice_temp", [])
-    return render(request, "shavedice/shavedice_register.html", {"temp_orders": temp_orders})
+        temp = request.session.get("shavedice_temp", [])
+        temp.append({
+            "size": "S",
+            "container": "cup",
+            "flavor1": request.POST.get("flavor1"),
+            "flavor2": None,
+            "is_pudding": False
+        })
+        request.session["shavedice_temp"] = temp
+        request.session.modified = True # ★この行を追加★
+        return JsonResponse({"status": "ok"})
 
 
-# 作成画面（キッチン側）
+
 def shavedice_kitchen(request):
-    orders = ShavedIceOrder.objects.filter(is_completed=False).order_by("created_at")
-    return render(request, "shavedice/shavedice_kitchen.html", {"orders": orders})
+    return render(request, "shavedice/shavedice_kitchen.html", {})
