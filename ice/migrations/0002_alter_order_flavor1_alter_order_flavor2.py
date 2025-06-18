@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='order',
             name='flavor1',
-            field=models.CharField(choices=[('jersey', 'ジャージー牛乳'), ('matcha', '抹茶'), ('mango', 'マンゴー'), ('mint', 'チョコミント'), ('blackbean', '黒豆'), ('saltcaramel', '塩キャラ'), ('strawberry', 'いちご'), ('strawmilk', 'いちごミルク'), ('idashio', '井田塩'), ('cassis', 'カシス'), ('chocolat', 'ショコラ'), ('sakura', 'さくらもち'), ('coffee', 'コーヒー'), ('lemon', 'レモン')], max_length=50),
+            field=models.CharField(choices=[('jersey', 'ジャージー牛乳'), ('matcha', '抹茶'), ('mango', 'マンゴー'), ('mint', 'チョコミント'), ('blackbean', '黒豆'), ('saltcaramel', '塩キャラ'), ('strawberry', 'いちご'), ('strawmilk', 'いちごミルク'), ('idashio', '井田塩'), ('cassis', 'カシス'), ('chocolat', 'ショコラ'), ('sakura', 'さくらもち'), ('coffee', 'コーヒー'), ('lemon', 'レモン'), ('hojicha', 'ほうじ茶'), ('yuzu', 'ゆず')], max_length=50),
         ),
         migrations.AlterField(
             model_name='order',
             name='flavor2',
-            field=models.CharField(blank=True, choices=[('jersey', 'ジャージー牛乳'), ('matcha', '抹茶'), ('mango', 'マンゴー'), ('mint', 'チョコミント'), ('blackbean', '黒豆'), ('saltcaramel', '塩キャラ'), ('strawberry', 'いちご'), ('strawmilk', 'いちごミルク'), ('idashio', '井田塩'), ('cassis', 'カシス'), ('chocolat', 'ショコラ'), ('sakura', 'さくらもち'), ('coffee', 'コーヒー'), ('lemon', 'レモン')], max_length=50, null=True),
+            field=models.CharField(blank=True, choices=[('jersey', 'ジャージー牛乳'), ('matcha', '抹茶'), ('mango', 'マンゴー'), ('mint', 'チョコミント'), ('blackbean', '黒豆'), ('saltcaramel', '塩キャラ'), ('strawberry', 'いちご'), ('strawmilk', 'いちごミルク'), ('idashio', '井田塩'), ('cassis', 'カシス'), ('chocolat', 'ショコラ'), ('sakura', 'さくらもち'), ('coffee', 'コーヒー'), ('lemon', 'レモン'), ('hojicha', 'ほうじ茶'), ('yuzu', 'ゆず')], max_length=50, null=True),
         ),
     ]

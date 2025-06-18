@@ -26,6 +26,8 @@ FLAVOR_CHOICES = [
     ('sakura', 'さくらもち'),
     ('coffee', 'コーヒー'),
     ('lemon', 'レモン'),
+    ('hojicha', 'ほうじ茶'),
+    ('yuzu', 'ゆず'),
 ]
 
 class Order(models.Model):
