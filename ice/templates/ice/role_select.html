@@ -48,13 +48,23 @@
 </head>
 <body>
     <h1>あなたの役割を選択してください</h1>
-<!-- 役割選択画面：新たに追加する部分 -->
+<!-- このかき氷はアイスを修正して作ったものである。 -->
 <div style="border: 2px solid #ccc; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-  <h2>🍨 アイス注文（かき氷練習用）</h2>
+  <h2>🍧 かき氷注文 🍧</h2>
   <form>
     <button formaction="/register" class="common-button">レジ担当</button><br>
-    <button formaction="/ice" class="common-button">アイス担当</button>
+    <button formaction="/ice" class="common-button">かき氷担当</button>
+    <!--
     <button formaction="/deshap" class="common-button">デシャップ担当</button>
+    -->
+  </form>
+</div>
+<!--
+<div style="border: 2px solid #ccc; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+  <h2>🍧 かき氷注文（開発中）</h2>
+  <form>
+    <button formaction="/shavedice/register" class="common-button">かき氷レジ</button><br>
+    <button formaction="/shavedice/kitchen" class="common-button">キッチン担当</button>
   </form>
 </div>
 
@@ -66,14 +76,6 @@
   </form>
 </div>
 
-<div>
-  <h2>🍧 かき氷注文（開発中）</h2>
-  <form>
-    <button formaction="/shavedice/register" class="common-button">かき氷レジ</button><br>
-    <button formaction="/shavedice/kitchen" class="common-button">キッチン担当</button>
-  </form>
-</div>
-
 
 <div>
   <h2>📱 モバイルオーダー（開発中）</h2>
@@ -82,6 +84,8 @@
   </form>
 </div>
 
+
+-->
 
     <div class="logout-bottom">
         <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>

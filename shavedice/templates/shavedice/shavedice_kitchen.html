@@ -144,6 +144,81 @@
       border-radius: 8px;
       cursor: pointer;
     }
+.order-card {
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.clip-id {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.clip-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 50%;
+  background-color: #eee;
+  color: #333;
+  font-weight: bold;
+  margin-left: 8px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.clip-badge.yellow {
+  background-color: #f1c40f;
+}
+
+.clip-badge.white {
+  background-color: #bdc3c7;
+}
+
+.status-line {
+  font-weight: bold;
+  color: #2e7d32;
+  margin-top: 4px;
+}
+
+.elapsed-time {
+  font-size: 14px;
+  color: #666;
+}
+
+.flavor-strong {
+  font-weight: bold;
+  font-size: 16px;
+  color: #444;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.complete-button {
+  margin-top: 12px;
+  width: 100%;
+  padding: 14px;
+  background-color: #2196F3;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.complete-button:hover {
+  background-color: #1976D2;
+  transform: scale(0.98);
+}
+
+
 @media screen and (max-width: 480px) {
   body {
     font-size: 18px;
@@ -188,79 +263,56 @@
   <h3>🧊 かき氷作成の流れ</h3>
   <ul>
     <li>🟢「作成OK」のオーダーから順に作成してください</li>
-    <li>📦「カップ」「コーン」や「サイズ」「種類」をよく確認してください</li>
+    <li>📦「種類」をよく確認してください</li>
     <li>✅ 完了後は「このオーダーを完了」ボタンを押してください</li>
     <li>⏱ 完了済みは30秒間表示されます</li>
-    <li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>
   </ul>
 <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 
 </div>
+{% if debug %}
+  <div style="background: #eee; border: 2px dashed #aaa; padding: 12px; margin-bottom: 16px;">
+    <h3>🛠 デバッグ情報</h3>
+    <p>受け取った grouped_orders:</p>
+    <pre>{{ grouped_orders|safe }}</pre>
 
-
-  {% for group_id, orders in grouped_orders.items %}
-<div class="order-card">
-<p class="clip-id">
-  🧾 オーダー番号:
-  <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
-    {{ orders.0.clip_number }}
-  </span>
-</p>
-
-
-  <p class="status-line">
-    状態:
-    {% if orders.0.status == 'ok' %}
-      🟢 作成OK
-    {% elif orders.0.status == 'stop' %}
-      🔴 STOP中
-      {% if orders.0.is_auto_stopped %}<span style="color: red;">（自動）</span>{% endif %}
-    {% endif %}
-  </p>
-
-  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
-{% if orders.0.note %}
-  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
-{% endif %}
-
-<ul>
-
-{% if pudding_count_active > 0 %}
-  <li style="font-weight: bold; color: #a52a2a;">
-    🍮 アフォガードプリン × {{ pudding_count_active }}個
-  </li>
+    <p>アクティブオーダー数: {{ active_count }}</p>
+    <p>現在時刻: {{ now }}</p>
+  </div>
 {% endif %}
 
 
-  {% for order in orders %}
-    {% if not order.is_pudding %}
-      <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
-        <span class="item-label">
-          {% if order.container == 'cup' %}カップ
-          {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
-        </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
-      </li>
+
+
+{% for group_id, orders in grouped_orders.items %}
+  <div class="order-card">
+    <p class="clip-id">
+      🧾 オーダー番号:
+      <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+        {{ orders.0.clip_number }}
+      </span>
+    </p>
+
+    <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+    {% if orders.0.note %}
+      <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
     {% endif %}
-  {% endfor %}
-</ul>
 
+    <ul>
+      {% for order in orders %}
+            <br>
+            <span class="flavor-strong">→ {{ order.flavor }}</span>
+          </li>
+      {% endfor %}
+    </ul>
 
-    {% if orders.0.status != 'stop' %}
-<form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
-  {% csrf_token %}
-  <button type="submit" class="complete-button">✅ このオーダーを完了</button>
-</form>
-
-    {% else %}
-      <p style="color: red; font-weight: bold; margin-top: 12px;">
-        🔒 STOP中のため完了できません
-      </p>
-    {% endif %}
+    <form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+    </form>
   </div>
 {% endfor %}
+
   <hr>
   <p>完了済み注文（30秒後に自動で非表示）</p>
 
@@ -277,27 +329,19 @@
 
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
 <ul>
-{% if pudding_count_completed > 0 %}
-  <li style="font-weight: bold; color: #a52a2a;">
-    🍮 アフォガードプリン × {{ pudding_count_completed }}個
-  </li>
-{% endif %}
+{% for order in orders %}
+  {% if not order.is_pudding %}
+    <li>
+      <span class="flavor-strong">
+        → {{ order.flavor }}
+        {% if order.flavor2 %}
+          ＋ {{ order.flavor2 }}
+        {% endif %}
+      </span>
+    </li>
+  {% endif %}
+{% endfor %}
 
-
-
-  {% for order in orders %}
-    {% if not order.is_pudding %}
-      <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
-        <span class="item-label">
-          {% if order.container == 'cup' %}カップ
-          {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
-        </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
-      </li>
-    {% endif %}
-  {% endfor %}
 </ul>
 
     </div>
@@ -310,6 +354,16 @@
   <div class="logout-bottom">
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
+
+  <ul>
+  {% for order in orders %}
+    <li>
+      <span class="flavor-strong">→ {{ order.flavor }}</span>
+      <a href="/detail/{{ order.id }}/" style="margin-left: 10px; font-size: 14px;">🔍 詳細</a>
+    </li>
+  {% endfor %}
+</ul>
+
 
 <script>
   function updateCountdowns() {

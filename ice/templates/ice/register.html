@@ -374,7 +374,7 @@
 
 </head>
 <body>
-  <h1>アイス注文入力</h1>
+  <h1>かき氷注文入力</h1>
 
 
 
@@ -421,7 +421,7 @@
 
 
 <!-- 🍨 アイスを追加ボタン（従来通り） -->
-<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">アイスの個数:</label>
+<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">かき氷の個数:</label>
 <select id="ice-quantity" style="padding: 8px; margin-bottom: 16px;">
   <option value="1">1個</option>
   <option value="2">2個</option>
@@ -429,7 +429,7 @@
   <option value="4">4個</option>
   <option value="5">5個</option>
 </select>
-<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスを追加</button>
+<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">かき氷を追加</button>
 
 
 
@@ -543,7 +543,7 @@ async function addPudding() {
 </div>
 -->
 
-<label>アイス（1つ目）:</label>
+<label>かき氷:</label>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
@@ -560,7 +560,7 @@ async function addPudding() {
 
 
     <br>
-    <button type="submit" class="add-button">アイスを追加</button>
+    <button type="submit" class="add-button">かき氷を追加</button>
   </form>
 
   {% if temp_ice %}
@@ -584,12 +584,15 @@ async function addPudding() {
   {% for ice in temp_ice %}
     {% if not ice.is_pudding %}
       <li style="margin-bottom: 6px;">
+
+        <!--
         <div>
           <strong class="item-label">サイズ:</strong>
           <span class="item-value">{{ ice.size }}</span> ／
           <strong class="item-label">容器:</strong>
           <span class="item-value">{{ container_map|get_item:ice.container }}</span>
         </div>
+      -->
         <div>
           <strong class="item-label">アイス:</strong>
           <span class="item-value">
