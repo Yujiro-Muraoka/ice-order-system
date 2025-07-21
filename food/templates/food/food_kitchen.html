@@ -268,13 +268,17 @@
       <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
         {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
       </span>
+      <form method="post" action="/food/complete_order/{{ order.id }}/" style="display:inline; margin-left:8px;">
+        {% csrf_token %}
+        <button type="submit" style="font-size:13px; padding:4px 10px; border-radius:6px; background:#4CAF50; color:white; border:none; cursor:pointer;">この注文だけ完了</button>
+      </form>
     </li>
   {% endfor %}
 </ul>
 
 
     {% if orders.0.status != 'stop' %}
-<form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
+<form method="post" action="/food/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
   {% csrf_token %}
   <button type="submit" class="complete-button">✅ このオーダーを完了</button>
 </form>
@@ -302,27 +306,14 @@
 
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
 <ul>
-{% if pudding_count_completed > 0 %}
-  <li style="font-weight: bold; color: #a52a2a;">
-    🍮 アフォガードプリン × {{ pudding_count_completed }}個
+{% for order in orders %}
+  <li>
+    <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+    <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+      {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+    </span>
   </li>
-{% endif %}
-
-
-
-  {% for order in orders %}
-    {% if not order.is_pudding %}
-      <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
-        <span class="item-label">
-          {% if order.container == 'cup' %}カップ
-          {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
-        </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
-      </li>
-    {% endif %}
-  {% endfor %}
+{% endfor %}
 </ul>
 
     </div>

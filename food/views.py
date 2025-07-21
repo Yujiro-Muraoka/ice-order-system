@@ -199,6 +199,23 @@ def complete_food_group(request, group_id):
 
 
 @csrf_exempt
+def complete_food_order(request, order_id):
+    """
+    指定IDの注文を個別に完了にするビュー
+    """
+    if request.method == 'POST':
+        now = timezone.now()
+        try:
+            order = FoodOrder.objects.get(id=order_id)
+            order.is_completed = True
+            order.completed_at = now
+            order.save()
+        except FoodOrder.DoesNotExist:
+            pass
+    return redirect('food_kitchen')
+
+
+@csrf_exempt
 def delete_temp_food(request, index):
     """
     仮注文リストから指定インデックスの注文を削除するビュー

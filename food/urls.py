@@ -50,4 +50,7 @@ urlpatterns = [
     # 仮注文をデータベースに保存し、キッチンに送信
     # クリップ情報と備考も同時に保存
     path('submit_order_group/', views.submit_order_group, name='submit_order_group'),
+
+    # 個別注文完了処理
+    path('complete_order/<int:order_id>/', views.complete_food_order, name='complete_food_order'),
 ]
