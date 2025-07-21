@@ -218,6 +218,20 @@
   transform: scale(0.98);
 }
 
+.flavor-label {
+  font-size: 13px;
+  color: #888;
+  font-weight: normal;
+  margin-right: 4px;
+  letter-spacing: 0.5px;
+}
+.flavor-strong {
+  font-size: 20px;
+  color: #b85c00;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
 
 @media screen and (max-width: 480px) {
   body {
@@ -254,6 +268,47 @@
   </style>
 </head>
 <body>
+    <audio id="notify-audio" src="{% static 'orders/sounds/FOGバレ音.mp3' %}"></audio>
+    <audio id="silent-audio" src="{% static 'orders/sounds/silent.mp3' %}"></audio>
+    <script>
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        const silent = document.getElementById('silent-audio');
+        if (silent) {
+          silent.play().catch(()=>{});
+        }
+        audioUnlocked = true;
+      }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('DOMContentLoaded', function() {
+      // 未完了オーダー数を取得
+      const nowCount = Number(document.querySelector('p').textContent.replace(/[^0-9]/g, ''));
+      const prevCount = Number(localStorage.getItem('shavedice_active_count') || 0);
+      // 新規オーダーが入った時だけ音を鳴らす
+      if (nowCount > prevCount) {
+        const audio = document.getElementById('notify-audio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play();
+        }
+      }
+      // 今回の値を保存
+      localStorage.setItem('shavedice_active_count', nowCount);
+    });
+    setInterval(() => {
+      localStorage.setItem('shavedice_kitchen_scroll', window.scrollY);
+      sessionStorage.setItem('scrollPos', window.scrollY);
+      location.reload();
+    }, 3000);
+    window.addEventListener('load', () => {
+      const scroll = localStorage.getItem('shavedice_kitchen_scroll');
+      if (scroll) {
+        window.scrollTo(0, parseInt(scroll));
+      }
+    });
+    </script>
   <h2>かき氷注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
@@ -298,7 +353,8 @@
 <ul>
   {% for order in orders %}
     <li>
-      <span class="flavor-strong">フレーバー→ {{ order.flavor }}</span>
+      <span class="flavor-label">フレーバー</span>
+      <span class="flavor-strong">{{ order.flavor }}</span>
     </li>
   {% endfor %}
 </ul>
@@ -364,15 +420,9 @@
   }
 </script>
 <script>
-setInterval(() => {
-  localStorage.setItem('shavedice_kitchen_scroll', window.scrollY);
-  location.reload();
-}, 3000);
-</script>
-<script>
   window.onload = function() {
     const scroll = localStorage.getItem('shavedice_kitchen_scroll');
-    if (scroll) {
+    if (scroll !== null) {
       window.scrollTo(0, parseInt(scroll));
     }
   };

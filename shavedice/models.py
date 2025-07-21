@@ -21,7 +21,6 @@ class ShavedIceOrder(models.Model):
         ('抹茶', '抹茶'),
         ('いちご', 'いちご'),
         ('ゆず', 'ゆず'),
-        ('ほうじ茶', 'ほうじ茶'),
     ]
     
     flavor = models.CharField(max_length=50, choices=FLAVOR_CHOICES)  # フレーバー

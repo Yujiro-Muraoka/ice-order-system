@@ -206,28 +206,34 @@ function unlockAudio() {
   }
 }
 document.body.addEventListener('click', unlockAudio, { once: true });
-
-let prevCount = Number(localStorage.getItem('ice_active_count') || 0);
-setInterval(async () => {
-  try {
-    const res = await fetch('/ice/api/active_count/');
-    if (!res.ok) return;
-    const data = await res.json();
-    const nowCount = data.active_count;
-    if (nowCount > prevCount) {
-      const audio = document.getElementById('notify-audio');
-      if (audio) {
-        audio.currentTime = 0;
-        audio.play();
-      }
+window.addEventListener('DOMContentLoaded', function() {
+  // 未完了オーダー数を取得
+  const nowCount = Number(document.getElementById('active-count').textContent.replace(/[^0-9]/g, ''));
+  const prevCount = Number(localStorage.getItem('ice_active_count') || 0);
+  // 新規オーダーが入った時だけ音を鳴らす
+  if (nowCount > prevCount && audioUnlocked) {
+    const audio = document.getElementById('notify-audio');
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
     }
-    prevCount = nowCount;
-    localStorage.setItem('ice_active_count', nowCount);
-  } catch (e) {}
+  }
+  // 今回の値を保存
+  localStorage.setItem('ice_active_count', nowCount);
+});
+setInterval(() => {
+  localStorage.setItem('ice_scroll', window.scrollY);
+  location.reload();
 }, 3000);
+window.onload = function() {
+  const scroll = localStorage.getItem('ice_scroll');
+  if (scroll !== null) {
+    window.scrollTo(0, parseInt(scroll));
+  }
+};
     </script>
   <h2>アイスクリーム注文一覧（3秒ごとに更新）</h2>
-  <p>未完了オーダー数: {{ active_count }}</p>
+  <p id="active-count">未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -410,6 +416,20 @@ setInterval(async () => {
       }
     }
   });
+</script>
+
+<script>
+setInterval(() => {
+  localStorage.setItem('ice_scroll', window.scrollY);
+  location.reload();
+}, 3000);
+
+window.onload = function() {
+  const scroll = localStorage.getItem('ice_scroll');
+  if (scroll !== null) {
+    window.scrollTo(0, parseInt(scroll));
+  }
+};
 </script>
 
 </body>

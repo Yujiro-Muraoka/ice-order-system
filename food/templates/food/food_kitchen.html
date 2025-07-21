@@ -179,6 +179,36 @@
   </style>
 </head>
 <body>
+    <audio id="notify-audio" src="{% static 'orders/sounds/FOGバレ音.mp3' %}"></audio>
+    <audio id="silent-audio" src="{% static 'orders/sounds/silent.mp3' %}"></audio>
+    <script>
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (!audioUnlocked) {
+        const silent = document.getElementById('silent-audio');
+        if (silent) {
+          silent.play().catch(()=>{});
+        }
+        audioUnlocked = true;
+      }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('DOMContentLoaded', function() {
+      // 未完了オーダー数を取得
+      const nowCount = Number(document.querySelector('p:first-of-type').textContent.replace(/[^0-9]/g, ''));
+      const prevCount = Number(localStorage.getItem('food_active_count') || 0);
+      // 新規オーダーが入った時だけ音を鳴らす
+      if (nowCount > prevCount) {
+        const audio = document.getElementById('notify-audio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play();
+        }
+      }
+      // 今回の値を保存
+      localStorage.setItem('food_active_count', nowCount);
+    });
+    </script>
   <h2>フード注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
@@ -329,8 +359,6 @@
 
 <script>
 setInterval(() => {
-  const helpVisible = document.getElementById('helpModal').style.display === 'block';
-  localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
   sessionStorage.setItem('scrollPos', window.scrollY);
   location.reload();
 }, 3000);

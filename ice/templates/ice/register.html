@@ -465,9 +465,13 @@ async function addIce() {
     alert('サイズ・容器・アイス（1つ目）を選択してください。');
     return;
   }
-
+  if (selected.size === 'W' && !selected.flavor2) {
+    alert('ダブルサイズの場合は2つ目のアイスも選んでください。');
+    return;
+  }
+  let hasError = false;
   for (let i = 0; i < quantity; i++) {
-    await fetch('/add_temp_ice/', {
+    const res = await fetch('/add_temp_ice/', {
       method: 'POST',
       headers: {
         'X-CSRFToken': '{{ csrf_token }}',
@@ -480,8 +484,16 @@ async function addIce() {
         flavor2: selected.flavor2 || ''
       })
     });
+    if (!res.ok) {
+      hasError = true;
+      const data = await res.json().catch(() => ({}));
+      alert('仮注文の追加に失敗しました: ' + (data.message || res.status));
+      break;
+    }
   }
-  location.reload();
+  if (!hasError) {
+    location.reload();
+  }
 }
 </script>
 

@@ -1,0 +1,157 @@
+/* muji_base.css - 無印良品イメージの共通デザインCSS（改良版） */
+body {
+  background: #f7f6f2;
+  font-family: 'Noto Sans JP', 'Yu Gothic', '游ゴシック', 'Meiryo', sans-serif;
+  color: #3a2e23;
+  margin: 0;
+  padding: 0 0 40px 0;
+}
+
+h1, h2, h3 {
+  font-family: 'Noto Sans JP', 'Yu Gothic', '游ゴシック', 'Meiryo', sans-serif;
+  color: #6b4f2a;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+
+.card, .order-card, .ice-list {
+  background: #f5f5ef;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.07);
+  padding: 18px 16px;
+  margin-bottom: 20px;
+  border: 1.5px solid #e0ded7;
+}
+
+.menu-btn, .add-button, .complete-button, .clip-btn, .qty-btn, .logout-bottom a, .submit-button {
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 17px;
+  box-shadow: 0 1px 4px rgba(139, 115, 85, 0.08);
+  border: none;
+  margin-bottom: 8px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  min-width: 80px;
+  min-height: 38px;
+  padding: 8px 18px;
+  display: inline-block;
+}
+.menu-btn, .add-button, .complete-button, .submit-button {
+  background: #ede9e1;
+  color: #3a2e23;
+  border: 1.5px solid #bfa980;
+  margin-right: 8px;
+}
+.menu-btn.selected, .add-button:hover, .complete-button:hover, .submit-button:hover {
+  background: #bfa980;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.15);
+}
+.clip-btn {
+  background: #f0ede7;
+  color: #6b4f2a;
+  border: 1.5px solid #e0ded7;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  min-width: 60px;
+  min-height: 36px;
+}
+.clip-btn.selected {
+  background: #bfa980;
+  color: #fff;
+}
+.qty-btn {
+  background: #ede9e1;
+  color: #6b4f2a;
+  border: 1.5px solid #e0ded7;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  margin: 0 8px;
+}
+.qty-btn:active {
+  background: #bfa980;
+  color: #fff;
+}
+.ice-list, .order-card {
+  border: 1.5px solid #e0ded7;
+}
+ul, li {
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  margin: 0 0 8px 0;
+  padding: 0;
+}
+input, textarea, select {
+  border-radius: 8px;
+  border: 1.5px solid #e0ded7;
+  padding: 10px;
+  font-size: 16px;
+  background: #f7f6f2;
+  color: #3a2e23;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+.logout-bottom a {
+  background: #a58c6f;
+  color: #fff;
+  padding: 10px 32px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 1px 4px rgba(139, 115, 85, 0.08);
+  letter-spacing: 1px;
+}
+.logout-bottom a:hover {
+  background: #6b4f2a;
+  color: #fffbe7;
+}
+#helpButton {
+  background: #ede9e1;
+  color: #6b4f2a;
+  border-radius: 30px;
+  font-size: 18px;
+  padding: 8px 18px;
+  box-shadow: 0 1px 4px rgba(139, 115, 85, 0.08);
+  border: 1.5px solid #bfa980;
+  margin-bottom: 12px;
+}
+#helpButton:hover {
+  background: #bfa980;
+  color: #fff;
+}
+#helpModal {
+  background: #f5f5ef;
+  border: 1.5px solid #e0ded7;
+  border-radius: 12px;
+  color: #3a2e23;
+}
+.clip-badge.yellow {
+  background: #e6d3b3;
+  color: #6b4f2a;
+}
+.clip-badge.white {
+  background: #fffbe7;
+  color: #6b4f2a;
+  border: 1.5px solid #e0ded7;
+}
+hr {
+  border: none;
+  border-top: 1.5px dashed #e0ded7;
+  margin: 24px 0;
+}
+::-webkit-input-placeholder { color: #bfa980; }
+::-moz-placeholder { color: #bfa980; }
+:-ms-input-placeholder { color: #bfa980; }
+::placeholder { color: #bfa980; }
+
+/* レイアウト調整 */
+.quantity-selector { margin-bottom: 18px; }
+.menu-btn, .add-button, .complete-button, .submit-button { margin-bottom: 12px; }
+.clip-color-row, .clip-number-grid { margin-bottom: 10px; }
+.ice-list { margin-top: 24px; }
+.logout-bottom { text-align: center; margin-top: 36px; } 

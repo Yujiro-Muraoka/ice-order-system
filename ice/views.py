@@ -484,3 +484,10 @@ def mobile_order_complete(request):
     """モバイル注文完了画面を表示"""
     return render(request, 'ice/mobile_complete.html')
 
+
+def api_active_count(request):
+    """未完了オーダー数を返すAPI"""
+    from .models import Order
+    active_count = Order.objects.filter(is_completed=False).count()
+    return JsonResponse({'active_count': active_count})
+

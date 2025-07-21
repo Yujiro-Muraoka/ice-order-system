@@ -28,6 +28,16 @@
   </style>
 </head>
 <body>
+  <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+  <script>
+  window.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('role-audio');
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
+    }
+  });
+  </script>
   <h1>📱 モバイルオーダー（開発中）</h1>
   <p>この機能は現在開発中です。しばらくお待ちください。</p>
   <a href="/">← 役割選択へ戻る</a>

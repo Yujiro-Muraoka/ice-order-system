@@ -15,6 +15,16 @@
   </style>
 </head>
 <body>
+    <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('role-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+    });
+    </script>
   <h1>✅ ご注文を受け付けました！</h1>
   <p>ご注文ありがとうございました。</p>
   <a href="/mobile/order">← もう一度注文する</a><br>

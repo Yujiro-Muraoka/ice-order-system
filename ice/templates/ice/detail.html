@@ -5,6 +5,16 @@
     <title>注文詳細</title>
 </head>
 <body>
+    <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('role-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+    });
+    </script>
     <h1>注文詳細</h1>
     <ul>
         <li>注文ID: {{ order.id }}</li>

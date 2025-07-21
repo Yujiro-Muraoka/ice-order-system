@@ -24,4 +24,5 @@ urlpatterns = [
     path('mobile/order/', views.mobile_order_entry, name='mobile_order_entry'),
     path('mobile/submit/', views.submit_mobile_order, name='submit_mobile_order'),
     path('mobile/complete/', views.mobile_order_complete, name='mobile_order_complete'),
+    path('api/active_count/', views.api_active_count, name='api_active_count'),
 ]

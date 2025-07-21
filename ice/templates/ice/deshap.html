@@ -153,6 +153,16 @@
   </style>
 </head>
 <body>
+    <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('role-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+    });
+    </script>
   <h2>デシャップ担当画面（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
