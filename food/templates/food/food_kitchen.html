@@ -409,14 +409,15 @@ window.addEventListener('load', () => {
 
 <script>
   // 自動更新後、ヘルプが開いていたら再表示
-  window.addEventListener('load', () => {
+  window.onload = function() {
     if (localStorage.getItem('helpVisible') === 'true') {
-      const modal = document.getElementById('helpModal');
-      if (modal) {
-        modal.style.display = 'block';
-      }
+      document.getElementById('helpModal').style.display = 'block';
+    } else {
+      document.getElementById('helpModal').style.display = 'none';
     }
-  });
+    // デフォルト選択
+    document.getElementById('karaageBtn').classList.add('selected');
+  };
 </script>
 
 </body>

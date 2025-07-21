@@ -419,6 +419,17 @@ window.onload = function() {
 </script>
 
 <script>
+function openHelp() {
+  document.getElementById('helpModal').style.display = 'block';
+  localStorage.setItem('helpVisible', 'true');
+}
+function closeHelp() {
+  document.getElementById('helpModal').style.display = 'none';
+  localStorage.setItem('helpVisible', 'false');
+}
+</script>
+
+<script>
 setInterval(() => {
   localStorage.setItem('ice_scroll', window.scrollY);
   location.reload();
@@ -428,6 +439,10 @@ window.onload = function() {
   const scroll = localStorage.getItem('ice_scroll');
   if (scroll !== null) {
     window.scrollTo(0, parseInt(scroll));
+  }
+  // helpModalの初期表示（初回のみ）
+  if (localStorage.getItem('helpVisible') === 'true') {
+    document.getElementById('helpModal').style.display = 'block';
   }
 };
 </script>
