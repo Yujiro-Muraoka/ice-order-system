@@ -179,20 +179,20 @@
   </style>
 </head>
 <body>
-  <h2>かき氷注文一覧（3秒ごとに更新）</h2>
+  <h2>アイスクリーム注文一覧（3秒ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
-  <h3>🧊 かき氷作成の流れ</h3>
+  <h3>🍦 アイスクリーム作成の流れ</h3>
   <ul>
     <li>🟢「作成OK」のオーダーから順に作成してください</li>
     <li>📦「種類」をよく確認してください</li>
-    <!--<li>📦「カップ」「コーン」や「サイズ」「種類」をよく確認してください</li>-->
+    <li>📦「カップ」「コーン」や「サイズ」「種類」をよく確認してください</li>
     <li>✅ 完了後は「このオーダーを完了」ボタンを押してください</li>
     <li>⏱ 完了済みは30秒間表示されます</li>
-    <!--<li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>-->
+    <li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>
   </ul>
 <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 
@@ -208,7 +208,7 @@
   </span>
 </p>
 
-<!--
+
   <p class="status-line">
     状態:
     {% if orders.0.status == 'ok' %}
@@ -218,7 +218,7 @@
       {% if orders.0.is_auto_stopped %}<span style="color: red;">（自動）</span>{% endif %}
     {% endif %}
   </p>
--->
+
 
   <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
 {% if orders.0.note %}
@@ -292,14 +292,15 @@
   {% for order in orders %}
     {% if not order.is_pudding %}
       <li>
-        <!--
+      
+        
         <span class="item-label">{{ order.size }}サイズ</span>｜
         <span class="item-label">
           {% if order.container == 'cup' %}カップ
           {% elif order.container == 'cone' %}コーン
           {% else %}{{ order.container }}{% endif %}
         </span><br>
-      -->
+        
         <span class="flavor-strong">フレーバー→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
       </li>
     {% endif %}
@@ -340,13 +341,18 @@
 
 <script>
 setInterval(() => {
-  const helpVisible = document.getElementById('helpModal').style.display === 'block';
-  localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
+  localStorage.setItem('ice_scroll', window.scrollY);
   location.reload();
 }, 3000);
 </script>
-
-
+<script>
+  window.onload = function() {
+    const scroll = localStorage.getItem('ice_scroll');
+    if (scroll) {
+      window.scrollTo(0, parseInt(scroll));
+    }
+  };
+</script>
 
 <script>
   function openHelp() {

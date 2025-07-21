@@ -226,6 +226,25 @@
       outline: none !important;
     }
 
+    .qty-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      line-height: 1;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qty-btn:active {
+      background: #e0e0e0;
+    }
+
   </style>
   <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -374,19 +393,18 @@
 
 </head>
 <body>
-  <h1>🍧かき氷注文入力🍧</h1>
+  <h1>🍦アイスクリーム注文入力🍦</h1>
 
 
 
-  <!-- 🍮 アフォガードプリンの個数選択 
+   🍮 アフォガードプリンの個数選択（新UI）
 <label for="pudding-quantity" style="display:block; margin-top: 16px; font-weight: bold;">プリンの個数:</label>
-<select id="pudding-quantity" style="padding: 8px; margin-bottom: 12px;">
-  <option value="1">1個</option>
-  <option value="2">2個</option>
-  <option value="3">3個</option>
-  <option value="4">4個</option>
-  <option value="5">5個</option>
-</select>
+<div class="quantity-selector" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+  <button type="button" class="qty-btn" onclick="changeQty(-1, 'pudding-quantity', 'pudding-quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">−</button>
+  <span id="pudding-quantity-value" style="font-size: 20px; min-width: 24px; text-align: center;">1</span>個
+  <button type="button" class="qty-btn" onclick="changeQty(1, 'pudding-quantity', 'pudding-quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">＋</button>
+  <input type="hidden" id="pudding-quantity" value="1">
+</div>
 
 
   <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
@@ -403,49 +421,42 @@
   ">🍮 アフォガードプリンを追加</button>
 </div>
 
--->
 
 <hr style="margin-top: 24px; margin-bottom: 24px;">
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
-  <h3>🧾 レジ操作ガイド</h3>
+  <h3>🧾 操作ガイド</h3>
   <ul>
-    <li>フレーバーを選択してください</li>
-    <!--<li>サイズ、容器、フレーバーを選択してください</li>-->
-    <li>「かき氷を追加」で仮注文に追加されます</li>
-    <li>全て追加したら「注文を確定」を押してください</li>
-    <li>クリップ番号と色も忘れずに設定してください</li>
+    <li>🍦「サイズ」「容器」「アイスクリーム（1つ目）」を選択してください</li>
+    <li>🍨 ダブルの場合は「アイスクリーム（2つ目）」も選択してください</li>
+    <li>➕「アイスクリームを追加」ボタンで仮注文リストに追加されます</li>
+    <li>✅ すべて追加したら「注文を確定」ボタンで送信してください</li>
+    <li>🟡⚪️ クリップ番号と色も必ず選択してください</li>
   </ul>
   <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
 
 
 
-<!-- 🍨 アイスを追加ボタン（従来通り） -->
-<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">かき氷の個数:(一種類ずつ🙇)</label>
-<select id="ice-quantity" style="padding: 8px; margin-bottom: 16px;">
-  <option value="1">1個</option>
-  <option value="2">2個</option>
-  <option value="3">3個</option>
-  <option value="4">4個</option>
-  <option value="5">5個</option>
-</select>
+<!-- 🍨 アイスクリームの個数選択（新UI） -->
+<label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">アイスクリームの個数:(一種類ずつ🙇)</label>
+<div class="quantity-selector" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+  <button type="button" class="qty-btn" onclick="changeQty(-1, 'ice-quantity', 'quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">−</button>
+  <span id="quantity-value" style="font-size: 20px; min-width: 24px; text-align: center;">1</span>個
+  <button type="button" class="qty-btn" onclick="changeQty(1, 'ice-quantity', 'quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">＋</button>
+  <input type="hidden" id="ice-quantity" value="1">
+</div>
 
-<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">かき氷を追加</button>
-
-
+<button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">アイスクリームを追加</button>
 
 
   <form onsubmit="event.preventDefault(); addIce();">
-    <!--
     <label>サイズ:</label>
     <div class="select-group">
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
-    -->
-</div>
+    </div>
 
-<!--
 <script>
 async function addIce() {
   const quantity = parseInt(document.getElementById('ice-quantity').value);
@@ -472,35 +483,17 @@ async function addIce() {
   location.reload();
 }
 </script>
--->
-<script>
-async function addIce() {
-  const quantity = parseInt(document.getElementById('ice-quantity').value);
-  if (!selected.flavor1) {
-    alert('アイスを選択してください。');
-    return;
-  }
 
-  for (let i = 0; i < quantity; i++) {
-    await fetch('/add_temp_ice/', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        size: selected.size,
-        container: selected.container,
-        flavor1: selected.flavor1,
-        flavor2: selected.flavor2 || ''
-      })
-    });
-  }
-  location.reload();
+<script>
+function changeQty(delta, inputId, displayId) {
+  const min = 1, max = 5;
+  let val = parseInt(document.getElementById(inputId).value);
+  val = Math.max(min, Math.min(max, val + delta));
+  document.getElementById(inputId).value = val;
+  document.getElementById(displayId).textContent = val;
 }
 </script>
 
-<!--
 <script>
 async function addPudding() {
   const quantity = parseInt(document.getElementById('pudding-quantity').value);
@@ -535,34 +528,28 @@ async function addPudding() {
 }
 
 </script>
--->
 
-<!--
     <label>容器:</label>
 <div class="select-group">
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
 </div>
--->
 
-<label>かき氷:</label>
+<label>アイスクリーム:</label>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
-<!--
 <label>アイス（2つ目）※Wのみ:</label>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
--->
-
 
     <br>
-    <button type="submit" class="add-button">かき氷を追加</button>
+    <button type="submit" class="add-button">アイスクリームを追加</button>
   </form>
 
   {% if temp_ice %}
@@ -587,14 +574,12 @@ async function addPudding() {
     {% if not ice.is_pudding %}
       <li style="margin-bottom: 6px;">
 
-        <!--
         <div>
           <strong class="item-label">サイズ:</strong>
           <span class="item-value">{{ ice.size }}</span> ／
           <strong class="item-label">容器:</strong>
           <span class="item-value">{{ container_map|get_item:ice.container }}</span>
         </div>
-      -->
         <div>
           <strong class="item-label">アイス:</strong>
           <span class="item-value">

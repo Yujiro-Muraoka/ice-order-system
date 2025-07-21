@@ -177,6 +177,24 @@
       margin-top: 8px;
       margin-bottom: 16px;
     }
+    .qty-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      line-height: 1;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qty-btn:active {
+      background: #e0e0e0;
+    }
     #helpButton {
       position: fixed;
       top: 10px;
@@ -291,12 +309,12 @@
 
 
   <script>
-    selected = {}; // ★変更後★
+    var selected = {};
     function selectOption(group, value, button) {
       selected[group] = value;
+      if(group === 'flavor') selected.flavor = value;
       document.querySelectorAll(`[data-group="${group}"]`).forEach(btn => btn.classList.remove('selected'));
       button.classList.add('selected');
-      if (group === 'size') toggleFlavor2();
     }
     function selectClipColor(color, button) {
       document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
@@ -352,33 +370,32 @@
 <hr style="margin-top: 24px; margin-bottom: 24px;">
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
-  <h3>🧾 レジ操作ガイド</h3>
+  <h3>🧾 操作ガイド</h3>
   <ul>
-    <li>サイズ、容器、フレーバーを選択してください</li>
-    <li>「かき氷を追加」で仮注文に追加されます</li>
-    <li>全て追加したら「注文を確定」を押してください</li>
-    <li>クリップ番号と色も忘れずに設定してください</li>
+    <li>🍧 お好きなかき氷のフレーバーを選択してください</li>
+    <li>➕「かき氷を追加」ボタンで仮注文リストに追加されます</li>
+    <li>✅ すべて追加したら「注文を確定」ボタンで送信してください</li>
+    <li>🟡⚪️ クリップ番号と色も必ず選択してください</li>
   </ul>
   <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
 
 
 
-<!-- 🍨 アイスを追加ボタン（従来通り） -->
+<!-- 🍨 かき氷の個数選択（新UI） -->
 <label for="ice-quantity" style="display:block; margin-top: 20px; font-weight: bold;">かき氷の個数:</label>
-<select id="ice-quantity" style="padding: 8px; margin-bottom: 16px;">
-  <option value="1">1個</option>
-  <option value="2">2個</option>
-  <option value="3">3個</option>
-  <option value="4">4個</option>
-  <option value="5">5個</option>
-</select>
+<div class="quantity-selector" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+  <button type="button" class="qty-btn" onclick="changeQty(-1, 'ice-quantity', 'quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">−</button>
+  <span id="quantity-value" style="font-size: 20px; min-width: 24px; text-align: center;">1</span>個
+  <button type="button" class="qty-btn" onclick="changeQty(1, 'ice-quantity', 'quantity-value')" style="font-size: 22px; width: 40px; height: 40px;">＋</button>
+  <input type="hidden" id="ice-quantity" value="1">
+</div>
 <button onclick="addIce()" class="add-button" style="margin-bottom: 16px;">かき氷を追加</button>
 
 <label>かき氷:</label>
 <div class="flavor-grid">
-  {% for flavor in flavors %}
-    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '{{ flavor }}', this)">{{ flavor }}</button>
+  {% for value, label in flavor_choices %}
+    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '{{ value }}', this)">{{ label }}</button>
   {% endfor %}
 </div>
 <form>
@@ -387,7 +404,7 @@
 </form>
 
   {% if temp_ice %}
-  <form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
+  <form method="post" action="/shavedice/submit_order_group/" onsubmit="return validateClipSelection();">
     {% csrf_token %}
 
 
@@ -465,28 +482,31 @@
     return;
   }
 
-  const headers = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'X-CSRFToken': '{{ csrf_token }}'
-  };
-
   const quantity = parseInt(document.getElementById('ice-quantity').value);
 
   for (let i = 0; i < quantity; i++) {
-    const params = new URLSearchParams({
-      flavor: selected.flavor
-    });
-
-    const res = await fetch('/add_temp_ice/', {
+    const formData = new FormData();
+    formData.append('flavor', selected.flavor.trim());
+    const res = await fetch('/shavedice/add_temp_ice/', {
       method: 'POST',
-      headers: headers,
-      body: params.toString()
+      body: formData
     });
-
-    console.log("FETCH STATUS", res.status);
+    if (!res.ok) {
+      const text = await res.text();
+      alert('追加失敗: ' + res.status + '\n' + text);
+    }
   }
 
   location.reload();
+}
+</script>
+<script>
+function changeQty(delta, inputId, displayId) {
+  const min = 1, max = 5;
+  let val = parseInt(document.getElementById(inputId).value);
+  val = Math.max(min, Math.min(max, val + delta));
+  document.getElementById(inputId).value = val;
+  document.getElementById(displayId).textContent = val;
 }
 </script>
 

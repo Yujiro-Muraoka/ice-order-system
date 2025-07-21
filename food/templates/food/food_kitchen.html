@@ -198,7 +198,7 @@
 </div>
 
 
-  {% for group_id, orders in grouped_orders.items %}
+  {% for group_id, orders in active_orders.items %}
 <div class="order-card">
 <p class="clip-id">
   🧾 オーダー番号:
@@ -233,17 +233,12 @@
 
 
   {% for order in orders %}
-    {% if not order.is_pudding %}
-      <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
-        <span class="item-label">
-          {% if order.container == 'cup' %}カップ
-          {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
-        </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
-      </li>
-    {% endif %}
+    <li>
+      <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+      <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+        {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+      </span>
+    </li>
   {% endfor %}
 </ul>
 
@@ -336,10 +331,18 @@
 setInterval(() => {
   const helpVisible = document.getElementById('helpModal').style.display === 'block';
   localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
+  sessionStorage.setItem('scrollPos', window.scrollY);
   location.reload();
 }, 3000);
-</script>
 
+window.addEventListener('load', () => {
+  const pos = sessionStorage.getItem('scrollPos');
+  if (pos !== null) {
+    window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
+    sessionStorage.removeItem('scrollPos');
+  }
+});
+</script>
 
 
 <script>

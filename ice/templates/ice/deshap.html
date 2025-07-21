@@ -195,11 +195,11 @@
   {% for order in orders %}
     {% if not order.is_pudding %}
       <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
+        <span class="item-label">{{ order.size|default:"-" }}サイズ</span>｜
         <span class="item-label">
           {% if order.container == 'cup' %}カップ
           {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
+          {% else %}-{% endif %}
         </span><br>
         <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
       </li>
@@ -241,11 +241,11 @@
   {% for order in orders %}
     {% if not order.is_pudding %}
       <li>
-        <span class="item-label">{{ order.size }}サイズ</span>｜
+        <span class="item-label">{{ order.size|default:"-" }}サイズ</span>｜
         <span class="item-label">
           {% if order.container == 'cup' %}カップ
           {% elif order.container == 'cone' %}コーン
-          {% else %}{{ order.container }}{% endif %}
+          {% else %}-{% endif %}
         </span><br>
         <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
       </li>
@@ -287,10 +287,17 @@
 
 <script>
 setInterval(() => {
-  const helpVisible = document.getElementById('helpModal').style.display === 'block';
-  localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
+  localStorage.setItem('ice_deshap_scroll', window.scrollY);
   location.reload();
 }, 3000);
+</script>
+<script>
+  window.onload = function() {
+    const scroll = localStorage.getItem('ice_deshap_scroll');
+    if (scroll) {
+      window.scrollTo(0, parseInt(scroll));
+    }
+  };
 </script>
 
 <script>

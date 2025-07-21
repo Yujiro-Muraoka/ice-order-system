@@ -260,59 +260,61 @@
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
-  <h3>🧊 かき氷作成の流れ</h3>
+  <h3>🍧 かき氷作成の流れ</h3>
   <ul>
     <li>🟢「作成OK」のオーダーから順に作成してください</li>
-    <li>📦「種類」をよく確認してください</li>
+    <li>📦「フレーバー」をよく確認してください</li>
     <li>✅ 完了後は「このオーダーを完了」ボタンを押してください</li>
     <li>⏱ 完了済みは30秒間表示されます</li>
+    <li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>
   </ul>
-<button id="closeHelp" onclick="closeHelp()">閉じる</button>
-
+  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
 </div>
-{% if debug %}
-  <div style="background: #eee; border: 2px dashed #aaa; padding: 12px; margin-bottom: 16px;">
-    <h3>🛠 デバッグ情報</h3>
-    <p>受け取った grouped_orders:</p>
-    <pre>{{ grouped_orders|safe }}</pre>
 
-    <p>アクティブオーダー数: {{ active_count }}</p>
-    <p>現在時刻: {{ now }}</p>
-  </div>
+  {% for group_id, orders in grouped_orders.items %}
+<div class="order-card">
+<p class="clip-id">
+  🧾 オーダー番号:
+  <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+    {{ orders.0.clip_number }}
+  </span>
+</p>
+
+  <p class="status-line">
+    状態:
+    {% if orders.0.status == 'ok' %}
+      🟢 作成OK
+    {% elif orders.0.status == 'stop' %}
+      🔴 STOP中
+      {% if orders.0.is_auto_stopped %}<span style="color: red;">（自動）</span>{% endif %}
+    {% endif %}
+  </p>
+
+  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+{% if orders.0.note %}
+  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
 {% endif %}
 
+<ul>
+  {% for order in orders %}
+    <li>
+      <span class="flavor-strong">フレーバー→ {{ order.flavor }}</span>
+    </li>
+  {% endfor %}
+</ul>
 
-
-
-{% for group_id, orders in grouped_orders.items %}
-  <div class="order-card">
-    <p class="clip-id">
-      🧾 オーダー番号:
-      <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
-        {{ orders.0.clip_number }}
-      </span>
-    </p>
-
-    <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
-    {% if orders.0.note %}
-      <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+    {% if orders.0.status != 'stop' %}
+<form method="post" action="/shavedice/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
+  {% csrf_token %}
+  <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+</form>
+    {% else %}
+      <p style="color: red; font-weight: bold; margin-top: 12px;">
+        🔒 STOP中のため完了できません
+      </p>
     {% endif %}
-
-    <ul>
-      {% for order in orders %}
-            <br>
-            <span class="flavor-strong">→ {{ order.flavor }}</span>
-          </li>
-      {% endfor %}
-    </ul>
-
-    <form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
-      {% csrf_token %}
-      <button type="submit" class="complete-button">✅ このオーダーを完了</button>
-    </form>
   </div>
 {% endfor %}
-
   <hr>
   <p>完了済み注文（30秒後に自動で非表示）</p>
 
@@ -326,28 +328,17 @@
       {% if orders.0.note %}
   <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
 {% endif %}
-
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
 <ul>
-{% for order in orders %}
-  {% if not order.is_pudding %}
+  {% for order in orders %}
     <li>
-      <span class="flavor-strong">
-        → {{ order.flavor }}
-        {% if order.flavor2 %}
-          ＋ {{ order.flavor2 }}
-        {% endif %}
-      </span>
+      <span class="flavor-strong">フレーバー→ {{ order.flavor }}</span>
     </li>
-  {% endif %}
-{% endfor %}
-
+  {% endfor %}
 </ul>
-
     </div>
     {% endwith %}
   {% endfor %}
-
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>
@@ -355,27 +346,15 @@
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
 
-  <ul>
-  {% for order in orders %}
-    <li>
-      <span class="flavor-strong">→ {{ order.flavor }}</span>
-      <a href="/detail/{{ order.id }}/" style="margin-left: 10px; font-size: 14px;">🔍 詳細</a>
-    </li>
-  {% endfor %}
-</ul>
-
-
 <script>
   function updateCountdowns() {
     const now = new Date().getTime();
     document.querySelectorAll('.order-card.completed').forEach(card => {
-      const completedAtStr = card.dataset.completed.replace(' ', 'T'); // "2025-05-13 13:10:00"
+      const completedAtStr = card.dataset.completed.replace(' ', 'T');
       const completedAt = new Date(completedAtStr).getTime();
-
       const elapsed = Math.floor((now - completedAt) / 1000);
       const remaining = 30 - elapsed;
       const countdownEl = card.querySelector('.countdown');
-
       if (remaining > 0) {
         countdownEl.textContent = remaining;
       } else {
@@ -383,55 +362,35 @@
       }
     });
   }
-
 </script>
-
 <script>
 setInterval(() => {
-  const helpVisible = document.getElementById('helpModal').style.display === 'block';
-  localStorage.setItem('helpVisible', helpVisible ? 'true' : 'false');
+  localStorage.setItem('shavedice_kitchen_scroll', window.scrollY);
   location.reload();
 }, 3000);
 </script>
-
-
-
+<script>
+  window.onload = function() {
+    const scroll = localStorage.getItem('shavedice_kitchen_scroll');
+    if (scroll) {
+      window.scrollTo(0, parseInt(scroll));
+    }
+  };
+</script>
 <script>
   function openHelp() {
     document.getElementById('helpModal').style.display = 'block';
     localStorage.setItem('helpVisible', 'true');
   }
-
   function closeHelp() {
     document.getElementById('helpModal').style.display = 'none';
     localStorage.setItem('helpVisible', 'false');
   }
 </script>
-
-
 <script>
-  // フォーム送信時にスクロール位置を保存
-  document.querySelectorAll('form[action^="/complete_group/"]').forEach(form => {
-    form.addEventListener('submit', () => {
-      sessionStorage.setItem('scrollPos', window.scrollY);
-    });
-  });
-
-  // 読み込み後にスクロール位置を復元（1回だけ）
-  window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos !== null) {
-      window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
-      sessionStorage.removeItem('scrollPos');
-    }
-  });
+  setInterval(updateCountdowns, 1000);
 </script>
 <script>
-  setInterval(updateCountdowns, 1000);  // ← 毎秒1回、カウントダウン更新
-</script>
-
-<script>
-  // 自動更新後、ヘルプが開いていたら再表示
   window.addEventListener('load', () => {
     if (localStorage.getItem('helpVisible') === 'true') {
       const modal = document.getElementById('helpModal');

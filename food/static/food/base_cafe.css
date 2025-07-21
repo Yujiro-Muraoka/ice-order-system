@@ -1,0 +1,129 @@
+/* カフェっぽくて可愛い共通デザインCSS */
+body {
+  background: linear-gradient(135deg, #f8ede3 0%, #e6d3b3 100%);
+  font-family: 'Quicksand', 'Rounded M+ 1c', 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif;
+  color: #5a4632;
+  margin: 0;
+  padding: 0 0 40px 0;
+}
+
+h1, h2, h3 {
+  font-family: 'Quicksand', 'Rounded M+ 1c', 'Noto Sans JP', sans-serif;
+  color: #7c5c3e;
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+
+.card, .order-card, .ice-list {
+  background: #fffaf4;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(120, 90, 60, 0.08);
+  padding: 18px 16px;
+  margin-bottom: 20px;
+  border: 1.5px solid #e0c9a6;
+}
+
+.menu-btn, .add-button, .complete-button, .clip-btn, .qty-btn, .logout-bottom a, .submit-button {
+  border-radius: 16px;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(120, 90, 60, 0.10);
+  border: none;
+  margin-bottom: 8px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.menu-btn, .add-button, .complete-button, .submit-button {
+  background: linear-gradient(90deg, #e6d3b3 0%, #bfa380 100%);
+  color: #5a4632;
+}
+.menu-btn.selected, .add-button:hover, .complete-button:hover, .submit-button:hover {
+  background: linear-gradient(90deg, #bfa380 0%, #e6d3b3 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(120, 90, 60, 0.18);
+}
+.clip-btn {
+  background: #f5e6d3;
+  color: #7c5c3e;
+  border: 1.5px solid #e0c9a6;
+}
+.clip-btn.selected {
+  background: #bfa380;
+  color: #fff;
+}
+.qty-btn {
+  background: #e6d3b3;
+  color: #7c5c3e;
+  border: 1.5px solid #e0c9a6;
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+}
+.qty-btn:active {
+  background: #bfa380;
+  color: #fff;
+}
+.ice-list, .order-card {
+  border: 2px solid #e0c9a6;
+}
+ul, li {
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+input, textarea, select {
+  border-radius: 12px;
+  border: 1.5px solid #e0c9a6;
+  padding: 10px;
+  font-size: 17px;
+  background: #f8ede3;
+  color: #5a4632;
+  margin-bottom: 8px;
+}
+.logout-bottom a {
+  background: #bfa380;
+  color: #fff;
+  padding: 10px 24px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 18px;
+}
+.logout-bottom a:hover {
+  background: #7c5c3e;
+  color: #fffbe7;
+}
+#helpButton {
+  background: #e6d3b3;
+  color: #7c5c3e;
+  border-radius: 50px;
+  font-size: 20px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 8px rgba(120, 90, 60, 0.10);
+}
+#helpButton:hover {
+  background: #bfa380;
+  color: #fff;
+}
+#helpModal {
+  background: #fffaf4;
+  border: 2px solid #e0c9a6;
+  border-radius: 18px;
+  color: #5a4632;
+}
+.clip-badge.yellow {
+  background: #ffe066;
+  color: #7c5c3e;
+}
+.clip-badge.white {
+  background: #fffbe7;
+  color: #7c5c3e;
+  border: 1.5px solid #e0c9a6;
+}
+hr {
+  border: none;
+  border-top: 2px dashed #e0c9a6;
+  margin: 24px 0;
+}
+::-webkit-input-placeholder { color: #bfa380; }
+::-moz-placeholder { color: #bfa380; }
+:-ms-input-placeholder { color: #bfa380; }
+::placeholder { color: #bfa380; } 
