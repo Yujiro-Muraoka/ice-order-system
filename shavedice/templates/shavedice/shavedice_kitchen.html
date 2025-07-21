@@ -423,7 +423,9 @@
   window.onload = function() {
     const scroll = localStorage.getItem('shavedice_kitchen_scroll');
     if (scroll !== null) {
-      window.scrollTo(0, parseInt(scroll));
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(scroll));
+      }, 100);
     }
     // helpModalの初期表示（初回のみ）
     if (localStorage.getItem('helpVisible') === 'true') {
