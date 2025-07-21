@@ -1,4 +1,5 @@
 {% load custom_filters %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -364,6 +365,8 @@
 
 </head>
 <body>
+    <!-- <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio> -->
+    <!-- window.addEventListener('DOMContentLoaded', ...) で role-audio を再生するJSも削除 -->
   <h1>かき氷注文入力</h1>
 
 

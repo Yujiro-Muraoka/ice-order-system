@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>役割選択</title>
+    {% load static %}
     <style>
         body {
             font-family: sans-serif;
@@ -56,7 +57,6 @@
 </head>
 <body>
     <h1>🍦 役割選択 🍦</h1>
-    
     <form method="post">
         {% csrf_token %}
         
@@ -64,24 +64,24 @@
             <!-- このアイスクリームはアイスを修正して作ったものである。 -->
             <h2>🍦 アイスクリーム注文 🍦</h2>
             <p>アイスクリームの注文を受け付けます</p>
-            <button formaction="/register/" class="common-button">アイスクリームレジ</button>
-            <button formaction="/ice/" class="common-button">アイスクリーム担当</button>
-            <button formaction="/deshap/" class="common-button">デシャップ担当</button>
+            <button formaction="/register/" class="common-button role-sound">アイスクリームレジ</button>
+            <button formaction="/ice/" class="common-button role-sound">アイスクリーム担当</button>
+            <button formaction="/deshap/" class="common-button role-sound">デシャップ担当</button>
         </div>
         
         <div class="role-section">
             <h2>🍧 かき氷注文</h2>
             <p>かき氷の注文を受け付けます</p>
-            <button formaction="/shavedice/register/" class="common-button">かき氷レジ</button>
-            <button formaction="/shavedice/kitchen/" class="common-button">かき氷担当</button>
-            <button formaction="/shavedice/deshap/" class="common-button">かき氷デシャップ担当</button>
+            <button formaction="/shavedice/register/" class="common-button role-sound">かき氷レジ</button>
+            <button formaction="/shavedice/kitchen/" class="common-button role-sound">かき氷担当</button>
+            <button formaction="/shavedice/deshap/" class="common-button role-sound">かき氷デシャップ担当</button>
         </div>
         
         <div class="role-section">
             <h2>🍗 フード注文</h2>
             <p>フードの注文を受け付けます</p>
-            <button formaction="/food/register/" class="common-button">フードレジ</button>
-            <button formaction="/food/kitchen/" class="common-button">フード担当</button>
+            <button formaction="/food/register/" class="common-button role-sound">フードレジ</button>
+            <button formaction="/food/kitchen/" class="common-button role-sound">フード担当</button>
         </div>
         
         <button formaction="/logout/" class="common-button logout-button">ログアウト</button>
