@@ -79,7 +79,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates', # テンプレートエンジン
-        'DIRS': [],  # 追加テンプレートディレクトリ（現在は未使用）
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # 共通テンプレートディレクトリ
         'APP_DIRS': True,  # アプリケーション内のtemplatesディレクトリを自動検索
         'OPTIONS': {
             'context_processors': [
@@ -147,7 +147,7 @@ STATIC_URL = 'static/'
 
 # 静的ファイルの検索ディレクトリ
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'ice/static')  # iceアプリの静的ファイル
+    os.path.join(BASE_DIR, 'static'),  # 全体共通の静的ファイルディレクトリ
 ]
 
 # デフォルトの主キーフィールドタイプ

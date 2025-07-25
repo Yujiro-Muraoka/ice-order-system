@@ -7,24 +7,182 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>フード注文入力</title>
   <style>
-    body { font-family: sans-serif; padding: 16px; margin: 0; background-color: #f9f9f9; }
-    h1 { font-size: 20px; margin-bottom: 16px; }
-    .menu-btn { font-size: 20px; padding: 18px; border-radius: 12px; border: 2px solid #2196F3; background: #f2f2f2; color: #2196F3; font-weight: bold; margin: 0 8px 16px 0; cursor: pointer; transition: background 0.2s, color 0.2s, border 0.2s; }
-    .menu-btn.selected { background: #2196F3; color: #fff; border-color: #1976D2; }
-    .quantity-selector { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .qty-btn { display: flex; align-items: center; justify-content: center; font-size: 22px; width: 40px; height: 40px; padding: 0; line-height: 1; border-radius: 8px; border: 1px solid #ccc; background: #f8f8f8; cursor: pointer; user-select: none; }
-    .qty-btn:active { background: #e0e0e0; }
-    .add-button { margin: 10px 0; padding: 16px; font-size: 18px; background-color: #28a745; color: white; border: none; border-radius: 8px; width: 100%; font-weight: bold; }
-    .ice-list { margin-top: 20px; padding: 10px; border: 1px dashed #888; font-size: 16px; }
-    .clip-color-row { display: flex; gap: 12px; margin: 8px 0 16px; justify-content: center; }
-    .clip-btn { padding: 12px 0; font-size: 16px; border-radius: 10px; border: 2px solid #ccc; background-color: #f0f0f0; color: #333; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
-    .clip-btn.selected { background-color: #2196F3; color: white; border-color: #1976D2; }
-    .clip-btn:not(.selected):hover { background-color: #e0e0e0; }
-    .clip-number-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 8px; }
-    .logout-bottom { text-align: center; margin-top: 30px; }
-    #helpButton { position: fixed; top: 10px; right: 10px; background: #ff9800; color: white; border: none; border-radius: 20px; padding: 10px 16px; font-weight: bold; cursor: pointer; z-index: 999; width: auto; max-width: 200px; }
-    #helpModal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 80%; background: white; border: 2px solid #ccc; border-radius: 12px; padding: 20px; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-    #closeHelp { margin-top: 10px; background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .menu-btn {
+      width: 48%;
+      padding: 16px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 2px solid #2196F3;
+      background: #f2f2f2;
+      color: #2196F3;
+      font-weight: bold;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      box-sizing: border-box;
+    }
+    .menu-btn.selected {
+      background: #2196F3;
+      color: #fff;
+      border-color: #1976D2;
+    }
+    .menu-row {
+      display: flex;
+      gap: 4%;
+      margin-bottom: 12px;
+    }
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .qty-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      line-height: 1;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qty-btn:active {
+      background: #e0e0e0;
+    }
+    .add-button {
+      margin: 10px 0;
+      padding: 16px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .add-button:active {
+      background-color: #218838;
+    }
+    .ice-list {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #888;
+      font-size: 16px;
+      background: #fff;
+      border-radius: 10px;
+    }
+    .clip-color-row {
+      display: flex;
+      gap: 12px;
+      margin: 8px 0 16px;
+      justify-content: center;
+    }
+    .clip-btn {
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 48%;
+    }
+    .clip-btn.selected {
+      background-color: #2196F3;
+      color: white;
+      border-color: #1976D2;
+    }
+    .clip-btn:not(.selected):hover {
+      background-color: #e0e0e0;
+    }
+    .clip-number-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+      width: auto;
+      max-width: 200px;
+    }
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      font-size: 16px;
+      border-radius: 8px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 600px) {
+      .menu-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .menu-btn,
+      .clip-btn {
+        width: 100%;
+      }
+      .clip-number-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
@@ -41,7 +199,7 @@
     <button id="closeHelp" onclick="closeHelp()">閉じる</button>
   </div>
 
-  <div style="margin-bottom: 18px;">
+  <div class="menu-row">
     <button type="button" class="menu-btn" id="karaageBtn" onclick="selectMenu('からあげ丼', this)">🍗 からあげ丼</button>
     <button type="button" class="menu-btn" id="lurowfanBtn" onclick="selectMenu('ルーロー飯', this)">🐷 ルーロー飯</button>
   </div>
@@ -51,7 +209,7 @@
     <button type="button" class="qty-btn" onclick="changeQty(1)">＋</button>
     <input type="hidden" id="food-quantity" value="1">
   </div>
-  <div style="margin-bottom: 16px;">
+  <div class="menu-row">
     <button type="button" class="menu-btn" id="eatInBtn" onclick="selectEatIn(true, this)">🍽️ 店内</button>
     <button type="button" class="menu-btn" id="takeoutBtn" onclick="selectEatIn(false, this)">🥡 テイクアウト</button>
     <input type="hidden" id="eat-in" value="">
@@ -84,7 +242,7 @@
   <form method="post" action="/food/submit_order_group/" onsubmit="return validateClipSelection();">
     {% csrf_token %}
     <label for="note">備考：</label>
-    <textarea id="note" name="note" rows="4" style="box-sizing: border-box; width: 100%; max-width: 100%; font-size: 16px; padding: 10px; border-radius: 8px;" placeholder="例：アフォのエスプレッソなし、フード注文大量等"></textarea>
+    <textarea id="note" name="note" rows="4" placeholder="例：アフォのエスプレッソなし、フード注文大量等"></textarea>
     <h3>オーダー表 クリップ情報</h3>
     <strong>色:</strong>
     <div class="clip-color-row">

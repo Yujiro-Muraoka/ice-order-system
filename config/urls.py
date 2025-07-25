@@ -32,4 +32,8 @@ urlpatterns = [
     # かき氷注文システム
     # /shavedice/で始まるURLをshavediceアプリのURLに振り分け
     path('shavedice/', include('shavedice.urls')),
+
+    # モバイルオーダーシステム
+    # /mobile/で始まるURLをmobileアプリのURLに振り分け
+    path('mobile/', include('mobile.urls')),
 ]

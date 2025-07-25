@@ -23,31 +23,12 @@ FLAVORS = [
 ]
 
 
-def login_view(request):
-    """ログイン画面"""
-    if request.method == 'POST':
-        code = request.POST.get('passcode')
-        if code == SHARED_PASSCODE:
-            request.session['logged_in'] = True
-            return redirect('/')
-        else:
-            messages.error(request, "パスコードが間違っています")
-    
-    return render(request, 'ice/login.html')
-
-
-def logout_view(request):
-    """ログアウト処理"""
-    request.session.flush()
-    return redirect('/login')
-
-
 def role_select(request):
     """役割選択画面"""
     if not request.session.get('logged_in'):
         return redirect('/login')
     
-    return render(request, 'ice/role_select.html')
+    return render(request, 'common/role_select.html')
 
 
 @csrf_exempt
@@ -433,56 +414,6 @@ def update_status(request, group_id, new_status):
 def health_check(request):
     """ヘルスチェック"""
     return HttpResponse("OK")
-
-
-def mobile_order_entry(request):
-    """モバイル注文画面を表示"""
-    return render(request, 'ice/mobile_order.html', {
-        'quantity_range': range(1, 6),
-        'clip_numbers': range(1, 17),
-    })
-
-
-def submit_mobile_order(request):
-    """モバイル注文を処理"""
-    if request.method == 'POST':
-        menu = request.POST.get('menu')
-        quantity_str = request.POST.get('quantity')
-        clip_color = request.POST.get('clip_color')
-        clip_number_str = request.POST.get('clip_number')
-        note = request.POST.get('note', '')
-        
-        # 入力チェック
-        if not all([menu, quantity_str, clip_color, clip_number_str]):
-            return redirect('mobile_order')
-        
-        try:
-            quantity = int(quantity_str)
-            clip_number = int(clip_number_str)
-        except (ValueError, TypeError):
-            return redirect('mobile_order')
-        
-        group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
-        
-        for _ in range(quantity):
-            FoodOrder.objects.create(
-                menu=menu,
-                quantity=1,
-                clip_color=clip_color,
-                clip_number=clip_number,
-                group_id=group_id,
-                status='ok',
-                note=note,
-            )
-        
-        return redirect('mobile_order_complete')
-    
-    return redirect('mobile_order')
-
-
-def mobile_order_complete(request):
-    """モバイル注文完了画面を表示"""
-    return render(request, 'ice/mobile_complete.html')
 
 
 def api_active_count(request):

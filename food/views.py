@@ -303,6 +303,8 @@ def submit_order_group(request):
     
     # グループIDを現在時刻で生成（一意性を保証）
     group_id = str(int(time.time()))
+
+    
     
     # 仮注文をデータベースに保存
     for item in temp_food:

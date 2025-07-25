@@ -32,19 +32,19 @@ class FoodOrder(models.Model):
         max_length=20,
         verbose_name="メニュー名",
         help_text="注文されたフードのメニュー名（例：からあげ丼、ルーロー飯）"
-    )
+    )  # 注文されたメニュー名を保存
     
     quantity = models.PositiveIntegerField(
         default=1,
         verbose_name="数量",
         help_text="注文数量（1以上の整数）"
-    )
+    )  # 注文の数量を保存
     
     eat_in = models.BooleanField(
         default=True,
         verbose_name="店内飲食",
         help_text="True=店内飲食、False=テイクアウト"
-    )
+    )  # 店内飲食かテイクアウトかを判別
     
     # ==================== クリップ情報 ====================
     
@@ -52,12 +52,12 @@ class FoodOrder(models.Model):
         max_length=10,
         verbose_name="クリップ色",
         help_text="オーダー表のクリップの色（yellow, white等）"
-    )
+    )  # クリップの色を保存
     
     clip_number = models.IntegerField(
         verbose_name="クリップ番号",
         help_text="オーダー表のクリップの番号（1-16等）"
-    )
+    )  # クリップの番号を保存
     
     # ==================== 注文管理 ====================
     
@@ -65,20 +65,20 @@ class FoodOrder(models.Model):
         max_length=50,
         verbose_name="グループID",
         help_text="同一注文グループを識別するID（複数商品の一括注文用）"
-    )
+    )  # 複数商品をまとめるグループID
     
     status = models.CharField(
         max_length=10,
         default='ok',
         verbose_name="注文状態",
         help_text="注文の現在の状態（ok=作成OK、stop=STOP中）"
-    )
+    )  # 注文の進行状況を管理
     
     is_completed = models.BooleanField(
         default=False,
         verbose_name="完了フラグ",
         help_text="注文が完了したかどうかのフラグ"
-    )
+    )  # 注文が完了したかどうか
     
     # ==================== 時刻管理 ====================
     
@@ -86,14 +86,14 @@ class FoodOrder(models.Model):
         auto_now_add=True,
         verbose_name="受注時刻",
         help_text="注文を受けた時刻（自動設定）"
-    )
+    )  # 注文を受けた時刻（自動記録）
     
     completed_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="完了時刻",
         help_text="注文が完了した時刻（完了時に設定）"
-    )
+    )  # 注文が完了した時刻
     
     # ==================== その他 ====================
     
@@ -102,7 +102,7 @@ class FoodOrder(models.Model):
         default="",
         verbose_name="備考",
         help_text="注文に関する特記事項や要望"
-    )
+    )  # 備考欄（特記事項や要望など）
 
     def __str__(self):
         """
@@ -116,6 +116,7 @@ class FoodOrder(models.Model):
     class Meta:
         """
         モデルのメタ情報設定
+        - 管理画面での表示名やデフォルトの並び順を指定
         """
         verbose_name = "フード注文"           # 管理画面での単数表示名
         verbose_name_plural = "フード注文"    # 管理画面での複数表示名
