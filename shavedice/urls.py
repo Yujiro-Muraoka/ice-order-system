@@ -14,4 +14,5 @@ urlpatterns = [
     path('ice/', views.ice_view, name='ice'),
     path('deshap/', views.shavedice_deshap_view, name='shavedice_deshap'),
     path('update_status/<str:group_id>/<str:new_status>/', views.shavedice_update_status, name='shavedice_update_status'),
+    path('waittime/', views.wait_time_view, name='shavedice_wait_time'),
 ]

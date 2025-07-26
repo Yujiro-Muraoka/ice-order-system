@@ -313,3 +313,17 @@ def shavedice_deshap_view(request):
         "active_count": len(grouped_active),
     }
     return render(request, "shavedice/deshap.html", context)
+
+
+def wait_time_view(request):
+    """
+    かき氷の未完了注文数から待ち時間（1つ3分）を計算して表示するビュー
+    """
+    from .models import ShavedIceOrder
+    uncompleted_count = ShavedIceOrder.objects.filter(is_completed=False).count()
+    wait_minutes = uncompleted_count * 3
+    context = {
+        'uncompleted_count': uncompleted_count,
+        'wait_minutes': wait_minutes,
+    }
+    return render(request, 'shavedice/wait_time.html', context)
