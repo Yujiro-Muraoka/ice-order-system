@@ -192,8 +192,8 @@
   </style>
 </head>
 <body>
-    <audio id="notify-audio" src="{% static 'orders/sounds/FOGバレ音.mp3' %}"></audio>
-    <audio id="silent-audio" src="{% static 'orders/sounds/silent.mp3' %}"></audio>
+    <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
+    <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
 let audioUnlocked = false;
 function unlockAudio() {
@@ -221,10 +221,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // 今回の値を保存
   localStorage.setItem('ice_active_count', nowCount);
 });
-setInterval(() => {
-  localStorage.setItem('ice_scroll', window.scrollY);
-  location.reload();
-}, 3000);
+// 自動リロードを廃止
 window.onload = function() {
   const scroll = localStorage.getItem('ice_scroll');
   if (scroll !== null) {
@@ -232,7 +229,7 @@ window.onload = function() {
   }
 };
     </script>
-  <h2>アイスクリーム注文一覧（3秒ごとに更新）</h2>
+  <h2>アイスクリーム注文一覧</h2>
   <p id="active-count">未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
@@ -430,10 +427,7 @@ function closeHelp() {
 </script>
 
 <script>
-setInterval(() => {
-  localStorage.setItem('ice_scroll', window.scrollY);
-  location.reload();
-}, 3000);
+
 
 window.onload = function() {
   const scroll = localStorage.getItem('ice_scroll');

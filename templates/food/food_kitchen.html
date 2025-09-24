@@ -179,8 +179,8 @@
   </style>
 </head>
 <body>
-    <audio id="notify-audio" src="{% static 'orders/sounds/FOGバレ音.mp3' %}"></audio>
-    <audio id="silent-audio" src="{% static 'orders/sounds/silent.mp3' %}"></audio>
+    <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
+    <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
     let audioUnlocked = false;
     function unlockAudio() {
@@ -209,7 +209,7 @@
       localStorage.setItem('food_active_count', nowCount);
     });
     </script>
-  <h2>フード注文一覧（3秒ごとに更新）</h2>
+  <h2>フード注文一覧</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
@@ -349,10 +349,7 @@
 </script>
 
 <script>
-setInterval(() => {
-  sessionStorage.setItem('scrollPos', window.scrollY);
-  location.reload();
-}, 3000);
+// 自動リロード廃止
 
 window.addEventListener('load', () => {
   const pos = sessionStorage.getItem('scrollPos');

@@ -1,0 +1,385 @@
+<h1 id="cafemuji-注文管理システム-画面遷移図">cafeMuji 注文管理システム
+画面遷移図</h1>
+<h2 id="システム全体の画面構成">1. システム全体の画面構成</h2>
+<h3 id="主要画面一覧">1.1 主要画面一覧</h3>
+<pre><code>cafeMuji 注文管理システム
+├── 共通画面
+│   ├── ログイン画面 (login.html)
+│   └── 役割選択画面 (role_select.html)
+├── フード注文管理
+│   ├── 注文登録画面 (food_register.html)
+│   └── キッチン画面 (food_kitchen.html)
+├── アイスクリーム注文管理
+│   ├── 注文画面 (ice.html)
+│   ├── 注文登録画面 (register.html)
+│   ├── 注文詳細画面 (detail.html)
+│   └── 注文削除画面 (deshap.html)
+├── かき氷注文管理
+│   ├── 注文画面 (shavedice.html)
+│   ├── 注文登録画面 (shavedice_register.html)
+│   ├── キッチン画面 (shavedice_kitchen.html)
+│   └── 待ち時間画面 (wait_time.html)
+└── モバイル対応
+    ├── 注文画面 (mobile_order.html)
+    └── 完了画面 (mobile_complete.html)</code></pre>
+<h2 id="画面遷移フロー">2. 画面遷移フロー</h2>
+<h3 id="メインフロー">2.1 メインフロー</h3>
+<pre><code>[ログイン] → [役割選択] → [各機能画面]
+     ↓
+[認証成功] → [権限確認] → [機能実行]
+     ↓
+[セッション管理] → [データ処理] → [画面更新]</code></pre>
+<h3 id="詳細画面遷移">2.2 詳細画面遷移</h3>
+<h4 id="フード注文管理フロー">2.2.1 フード注文管理フロー</h4>
+<pre><code>[ログイン] → [役割選択: レジ] → [フード注文登録]
+     ↓
+[メニュー選択] → [数量入力] → [店内/テイクアウト選択]
+     ↓
+[仮注文追加] → [クリップ情報設定] → [注文確認]
+     ↓
+[本注文確定] → [データベース保存] → [完了]
+     ↓
+[キッチン画面] ← [注文状態更新] ← [作業完了]</code></pre>
+<h4 id="アイスクリーム注文管理フロー">2.2.2
+アイスクリーム注文管理フロー</h4>
+<pre><code>[ログイン] → [役割選択: アイス担当] → [アイス注文画面]
+     ↓
+[サイズ選択] → [容器選択] → [フレーバー選択]
+     ↓
+[数量設定] → [クリップ情報設定] → [注文登録]
+     ↓
+[注文詳細確認] → [状態管理] → [完了処理]</code></pre>
+<h4 id="かき氷注文管理フロー">2.2.3 かき氷注文管理フロー</h4>
+<pre><code>[ログイン] → [役割選択: かき氷担当] → [かき氷注文画面]
+     ↓
+[フレーバー選択] → [クリップ情報設定] → [注文登録]
+     ↓
+[キッチン画面] → [作業管理] → [完了処理]
+     ↓
+[待ち時間表示] → [顧客案内]</code></pre>
+<h2 id="各画面の詳細仕様">3. 各画面の詳細仕様</h2>
+<h3 id="共通画面">3.1 共通画面</h3>
+<h4 id="ログイン画面-login.html">3.1.1 ログイン画面 (login.html)</h4>
+<p><strong>URL</strong>: <code>/login/</code> <strong>目的</strong>:
+ユーザー認証 <strong>機能</strong>: - ユーザーID・パスワード入力 -
+認証処理 - セッション開始</p>
+<p><strong>画面遷移</strong>: - 成功: 役割選択画面へ - 失敗:
+エラーメッセージ表示</p>
+<h4 id="役割選択画面-role_select.html">3.1.2 役割選択画面
+(role_select.html)</h4>
+<p><strong>URL</strong>: <code>/role-select/</code>
+<strong>目的</strong>: 利用者の役割選択 <strong>機能</strong>: -
+レジ担当者 - フードキッチン担当者 - アイスクリーム担当者 -
+かき氷担当者</p>
+<p><strong>画面遷移</strong>: - レジ: フード注文登録画面へ - キッチン:
+各キッチン画面へ - 各担当者: 各注文画面へ</p>
+<h3 id="フード注文管理画面">3.2 フード注文管理画面</h3>
+<h4 id="注文登録画面-food_register.html">3.2.1 注文登録画面
+(food_register.html)</h4>
+<p><strong>URL</strong>: <code>/food/register/</code>
+<strong>目的</strong>: フード注文の受付・管理 <strong>機能</strong>: -
+メニュー選択（からあげ丼、ルーロー飯） - 数量入力 -
+店内/テイクアウト選択 - 仮注文の追加・削除 - クリップ色・番号設定 -
+本注文確定</p>
+<p><strong>画面要素</strong>:</p>
+<pre><code>┌─────────────────────────────────────┐
+│ フード注文登録                      │
+├─────────────────────────────────────┤
+│ メニュー選択: [からあげ丼] [ルーロー飯] │
+│ 数量: [1] [2] [3] [4] [5]          │
+│ 店内/テイクアウト: [店内] [テイクアウト] │
+├─────────────────────────────────────┤
+│ [追加] [削除] [確定]                │
+├─────────────────────────────────────┤
+│ 仮注文一覧                          │
+│ • からあげ丼 ×2 (店内)              │
+│ • ルーロー飯 ×1 (テイクアウト)      │
+├─────────────────────────────────────┤
+│ クリップ色: [黄色] [白色]            │
+│ クリップ番号: [1] [2] [3] ... [16]  │
+└─────────────────────────────────────┘</code></pre>
+<p><strong>画面遷移</strong>: - 追加ボタン: 仮注文リストに追加 -
+削除ボタン: 選択された仮注文を削除 - 確定ボタン: 本注文として確定</p>
+<h4 id="キッチン画面-food_kitchen.html">3.2.2 キッチン画面
+(food_kitchen.html)</h4>
+<p><strong>URL</strong>: <code>/food/kitchen/</code>
+<strong>目的</strong>: キッチンでの作業管理 <strong>機能</strong>: -
+注文一覧表示 - 注文状態の更新 - 完了処理 - 作業進捗の管理</p>
+<p><strong>画面要素</strong>:</p>
+<pre><code>┌─────────────────────────────────────┐
+│ フードキッチン                      │
+├─────────────────────────────────────┤
+│ 黄色クリップ1: からあげ丼 ×2 (店内)  │
+│ [作業開始] [完了]                   │
+├─────────────────────────────────────┤
+│ 白色クリップ3: ルーロー飯 ×1 (テイク) │
+│ [作業開始] [完了]                   │
+├─────────────────────────────────────┤
+│ 完了済み注文                        │
+│ • からあげ丼 ×1 (店内) - 完了時刻: 14:30 │
+└─────────────────────────────────────┘</code></pre>
+<p><strong>画面遷移</strong>: - 作業開始: 注文状態を「作成中」に更新 -
+完了: 注文完了処理、完了時刻記録</p>
+<h3 id="アイスクリーム注文管理画面">3.3 アイスクリーム注文管理画面</h3>
+<h4 id="注文画面-ice.html">3.3.1 注文画面 (ice.html)</h4>
+<p><strong>URL</strong>: <code>/ice/</code> <strong>目的</strong>:
+アイスクリーム注文の受付 <strong>機能</strong>: -
+サイズ選択（シングル/ダブル） - 容器選択（カップ/コーン） -
+フレーバー選択（12種類） - 注文登録</p>
+<p><strong>画面要素</strong>:</p>
+<pre><code>┌─────────────────────────────────────┐
+│ アイスクリーム注文                  │
+├─────────────────────────────────────┤
+│ サイズ: [シングル] [ダブル]          │
+│ 容器: [カップ] [コーン]              │
+├─────────────────────────────────────┤
+│ フレーバー1: [ジャージー牛乳] [お茶] [マンゴー]... │
+│ フレーバー2: [選択なし] [ジャージー牛乳] [お茶]... │
+├─────────────────────────────────────┤
+│ クリップ色: [黄色] [白色]            │
+│ クリップ番号: [1] [2] [3] ... [16]  │
+├─────────────────────────────────────┤
+│ [注文登録]                          │
+└─────────────────────────────────────┘</code></pre>
+<h4 id="注文登録画面-register.html">3.3.2 注文登録画面
+(register.html)</h4>
+<p><strong>URL</strong>: <code>/ice/register/</code>
+<strong>目的</strong>: アイスクリーム注文の詳細登録
+<strong>機能</strong>: - 注文内容の確認 - 備考欄入力 - 注文の確定</p>
+<h4 id="注文詳細画面-detail.html">3.3.3 注文詳細画面 (detail.html)</h4>
+<p><strong>URL</strong>: <code>/ice/detail/&lt;id&gt;/</code>
+<strong>目的</strong>: 注文の詳細表示・編集 <strong>機能</strong>: -
+注文内容の表示 - 状態の更新 - 完了処理</p>
+<h4 id="注文削除画面-deshap.html">3.3.4 注文削除画面 (deshap.html)</h4>
+<p><strong>URL</strong>: <code>/ice/deshap/&lt;id&gt;/</code>
+<strong>目的</strong>: 注文の削除 <strong>機能</strong>: - 削除確認 -
+注文の完全削除</p>
+<h3 id="かき氷注文管理画面">3.4 かき氷注文管理画面</h3>
+<h4 id="注文画面-shavedice.html">3.4.1 注文画面 (shavedice.html)</h4>
+<p><strong>URL</strong>: <code>/shavedice/</code> <strong>目的</strong>:
+かき氷注文の受付 <strong>機能</strong>: -
+フレーバー選択（抹茶、いちご、ゆず） - 注文登録</p>
+<h4 id="注文登録画面-shavedice_register.html">3.4.2 注文登録画面
+(shavedice_register.html)</h4>
+<p><strong>URL</strong>: <code>/shavedice/register/</code>
+<strong>目的</strong>: かき氷注文の詳細登録 <strong>機能</strong>: -
+注文内容の確認 - 備考欄入力 - 注文の確定</p>
+<h4 id="キッチン画面-shavedice_kitchen.html">3.4.3 キッチン画面
+(shavedice_kitchen.html)</h4>
+<p><strong>URL</strong>: <code>/shavedice/kitchen/</code>
+<strong>目的</strong>: かき氷キッチンでの作業管理 <strong>機能</strong>:
+- 注文一覧表示 - 注文状態の更新 - 完了処理</p>
+<h4 id="待ち時間画面-wait_time.html">3.4.4 待ち時間画面
+(wait_time.html)</h4>
+<p><strong>URL</strong>: <code>/shavedice/wait-time/</code>
+<strong>目的</strong>: 待ち時間の表示 <strong>機能</strong>: -
+現在の待ち時間表示 - 注文状況の確認</p>
+<h3 id="モバイル対応画面">3.5 モバイル対応画面</h3>
+<h4 id="注文画面-mobile_order.html">3.5.1 注文画面
+(mobile_order.html)</h4>
+<p><strong>URL</strong>: <code>/mobile/order/</code>
+<strong>目的</strong>: モバイル端末での注文 <strong>機能</strong>: -
+タッチ操作に最適化されたUI - 簡潔な注文フロー</p>
+<h4 id="完了画面-mobile_complete.html">3.5.2 完了画面
+(mobile_complete.html)</h4>
+<p><strong>URL</strong>: <code>/mobile/complete/</code>
+<strong>目的</strong>: 注文完了の確認 <strong>機能</strong>: -
+注文完了メッセージ - 注文番号の表示</p>
+<h2 id="ユーザーインターフェース設計">4.
+ユーザーインターフェース設計</h2>
+<h3 id="デザイン原則">4.1 デザイン原則</h3>
+<ul>
+<li><strong>シンプル性</strong>: 必要最小限の情報表示</li>
+<li><strong>直感性</strong>: 操作が分かりやすいUI</li>
+<li><strong>一貫性</strong>: 全画面で統一されたデザイン</li>
+<li><strong>レスポンシブ</strong>: 様々な画面サイズに対応</li>
+</ul>
+<h3 id="カラーパレット">4.2 カラーパレット</h3>
+<ul>
+<li><strong>プライマリ</strong>: #007AFF（青）</li>
+<li><strong>セカンダリ</strong>: #FF9500（オレンジ）</li>
+<li><strong>アクセント</strong>: #FF3B30（赤）</li>
+<li><strong>背景</strong>: #F2F2F7（ライトグレー）</li>
+<li><strong>テキスト</strong>: #000000（黒）</li>
+</ul>
+<h3 id="フォントサイズ">4.3 フォント・サイズ</h3>
+<ul>
+<li><strong>見出し</strong>: 24px, 太字</li>
+<li><strong>本文</strong>: 16px, 通常</li>
+<li><strong>ラベル</strong>: 14px, 通常</li>
+<li><strong>注釈</strong>: 12px, 細字</li>
+</ul>
+<h2 id="画面遷移の実装">5. 画面遷移の実装</h2>
+<h3 id="url設計">5.1 URL設計</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># config/urls.py</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>urlpatterns <span class="op">=</span> [</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;admin/&#39;</span>, admin.site.urls),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;food/&#39;</span>, include(<span class="st">&#39;food.urls&#39;</span>)),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;ice/&#39;</span>, include(<span class="st">&#39;ice.urls&#39;</span>)),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;shavedice/&#39;</span>, include(<span class="st">&#39;shavedice.urls&#39;</span>)),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;mobile/&#39;</span>, include(<span class="st">&#39;mobile.urls&#39;</span>)),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># food/urls.py</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>urlpatterns <span class="op">=</span> [</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;register/&#39;</span>, views.food_register, name<span class="op">=</span><span class="st">&#39;food_register&#39;</span>),</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;kitchen/&#39;</span>, views.food_kitchen, name<span class="op">=</span><span class="st">&#39;food_kitchen&#39;</span>),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;add-temp/&#39;</span>, views.add_temp_food, name<span class="op">=</span><span class="st">&#39;add_temp_food&#39;</span>),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;remove-temp/&#39;</span>, views.remove_temp_food, name<span class="op">=</span><span class="st">&#39;remove_temp_food&#39;</span>),</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;complete/&#39;</span>, views.complete_food, name<span class="op">=</span><span class="st">&#39;complete_food&#39;</span>),</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;confirm/&#39;</span>, views.confirm_food, name<span class="op">=</span><span class="st">&#39;confirm_food&#39;</span>),</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<h3 id="ビュー関数">5.2 ビュー関数</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> food_register(request):</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;フード注文登録画面&quot;&quot;&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    temp_food <span class="op">=</span> request.session.get(<span class="st">&#39;temp_food&#39;</span>, [])</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    context <span class="op">=</span> {</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;temp_food&#39;</span>: temp_food,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;clip_color&#39;</span>: request.session.get(<span class="st">&#39;clip_color&#39;</span>, <span class="st">&#39;&#39;</span>),</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;clip_number&#39;</span>: request.session.get(<span class="st">&#39;clip_number&#39;</span>, <span class="st">&#39;&#39;</span>),</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> render(request, <span class="st">&#39;food/food_register.html&#39;</span>, context)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> food_kitchen(request):</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;フードキッチン画面&quot;&quot;&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    active_orders <span class="op">=</span> FoodOrder.objects.<span class="bu">filter</span>(is_completed<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    completed_orders <span class="op">=</span> FoodOrder.objects.<span class="bu">filter</span>(is_completed<span class="op">=</span><span class="va">True</span>).order_by(<span class="st">&#39;-completed_at&#39;</span>)[:<span class="dv">10</span>]</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    context <span class="op">=</span> {</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;active_orders&#39;</span>: active_orders,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;completed_orders&#39;</span>: completed_orders,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> render(request, <span class="st">&#39;food/food_kitchen.html&#39;</span>, context)</span></code></pre></div>
+<h3 id="テンプレート継承">5.3 テンプレート継承</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- base.html --&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="dt">&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>{% block title %}cafeMuji{% endblock %}<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">link</span><span class="ot"> rel</span><span class="op">=</span><span class="st">&quot;stylesheet&quot;</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;{% static &#39;common/base_cafe.css&#39; %}&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">header</span><span class="dt">&gt;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>cafeMuji 注文管理システム<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">header</span><span class="dt">&gt;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">main</span><span class="dt">&gt;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        {% block content %}{% endblock %}</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">main</span><span class="dt">&gt;</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span><span class="dv">&amp;copy;</span> 2025 cafeMuji<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- food_register.html --&gt;</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>{% extends &#39;base.html&#39; %}</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>{% block title %}フード注文登録{% endblock %}</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>{% block content %}</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">&lt;!-- 注文登録フォーム --&gt;</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>{% endblock %}</span></code></pre></div>
+<h2 id="セッション管理">6. セッション管理</h2>
+<h3 id="セッション構造">6.1 セッション構造</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># セッションに保存されるデータ</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>request.session <span class="op">=</span> {</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;temp_food&#39;</span>: [</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;menu&#39;</span>: <span class="st">&#39;からあげ丼&#39;</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;quantity&#39;</span>: <span class="dv">2</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;eat_in&#39;</span>: <span class="va">True</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        {</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;menu&#39;</span>: <span class="st">&#39;ルーロー飯&#39;</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;quantity&#39;</span>: <span class="dv">1</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;eat_in&#39;</span>: <span class="va">False</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;clip_color&#39;</span>: <span class="st">&#39;yellow&#39;</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;clip_number&#39;</span>: <span class="dv">3</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="セッション操作">6.2 セッション操作</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 仮注文の追加</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_temp_food(request):</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> request.method <span class="op">==</span> <span class="st">&quot;POST&quot;</span>:</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        menu <span class="op">=</span> request.POST.get(<span class="st">&#39;menu&#39;</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        quantity <span class="op">=</span> <span class="bu">int</span>(request.POST.get(<span class="st">&#39;quantity&#39;</span>, <span class="dv">1</span>))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        eat_in <span class="op">=</span> request.POST.get(<span class="st">&#39;eat_in&#39;</span>) <span class="op">==</span> <span class="st">&#39;1&#39;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        temp_food <span class="op">=</span> request.session.get(<span class="st">&#39;temp_food&#39;</span>, [])</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        temp_food.append({</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;menu&#39;</span>: menu,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;quantity&#39;</span>: quantity,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;eat_in&#39;</span>: eat_in</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        request.session[<span class="st">&#39;temp_food&#39;</span>] <span class="op">=</span> temp_food</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> redirect(<span class="st">&#39;food_register&#39;</span>)</span></code></pre></div>
+<h2 id="エラーハンドリング">7. エラーハンドリング</h2>
+<h3 id="エラー画面">7.1 エラー画面</h3>
+<ul>
+<li><strong>404エラー</strong>: ページが見つからない</li>
+<li><strong>500エラー</strong>: サーバー内部エラー</li>
+<li><strong>権限エラー</strong>: アクセス権限がない</li>
+</ul>
+<h3 id="バリデーション">7.2 バリデーション</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> validate_order_data(menu, quantity, eat_in):</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;注文データの妥当性チェック&quot;&quot;&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    errors <span class="op">=</span> []</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> menu:</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        errors.append(<span class="st">&quot;メニューを選択してください&quot;</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> quantity <span class="op">&lt;</span> <span class="dv">1</span>:</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        errors.append(<span class="st">&quot;数量は1以上で入力してください&quot;</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> eat_in <span class="kw">not</span> <span class="kw">in</span> [<span class="va">True</span>, <span class="va">False</span>]:</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        errors.append(<span class="st">&quot;店内/テイクアウトを選択してください&quot;</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> errors</span></code></pre></div>
+<h2 id="レスポンシブ対応">8. レスポンシブ対応</h2>
+<h3 id="ブレークポイント">8.1 ブレークポイント</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* モバイル */</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">max-width</span><span class="ch">:</span> <span class="dv">768</span><span class="dt">px</span><span class="fu">)</span> {</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">.container</span> {</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">padding</span><span class="ch">:</span> <span class="dv">10</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">.menu-grid</span> {</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">grid-template-columns</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">fr</span><span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">/* タブレット */</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">min-width</span><span class="ch">:</span> <span class="dv">769</span><span class="dt">px</span><span class="fu">)</span> <span class="kw">and</span> <span class="fu">(</span><span class="kw">max-width</span><span class="ch">:</span> <span class="dv">1024</span><span class="dt">px</span><span class="fu">)</span> {</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">.menu-grid</span> {</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">grid-template-columns</span><span class="ch">:</span> <span class="fu">repeat(</span><span class="dv">2</span><span class="op">,</span> <span class="dv">1</span><span class="dt">fr</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">/* デスクトップ */</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="fu">(</span><span class="kw">min-width</span><span class="ch">:</span> <span class="dv">1025</span><span class="dt">px</span><span class="fu">)</span> {</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">.menu-grid</span> {</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">grid-template-columns</span><span class="ch">:</span> <span class="fu">repeat(</span><span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="dt">fr</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="タッチ操作最適化">8.2 タッチ操作最適化</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* タッチ操作に最適化されたボタン */</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">.btn</span> {</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">min-height</span><span class="ch">:</span> <span class="dv">44</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">min-width</span><span class="ch">:</span> <span class="dv">44</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">padding</span><span class="ch">:</span> <span class="dv">12</span><span class="dt">px</span> <span class="dv">24</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">touch-action</span><span class="ch">:</span> <span class="dv">manipulation</span><span class="op">;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<p><strong>作成日</strong>: 2025年8月 <strong>作成者</strong>: 村岡
+優次郎 <strong>バージョン</strong>: 1.0</p>

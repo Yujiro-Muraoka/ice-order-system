@@ -268,8 +268,8 @@
   </style>
 </head>
 <body>
-    <audio id="notify-audio" src="{% static 'orders/sounds/FOGバレ音.mp3' %}"></audio>
-    <audio id="silent-audio" src="{% static 'orders/sounds/silent.mp3' %}"></audio>
+  <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
+  <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
     let audioUnlocked = false;
     function unlockAudio() {
@@ -297,11 +297,7 @@
       // 今回の値を保存
       localStorage.setItem('shavedice_active_count', nowCount);
     });
-    setInterval(() => {
-      localStorage.setItem('shavedice_kitchen_scroll', window.scrollY);
-      sessionStorage.setItem('scrollPos', window.scrollY);
-      location.reload();
-    }, 3000);
+    // 自動リロード廃止
     window.addEventListener('load', () => {
       const scroll = localStorage.getItem('shavedice_kitchen_scroll');
       if (scroll) {
@@ -309,7 +305,7 @@
       }
     });
     </script>
-  <h2>かき氷注文一覧（3秒ごとに更新）</h2>
+  <h2>かき氷注文一覧（ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 

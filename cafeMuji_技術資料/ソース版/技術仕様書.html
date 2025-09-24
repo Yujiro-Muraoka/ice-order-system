@@ -1,0 +1,213 @@
+<h1 id="cafemuji-注文管理システム-技術仕様書">cafeMuji 注文管理システム
+技術仕様書</h1>
+<h2 id="技術スタック">1. 技術スタック</h2>
+<h3 id="バックエンド">1.1 バックエンド</h3>
+<ul>
+<li><strong>言語</strong>: Python 3.x</li>
+<li><strong>フレームワーク</strong>: Django 5.2.1</li>
+<li><strong>Webサーバー</strong>: gunicorn 23.0.0</li>
+<li><strong>WSGI</strong>: Django標準WSGI</li>
+</ul>
+<h3 id="フロントエンド">1.2 フロントエンド</h3>
+<ul>
+<li><strong>テンプレートエンジン</strong>: Django Templates</li>
+<li><strong>CSS</strong>: カスタムCSS（レスポンシブ対応）</li>
+<li><strong>JavaScript</strong>: 最小限（Djangoの機能を活用）</li>
+</ul>
+<h3 id="データベース">1.3 データベース</h3>
+<ul>
+<li><strong>開発環境</strong>: SQLite 3.x</li>
+<li><strong>本番環境</strong>: SQLite（PostgreSQL推奨）</li>
+<li><strong>ORM</strong>: Django ORM</li>
+</ul>
+<h3 id="インフラデプロイ">1.4 インフラ・デプロイ</h3>
+<ul>
+<li><strong>ホスティング</strong>: Render.com</li>
+<li><strong>静的ファイル</strong>: Render CDN</li>
+<li><strong>バージョン管理</strong>: Git</li>
+</ul>
+<h2 id="プロジェクト構造">2. プロジェクト構造</h2>
+<h3 id="ディレクトリ構成">2.1 ディレクトリ構成</h3>
+<pre><code>cafeMuji/
+├── config/                 # プロジェクト設定
+│   ├── __init__.py
+│   ├── settings.py        # Django設定
+│   ├── urls.py           # メインURL設定
+│   ├── asgi.py           # ASGI設定
+│   └── wsgi.py           # WSGI設定
+├── food/                  # フード注文管理アプリ
+│   ├── models.py         # データベースモデル
+│   ├── views.py          # ビュー（処理ロジック）
+│   ├── urls.py           # URLルーティング
+│   ├── admin.py          # 管理画面設定
+│   └── templates/        # テンプレート
+├── ice/                   # アイスクリーム注文管理アプリ
+├── shavedice/             # かき氷注文管理アプリ
+├── mobile/                # モバイル対応
+├── common/                # 共通機能
+├── static/                # 静的ファイル
+├── templates/             # 共通テンプレート
+├── manage.py              # Django管理コマンド
+├── requirements.txt       # 依存関係
+└── Procfile              # Render用設定</code></pre>
+<h3 id="アプリケーション設計">2.2 アプリケーション設計</h3>
+<p>各アプリは独立した機能を持ち、DjangoのMVT（Model-View-Template）パターンに従って設計されています。</p>
+<h2 id="データベース設計">3. データベース設計</h2>
+<h3 id="フード注文テーブルfoodorder">3.1
+フード注文テーブル（FoodOrder）</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FoodOrder(models.Model):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 注文内容</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    menu <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">20</span>)           <span class="co"># メニュー名</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> models.PositiveIntegerField(default<span class="op">=</span><span class="dv">1</span>) <span class="co"># 数量</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    eat_in <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">True</span>)       <span class="co"># 店内/テイクアウト</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># クリップ情報</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    clip_color <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>)     <span class="co"># クリップ色</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    clip_number <span class="op">=</span> models.IntegerField()              <span class="co"># クリップ番号</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 注文管理</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    group_id <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">50</span>)       <span class="co"># グループID</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>, default<span class="op">=</span><span class="st">&#39;ok&#39;</span>) <span class="co"># 注文状態</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    is_completed <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>) <span class="co"># 完了フラグ</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 時刻管理</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    timestamp <span class="op">=</span> models.DateTimeField(auto_now_add<span class="op">=</span><span class="va">True</span>) <span class="co"># 受注時刻</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    completed_at <span class="op">=</span> models.DateTimeField(null<span class="op">=</span><span class="va">True</span>, blank<span class="op">=</span><span class="va">True</span>) <span class="co"># 完了時刻</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># その他</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    note <span class="op">=</span> models.TextField(blank<span class="op">=</span><span class="va">True</span>, null<span class="op">=</span><span class="va">True</span>)   <span class="co"># 備考</span></span></code></pre></div>
+<h3 id="アイスクリーム注文テーブルorder">3.2
+アイスクリーム注文テーブル（Order）</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Order(models.Model):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    group_id <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">20</span>)       <span class="co"># グループID</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    size <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">2</span>)            <span class="co"># サイズ（S/W）</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    container <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>)      <span class="co"># 容器（cup/cone）</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    flavor1 <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">50</span>)       <span class="co"># フレーバー1</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    flavor2 <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">50</span>, blank<span class="op">=</span><span class="va">True</span>, null<span class="op">=</span><span class="va">True</span>) <span class="co"># フレーバー2</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    is_completed <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>) <span class="co"># 完了フラグ</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    timestamp <span class="op">=</span> models.DateTimeField(auto_now_add<span class="op">=</span><span class="va">True</span>) <span class="co"># 受注時刻</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>, default<span class="op">=</span><span class="st">&#39;ok&#39;</span>) <span class="co"># 注文状態</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    clip_color <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>)     <span class="co"># クリップ色</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    clip_number <span class="op">=</span> models.IntegerField()              <span class="co"># クリップ番号</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    completed_at <span class="op">=</span> models.DateTimeField(null<span class="op">=</span><span class="va">True</span>, blank<span class="op">=</span><span class="va">True</span>) <span class="co"># 完了時刻</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    is_auto_stopped <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>) <span class="co"># 自動STOP</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    note <span class="op">=</span> models.TextField(blank<span class="op">=</span><span class="va">True</span>, null<span class="op">=</span><span class="va">True</span>)   <span class="co"># 備考</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    is_pudding <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>)  <span class="co"># アフォガードプリン</span></span></code></pre></div>
+<h3 id="かき氷注文テーブルshavediceorder">3.3
+かき氷注文テーブル（ShavedIceOrder）</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ShavedIceOrder(models.Model):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    flavor <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">50</span>)         <span class="co"># フレーバー</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    group_id <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">50</span>, default<span class="op">=</span><span class="st">&#39;&#39;</span>) <span class="co"># グループID</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    is_completed <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>) <span class="co"># 完了フラグ</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    clip_color <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>, default<span class="op">=</span><span class="st">&#39;white&#39;</span>) <span class="co"># クリップ色</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    clip_number <span class="op">=</span> models.IntegerField(default<span class="op">=</span><span class="dv">0</span>)     <span class="co"># クリップ番号</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    timestamp <span class="op">=</span> models.DateTimeField(auto_now_add<span class="op">=</span><span class="va">True</span>) <span class="co"># 受注時刻</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    completed_at <span class="op">=</span> models.DateTimeField(null<span class="op">=</span><span class="va">True</span>, blank<span class="op">=</span><span class="va">True</span>) <span class="co"># 完了時刻</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> models.CharField(max_length<span class="op">=</span><span class="dv">10</span>, default<span class="op">=</span><span class="st">&#39;ok&#39;</span>) <span class="co"># 注文状態</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    is_auto_stopped <span class="op">=</span> models.BooleanField(default<span class="op">=</span><span class="va">False</span>) <span class="co"># 自動STOP</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    note <span class="op">=</span> models.TextField(blank<span class="op">=</span><span class="va">True</span>, null<span class="op">=</span><span class="va">True</span>)   <span class="co"># 備考</span></span></code></pre></div>
+<h2 id="ビュー設計">4. ビュー設計</h2>
+<h3 id="フード注文管理">4.1 フード注文管理</h3>
+<ul>
+<li><strong>food_register</strong>: 注文登録画面</li>
+<li><strong>add_temp_food</strong>: 仮注文追加</li>
+<li><strong>remove_temp_food</strong>: 仮注文削除</li>
+<li><strong>food_kitchen</strong>: キッチン画面</li>
+<li><strong>complete_food</strong>: 注文完了処理</li>
+<li><strong>confirm_food</strong>: 本注文確定</li>
+</ul>
+<h3 id="アイスクリーム注文管理">4.2 アイスクリーム注文管理</h3>
+<ul>
+<li><strong>ice</strong>: 注文画面</li>
+<li><strong>register</strong>: 注文登録</li>
+<li><strong>detail</strong>: 注文詳細</li>
+<li><strong>deshap</strong>: 注文削除</li>
+</ul>
+<h3 id="かき氷注文管理">4.3 かき氷注文管理</h3>
+<ul>
+<li><strong>shavedice</strong>: 注文画面</li>
+<li><strong>shavedice_register</strong>: 注文登録</li>
+<li><strong>shavedice_kitchen</strong>: キッチン画面</li>
+<li><strong>wait_time</strong>: 待ち時間表示</li>
+</ul>
+<h2 id="url設計">5. URL設計</h2>
+<h3 id="メインurl設定">5.1 メインURL設定</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># config/urls.py</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>urlpatterns <span class="op">=</span> [</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;admin/&#39;</span>, admin.site.urls),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;food/&#39;</span>, include(<span class="st">&#39;food.urls&#39;</span>)),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;ice/&#39;</span>, include(<span class="st">&#39;ice.urls&#39;</span>)),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;shavedice/&#39;</span>, include(<span class="st">&#39;shavedice.urls&#39;</span>)),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    path(<span class="st">&#39;mobile/&#39;</span>, include(<span class="st">&#39;mobile.urls&#39;</span>)),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<h3 id="各アプリのurl">5.2 各アプリのURL</h3>
+<p>各アプリケーションで独立したURLルーティングを実装し、名前空間を明確に分離しています。</p>
+<h2 id="セッション管理">6. セッション管理</h2>
+<h3 id="仮注文の管理">6.1 仮注文の管理</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># セッションから仮注文リストを取得</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>temp_food <span class="op">=</span> request.session.get(<span class="st">&#39;temp_food&#39;</span>, [])</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 仮注文をセッションに保存</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>request.session[<span class="st">&#39;temp_food&#39;</span>] <span class="op">=</span> temp_food</span></code></pre></div>
+<h3 id="セッション設定">6.2 セッション設定</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># settings.py</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>SESSION_ENGINE <span class="op">=</span> <span class="st">&#39;django.contrib.sessions.backends.db&#39;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>SESSION_COOKIE_AGE <span class="op">=</span> <span class="dv">86400</span>  <span class="co"># 24時間</span></span></code></pre></div>
+<h2 id="セキュリティ実装">7. セキュリティ実装</h2>
+<h3 id="csrf保護">7.1 CSRF保護</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> django.views.decorators.csrf <span class="im">import</span> csrf_exempt</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">@csrf_exempt</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_temp_food(request):</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 仮注文追加処理</span></span></code></pre></div>
+<h3 id="入力値検証">7.2 入力値検証</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 入力値の妥当性チェック</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> menu <span class="kw">or</span> eat_in_str <span class="kw">not</span> <span class="kw">in</span> [<span class="st">&#39;0&#39;</span>, <span class="st">&#39;1&#39;</span>]:</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> redirect(<span class="st">&#39;food_register&#39;</span>)</span></code></pre></div>
+<h2 id="パフォーマンス最適化">8. パフォーマンス最適化</h2>
+<h3 id="データベースクエリ最適化">8.1 データベースクエリ最適化</h3>
+<ul>
+<li>適切なインデックス設計</li>
+<li>必要最小限のフィールド取得</li>
+<li>クエリの効率化</li>
+</ul>
+<h3 id="静的ファイル最適化">8.2 静的ファイル最適化</h3>
+<ul>
+<li>CSS/JSの最小化</li>
+<li>画像の最適化</li>
+<li>CDNの活用</li>
+</ul>
+<h2 id="エラーハンドリング">9. エラーハンドリング</h2>
+<h3 id="例外処理">9.1 例外処理</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># データベース操作</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    order.save()</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># エラーログ記録</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    logger.error(<span class="ss">f&quot;注文保存エラー: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&quot;</span>)</span></code></pre></div>
+<h3 id="ログ設定">9.2 ログ設定</h3>
+<p>Django標準のログ機能を活用し、適切なログレベルで情報を記録</p>
+<h2 id="テスト戦略">10. テスト戦略</h2>
+<h3 id="単体テスト">10.1 単体テスト</h3>
+<ul>
+<li>モデルのテスト</li>
+<li>ビューのテスト</li>
+<li>フォームのテスト</li>
+</ul>
+<h3 id="統合テスト">10.2 統合テスト</h3>
+<ul>
+<li>エンドツーエンドのテスト</li>
+<li>データベース操作のテスト</li>
+</ul>
+<hr />
+<p><strong>作成日</strong>: 2025年8月 <strong>作成者</strong>: 村岡
+優次郎 <strong>バージョン</strong>: 1.0</p>

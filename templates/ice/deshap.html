@@ -153,7 +153,7 @@
   </style>
 </head>
 <body>
-    <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+    <audio id="role-audio" src="{% static 'sounds/メニューを開く5.mp3' %}"></audio>
     <script>
     window.addEventListener('DOMContentLoaded', function() {
       const audio = document.getElementById('role-audio');
@@ -163,7 +163,7 @@
       }
     });
     </script>
-  <h2>デシャップ担当画面（3秒ごとに更新）</h2>
+  <h2>デシャップ担当画面（ごとに更新）</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -296,10 +296,7 @@
   </script>
 
 <script>
-setInterval(() => {
-  localStorage.setItem('ice_deshap_scroll', window.scrollY);
-  location.reload();
-}, 3000);
+// 自動リロード廃止
 </script>
 <script>
   window.onload = function() {

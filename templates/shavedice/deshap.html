@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-  <h2>かき氷デシャップ担当画面（3秒ごとに更新）</h2>
+  <h2>かき氷デシャップ担当画面</h2>
   <p>未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -108,10 +108,7 @@
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
 <script>
-setInterval(() => {
-  localStorage.setItem('shavedice_deshap_scroll', window.scrollY);
-  location.reload();
-}, 3000);
+// 自動リロード廃止
 </script>
 <script>
   window.onload = function() {
