@@ -36,4 +36,8 @@ urlpatterns = [
     # モバイルオーダーシステム
     # /mobile/で始まるURLをmobileアプリのURLに振り分け
     path('mobile/', include('mobile.urls')),
+    
+    # REST API
+    # /api/で始まるURLをAPIアプリのURLに振り分け
+    path('api/', include('api.urls')),
 ]

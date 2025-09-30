@@ -117,7 +117,17 @@ class FoodOrder(models.Model):
         """
         モデルのメタ情報設定
         - 管理画面での表示名やデフォルトの並び順を指定
+        - パフォーマンス最適化のためのインデックス設定
         """
         verbose_name = "フード注文"           # 管理画面での単数表示名
         verbose_name_plural = "フード注文"    # 管理画面での複数表示名
         ordering = ['-timestamp']            # デフォルトの並び順（新しい順）
+        
+        # パフォーマンス最適化のためのインデックス
+        indexes = [
+            models.Index(fields=['status', 'is_completed'], name='food_status_completed_idx'),
+            models.Index(fields=['clip_color', 'clip_number'], name='food_clip_idx'),
+            models.Index(fields=['timestamp'], name='food_timestamp_idx'),
+            models.Index(fields=['group_id'], name='food_group_idx'),
+            models.Index(fields=['menu', 'is_completed'], name='food_menu_completed_idx'),
+        ]

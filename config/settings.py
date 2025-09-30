@@ -55,14 +55,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',   # メッセージフレームワーク
     'django.contrib.staticfiles', # 静的ファイル管理
     
+    # サードパーティアプリケーション
+    'rest_framework',        # Django REST Framework
+    'corsheaders',          # CORS対応
+    'django_extensions',    # Django拡張機能
+    
     # cafeMuji独自アプリケーション
     'food',        # フード注文管理
     'ice',         # アイスクリーム注文管理
     'shavedice',   # かき氷注文管理
+    'api',         # REST API
 ]
 
 # ミドルウェア設定（リクエスト処理の順序）
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',             # CORS対応（最上位）
     'django.middleware.security.SecurityMiddleware',      # セキュリティ
     'django.contrib.sessions.middleware.SessionMiddleware', # セッション
     'django.middleware.common.CommonMiddleware',          # 共通処理
@@ -160,3 +167,123 @@ SESSION_COOKIE_AGE = 86400  # 24時間（1日）
 
 # ブラウザ終了時にセッションを無効化するか
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # ブラウザ終了後もセッション保持
+
+# ==================== キャッシュ設定 ====================
+
+# パフォーマンス向上のためのキャッシュ設定
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'cafeMuji-cache',
+        'TIMEOUT': 300,  # 5分間キャッシュ
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,  # 最大エントリ数
+            'CULL_FREQUENCY': 3,  # キャッシュ満杯時の削除頻度
+        }
+    }
+}
+
+# ==================== ログ設定 ====================
+
+# 包括的なログ設定
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'cafeMuji': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# ==================== Django REST Framework設定 ====================
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # 開発時のみ
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour'
+    }
+}
+
+# ==================== CORS設定 ====================
+
+# 開発環境でのCORS許可設定
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]

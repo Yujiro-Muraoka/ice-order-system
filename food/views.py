@@ -326,3 +326,74 @@ def submit_order_group(request):
     request.session.modified = True
     
     return redirect('food_register')
+
+
+# ==================== 監視・ヘルスチェック機能 ====================
+
+from django.http import JsonResponse
+from django.db import connection
+
+def food_health_check(request):
+    """
+    フードシステムのヘルスチェック
+    """
+    try:
+        # データベース接続確認
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM food_foodorder")
+            total_orders = cursor.fetchone()[0]
+        
+        # 未完了注文数の取得
+        pending_orders = FoodOrder.objects.filter(is_completed=False).count()
+        
+        # 今日の完了注文数
+        today = timezone.now().date()
+        completed_today = FoodOrder.objects.filter(
+            is_completed=True,
+            timestamp__date=today
+        ).count()
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'timestamp': timezone.now().isoformat(),
+            'data': {
+                'total_orders': total_orders,
+                'pending_orders': pending_orders,
+                'completed_today': completed_today
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'error': str(e)
+        }, status=503)
+
+
+def food_statistics(request):
+    """
+    フード注文の統計情報
+    """
+    try:
+        today = timezone.now().date()
+        
+        # 今日の統計
+        today_orders = FoodOrder.objects.filter(timestamp__date=today)
+        
+        # メニュー別集計
+        from django.db.models import Count
+        menu_stats = today_orders.values('menu').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        return JsonResponse({
+            'date': str(today),
+            'total_orders': today_orders.count(),
+            'completed_orders': today_orders.filter(is_completed=True).count(),
+            'menu_statistics': list(menu_stats)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)

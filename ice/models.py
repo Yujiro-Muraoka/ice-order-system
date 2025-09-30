@@ -56,3 +56,13 @@ class Order(models.Model):
         """メタ情報"""
         verbose_name = "アイスクリーム注文"
         verbose_name_plural = "アイスクリーム注文"
+        ordering = ['-timestamp']
+        
+        # パフォーマンス最適化のためのインデックス
+        indexes = [
+            models.Index(fields=['status', 'is_completed'], name='ice_status_completed_idx'),
+            models.Index(fields=['clip_color', 'clip_number'], name='ice_clip_idx'),
+            models.Index(fields=['group_id'], name='ice_group_idx'),
+            models.Index(fields=['timestamp'], name='ice_timestamp_idx'),
+            models.Index(fields=['size', 'is_completed'], name='ice_size_completed_idx'),
+        ]

@@ -46,3 +46,13 @@ class ShavedIceOrder(models.Model):
         """メタ情報"""
         verbose_name = "かき氷注文"
         verbose_name_plural = "かき氷注文"
+        ordering = ['-timestamp']
+        
+        # パフォーマンス最適化のためのインデックス
+        indexes = [
+            models.Index(fields=['status', 'is_completed'], name='shavedice_status_completed_idx'),
+            models.Index(fields=['clip_color', 'clip_number'], name='shavedice_clip_idx'),
+            models.Index(fields=['group_id'], name='shavedice_group_idx'),
+            models.Index(fields=['timestamp'], name='shavedice_timestamp_idx'),
+            models.Index(fields=['flavor', 'is_completed'], name='shavedice_flavor_completed_idx'),
+        ]
