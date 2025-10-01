@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
@@ -10,7 +10,6 @@ from datetime import timedelta
 from .models import Order, FLAVOR_CHOICES
 from food.models import FoodOrder
 import time
-import uuid
 
 # 共有パスコード
 SHARED_PASSCODE = "1234"
@@ -26,7 +25,7 @@ FLAVORS = [
 def role_select(request):
     """役割選択画面"""
     if not request.session.get('logged_in'):
-        return redirect('/login')
+        return redirect('login')
     
     return render(request, 'common/role_select.html')
 
@@ -36,22 +35,20 @@ def add_temp_ice(request):
     """仮注文をセッションに追加"""
     if request.method != 'POST':
         return JsonResponse({
-            'status': 'error', 
+            'status': 'error',
             'message': 'POST以外は許可されていません'
         }, status=405)
-    
+
     flavor1 = request.POST.get('flavor1')
     flavor2 = request.POST.get('flavor2') or None
     size = request.POST.get('size')
     container = request.POST.get('container')
-    
+
     # 入力チェック
     if not (flavor1 and size and container):
-        return JsonResponse({
-            'status': 'error', 
-            'message': '必要な情報が不足しています'
-        }, status=400)
-    
+        messages.error(request, '必要な情報が不足しています。')
+        return redirect('register_view')
+
     # 仮注文を作成
     ice = {
         'flavor1': flavor1,
@@ -59,20 +56,26 @@ def add_temp_ice(request):
         'size': size,
         'container': container
     }
-    
+
     # セッションに追加
     temp_ice = request.session.get('temp_ice', [])
     temp_ice.append(ice)
     request.session['temp_ice'] = temp_ice
-    
+    request.session.modified = True
+
     # クリップ情報も保存
     clip_color = request.POST.get('clip_color')
     clip_number = request.POST.get('clip_number')
     if clip_color and clip_number:
         request.session['clip_color'] = clip_color
         request.session['clip_number'] = clip_number
-    
-    return JsonResponse({'status': 'ok'})
+        request.session.modified = True
+
+    wants_json = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', '')
+    if wants_json:
+        return JsonResponse({'status': 'ok'})
+
+    return redirect('register_view')
 
 
 @require_POST
@@ -90,7 +93,7 @@ def add_temp_pudding(request):
 def submit_order_group(request):
     """仮注文を本注文としてDBに保存"""
     if request.method != 'POST':
-        return redirect('register')
+        return redirect('register_view')
     
     temp_ice_list = request.session.get('temp_ice', [])
     clip_color = request.POST.get('clip_color')
@@ -99,12 +102,14 @@ def submit_order_group(request):
     
     # 入力チェック
     if not temp_ice_list or not clip_color or not clip_number_str:
-        return redirect('register')
+        messages.warning(request, '仮注文またはクリップ情報が不足しています。')
+        return redirect('register_view')
     
     try:
         clip_number = int(clip_number_str)
     except (ValueError, TypeError):
-        return redirect('register')
+        messages.warning(request, 'クリップ番号が正しくありません。')
+        return redirect('register_view')
     
     # グループID生成
     group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
@@ -142,7 +147,10 @@ def submit_order_group(request):
     
     # セッション初期化
     request.session['temp_ice'] = []
-    return redirect('register')
+    request.session.pop('clip_color', None)
+    request.session.pop('clip_number', None)
+    request.session.modified = True
+    return redirect('register_view')
 
 
 def register_view(request):
@@ -173,9 +181,6 @@ def register_view(request):
 
 def ice_view(request):
     """アイスクリーム一覧画面を表示"""
-    if not request.session.get('logged_in'):
-        return redirect('/login')
-    
     now = timezone.localtime()
     
     # 全注文を取得
@@ -227,21 +232,20 @@ def ice_view(request):
         'pudding_count_completed': pudding_count_completed,
     }
     
+    context['is_logged_in'] = request.session.get('logged_in', False)
     return render(request, 'ice/ice.html', context)
 
 
+@require_POST
 def complete_order(request, order_id):
     """指定IDの注文を完了"""
-    if not request.session.get('logged_in'):
-        return redirect('/login')
-    
     order = get_object_or_404(Order, id=order_id)
     order.is_completed = True
     order.completed_at = timezone.now()
     order.status = 'hold'
     order.save()
     
-    return HttpResponseRedirect('/ice')
+    return redirect('ice_view')
 
 
 @csrf_exempt
@@ -259,8 +263,8 @@ def complete_group(request, group_id):
                 order.save()
         except Exception as e:
             print("[complete_group error]", e)
-    
-    return redirect('/ice')
+
+    return redirect('ice_view')
 
 
 def get_grouped_active_orders():
@@ -296,8 +300,8 @@ def delete_group(request, group_id):
     """指定グループの注文を削除"""
     if request.method == 'POST':
         Order.objects.filter(group_id=group_id).delete()
-    
-    return redirect('/ice')
+
+    return redirect('ice_view')
 
 
 @csrf_protect
@@ -305,14 +309,14 @@ def delete_group_from_deshap(request, group_id):
     """デシャップ画面から指定グループの注文を削除"""
     if request.method == 'POST':
         Order.objects.filter(group_id=group_id).delete()
-    
-    return redirect('/deshap')
+
+    return redirect('deshap')
 
 
 def order_detail(request, order_id):
     """注文詳細画面を表示"""
     if not request.session.get('logged_in'):
-        return redirect('/login')
+        return redirect('login')
     
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'ice/detail.html', {'order': order})
@@ -324,8 +328,9 @@ def delete_temp_ice(request, index):
     if 0 <= index < len(temp_ice):
         del temp_ice[index]
         request.session['temp_ice'] = temp_ice
-    
-    return redirect('/register')
+        request.session.modified = True
+
+    return redirect('register_view')
 
 
 def deshap_view(request):
@@ -407,8 +412,8 @@ def update_status(request, group_id, new_status):
     """指定グループの状態を更新"""
     if request.method == 'POST':
         Order.objects.filter(group_id=group_id).update(status=new_status)
-    
-    return redirect('/deshap')
+
+    return redirect('deshap')
 
 
 def health_check(request):

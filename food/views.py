@@ -350,7 +350,7 @@ def submit_order_group(request):
     for item in temp_food:
         FoodOrder.objects.create(
             menu=item['menu'],
-            quantity=item['quantity'],
+            quantity=item.get('quantity', 1),
             eat_in=item.get('eat_in', True),
             clip_color=clip_color,
             clip_number=clip_number,

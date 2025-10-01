@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
+from django.contrib import messages
 from .models import ShavedIceOrder
 from food.models import FoodOrder
 import time
@@ -11,9 +13,7 @@ import time
 
 def shavedice_register(request):
     """かき氷注文登録画面を表示"""
-    print("--- shavedice_register ---")
     temp_ice = request.session.get("temp_ice", [])
-    print("Session temp_ice (in register view):", temp_ice)
     
     flavor_choices = ShavedIceOrder.FLAVOR_CHOICES
     
@@ -28,7 +28,6 @@ def shavedice_register(request):
 @csrf_exempt
 def add_temp_ice(request):
     """仮注文をセッションに追加"""
-    print("POST DATA:", request.POST)
     if request.method != 'POST':
         return JsonResponse({
             'status': 'error', 
@@ -39,10 +38,8 @@ def add_temp_ice(request):
     
     # 入力チェック
     if not flavor:
-        return JsonResponse({
-            'status': 'error', 
-            'message': '必要な情報が不足しています'
-        }, status=400)
+        messages.error(request, 'フレーバーを選択してください。')
+        return redirect('shavedice_register')
     
     # 仮注文を作成
     ice = {'flavor': flavor}
@@ -57,8 +54,13 @@ def add_temp_ice(request):
     if clip_color and clip_number:
         request.session['clip_color'] = clip_color
         request.session['clip_number'] = clip_number
+        request.session.modified = True
     
-    return JsonResponse({'status': 'ok'})
+    wants_json = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', '')
+    if wants_json:
+        return JsonResponse({'status': 'ok'})
+    
+    return redirect('shavedice_register')
 
 
 @csrf_exempt
@@ -106,6 +108,9 @@ def submit_order_group(request):
     
     # セッション初期化
     request.session['temp_ice'] = []
+    request.session.pop('clip_color', None)
+    request.session.pop('clip_number', None)
+    request.session.modified = True
     return redirect('shavedice_register')
 
 
@@ -159,9 +164,6 @@ def shavedice_kitchen(request):
 
 def ice_view(request):
     """かき氷一覧画面を表示"""
-    if not request.session.get('logged_in'):
-        return redirect('/login')
-    
     now = timezone.localtime()
     
     # 全注文を取得
@@ -201,21 +203,20 @@ def ice_view(request):
         'active_count': active_count,
     }
     
+    context['is_logged_in'] = request.session.get('logged_in', False)
     return render(request, 'shavedice/ice.html', context)
 
 
+@require_POST
 def complete_order(request, order_id):
     """指定IDの注文を完了"""
-    if not request.session.get('logged_in'):
-        return redirect('/login')
-    
     order = get_object_or_404(ShavedIceOrder, id=order_id)
     order.is_completed = True
     order.completed_at = timezone.now()
     order.status = 'hold'
     order.save()
     
-    return HttpResponseRedirect('/ice')
+    return redirect('shavedice_kitchen')
 
 
 @csrf_exempt
@@ -224,7 +225,7 @@ def complete_group(request, group_id):
     if request.method == 'POST':
         now = timezone.now()
         ShavedIceOrder.objects.filter(group_id=group_id).update(is_completed=True, completed_at=now)
-    return redirect('/shavedice/kitchen/')
+    return redirect('shavedice_kitchen')
 
 
 def get_grouped_active_orders():
@@ -261,13 +262,13 @@ def delete_group(request, group_id):
     if request.method == 'POST':
         ShavedIceOrder.objects.filter(group_id=group_id).delete()
     
-    return redirect('/shavedice_kitchen')
+    return redirect('shavedice_kitchen')
 
 
 def order_detail(request, order_id):
     """注文詳細画面を表示"""
     if not request.session.get('logged_in'):
-        return redirect('/login')
+        return redirect('login')
     
     order = get_object_or_404(ShavedIceOrder, id=order_id)
     return render(request, 'shavedice/detail.html', {'order': order})
@@ -279,8 +280,9 @@ def delete_temp_ice(request, index):
     if 0 <= index < len(temp_ice):
         del temp_ice[index]
         request.session['temp_ice'] = temp_ice
+        request.session.modified = True
     
-    return redirect('/shavedice_register')
+    return redirect('shavedice_register')
 
 
 @csrf_exempt
@@ -288,7 +290,7 @@ def shavedice_update_status(request, group_id, new_status):
     """かき氷デシャップ画面からグループの状態を更新"""
     if request.method == 'POST':
         ShavedIceOrder.objects.filter(group_id=group_id).update(status=new_status)
-    return redirect('/shavedice/deshap/')
+    return redirect('shavedice_deshap')
 
 
 def shavedice_deshap_view(request):

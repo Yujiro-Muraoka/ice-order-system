@@ -455,8 +455,12 @@
   <form onsubmit="event.preventDefault(); addIce();">
     <label>サイズ:</label>
     <div class="select-group">
-<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">S</button>
-<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">W</button>
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">
+  シングル (S)
+</button>
+<button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'W', this)">
+  ダブル (W)
+</button>
     </div>
 
 <script>
