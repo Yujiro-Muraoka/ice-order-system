@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Count
 from collections import defaultdict
 from datetime import timedelta
 from .models import Order, FLAVOR_CHOICES
@@ -22,71 +21,71 @@ FLAVORS = [
 ]
 
 
+def _group_orders_by_id(orders):
+    grouped = {}
+    for order in orders:
+        grouped.setdefault(order.group_id, []).append(order)
+    return grouped
+
+
+def _separate_active_completed(grouped_orders, now):
+    active = {}
+    completed = {}
+    for group_id, orders in grouped_orders.items():
+        sorted_orders = sorted(orders, key=lambda o: o.timestamp)
+        if all(o.is_completed for o in sorted_orders):
+            completed_times = [o.completed_at for o in sorted_orders if o.completed_at]
+            if completed_times and now - max(completed_times) <= timedelta(seconds=30):
+                completed[group_id] = sorted_orders
+        else:
+            active[group_id] = sorted_orders
+    return active, completed
+
+
+def _update_hold_status():
+    pending_groups = list(
+        Order.objects.filter(is_completed=False, status='hold')
+        .values_list('group_id', flat=True)
+        .distinct()
+    )
+    if not pending_groups:
+        return
+    new_status = 'ok' if len(pending_groups) <= 3 else 'stop'
+    Order.objects.filter(group_id__in=pending_groups).update(status=new_status)
+
+
+def _find_recent_groups(grouped_orders, threshold_seconds=3, reference_time=None):
+    now = reference_time or timezone.now()
+    recent_ids = []
+    for group_id, orders in grouped_orders.items():
+        if all(not o.is_completed for o in orders):
+            if any((now - o.timestamp).total_seconds() < threshold_seconds for o in orders):
+                recent_ids.append(group_id)
+    return recent_ids
+
+
+def _count_pudding_by_group(group_orders):
+    return {
+        group_id: sum(1 for o in orders if o.is_pudding)
+        for group_id, orders in group_orders.items()
+    }
+
+
+def _count_active_order_items(active_orders):
+    return sum(
+        1
+        for orders in active_orders.values()
+        for order in orders
+        if not order.is_completed
+    )
+
+
 def role_select(request):
     """役割選択画面"""
     if not request.session.get('logged_in'):
         return redirect('login')
     
     return render(request, 'common/role_select.html')
-
-
-@csrf_exempt
-def add_temp_ice(request):
-    """仮注文をセッションに追加"""
-    if request.method != 'POST':
-        return JsonResponse({
-            'status': 'error',
-            'message': 'POST以外は許可されていません'
-        }, status=405)
-
-    flavor1 = request.POST.get('flavor1')
-    flavor2 = request.POST.get('flavor2') or None
-    size = request.POST.get('size')
-    container = request.POST.get('container')
-
-    # 入力チェック
-    if not (flavor1 and size and container):
-        messages.error(request, '必要な情報が不足しています。')
-        return redirect('register_view')
-
-    # 仮注文を作成
-    ice = {
-        'flavor1': flavor1,
-        'flavor2': flavor2,
-        'size': size,
-        'container': container
-    }
-
-    # セッションに追加
-    temp_ice = request.session.get('temp_ice', [])
-    temp_ice.append(ice)
-    request.session['temp_ice'] = temp_ice
-    request.session.modified = True
-
-    # クリップ情報も保存
-    clip_color = request.POST.get('clip_color')
-    clip_number = request.POST.get('clip_number')
-    if clip_color and clip_number:
-        request.session['clip_color'] = clip_color
-        request.session['clip_number'] = clip_number
-        request.session.modified = True
-
-    wants_json = request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('accept', '')
-    if wants_json:
-        return JsonResponse({'status': 'ok'})
-
-    return redirect('register_view')
-
-
-@require_POST
-def add_temp_pudding(request):
-    """仮注文リストにアフォガードプリンを追加"""
-    temp_ice = request.session.get('temp_ice', [])
-    temp_ice.append({'is_pudding': True})
-    request.session['temp_ice'] = temp_ice
-    request.session.modified = True
-    
-    return HttpResponse("ok")
 
 
 @csrf_exempt
@@ -212,6 +211,7 @@ def ice_view(request):
             active_orders[group_id] = orders
     
     active_count = len(active_orders)
+    active_order_total = _count_active_order_items(active_orders)
     
     # プリン数を計算
     pudding_count_active = sum(
@@ -238,6 +238,7 @@ def ice_view(request):
         'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
+        'active_order_total': active_order_total,
         'pudding_count_active': pudding_count_active,
         'pudding_count_completed': pudding_count_completed,
         'pudding_counts_active_by_group': pudding_counts_active_by_group,
@@ -347,77 +348,29 @@ def delete_temp_ice(request, index):
 
 def deshap_view(request):
     """デシャップ画面を表示"""
+    _update_hold_status()
     now = timezone.now()
-    
-    # 全注文を取得
-    all_orders = list(Order.objects.order_by('timestamp'))
-    
-    # グループ化
-    grouped_orders = {}
-    for order in all_orders:
-        grouped_orders.setdefault(order.group_id, []).append(order)
-    
-    # 未完了・完了注文を分離
-    active_orders = {}
-    completed_orders = {}
-    
-    for group_id, orders in grouped_orders.items():
-        sorted_orders = sorted(orders, key=lambda o: o.timestamp)
-        if all(o.is_completed for o in sorted_orders):
-            completed_times = [o.completed_at for o in sorted_orders if o.completed_at]
-            if completed_times and now - max(completed_times) <= timedelta(seconds=30):
-                completed_orders[group_id] = sorted_orders
-        else:
-            active_orders[group_id] = sorted_orders
-    
-    # 自動状態更新
-    pending = Order.objects.filter(is_completed=False, status='hold')
-    count = pending.values('group_id').distinct().count()
-    target_groups = pending.values_list('group_id', flat=True).distinct()
-    
-    for group_id in target_groups:
-        group_orders = Order.objects.filter(group_id=group_id)
-        if group_orders.exists():
-            new_status = 'ok' if count <= 3 else 'stop'
-            group_orders.update(status=new_status)
-    
-    # 未完了グループ数を計算
-    active_count = sum(
-        1 for orders in active_orders.values()
-        if any(not o.is_completed for o in orders)
-    )
-    
-    # 新着オーダー判定
-    newly_created_group_ids = []
-    for group_id, orders in grouped_orders.items():
-        if all(not o.is_completed for o in orders):
-            created_within_3s = any(
-                (timezone.now() - o.timestamp).total_seconds() < 3 
-                for o in orders
-            )
-            if created_within_3s:
-                newly_created_group_ids.append(group_id)
-    
-    # 画面上でグループ毎のプリン数を表示するため、未完了・完了でそれぞれ個数辞書を構築。
-    pudding_counts_active_by_group = {
-        group_id: sum(1 for o in orders if o.is_pudding)
-        for group_id, orders in active_orders.items()
-    }
-    pudding_counts_completed_by_group = {
-        group_id: sum(1 for o in orders if o.is_pudding)
-        for group_id, orders in completed_orders.items()
-    }
+
+    grouped_orders = _group_orders_by_id(Order.objects.order_by('timestamp'))
+    active_orders, completed_orders = _separate_active_completed(grouped_orders, now)
+
+    active_count = len(active_orders)
+    active_order_total = _count_active_order_items(active_orders)
+    newly_created_group_ids = _find_recent_groups(grouped_orders, reference_time=now)
+    pudding_counts_active_by_group = _count_pudding_by_group(active_orders)
+    pudding_counts_completed_by_group = _count_pudding_by_group(completed_orders)
 
     context = {
         'grouped_orders': active_orders,
         'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
+        'active_order_total': active_order_total,
         'newly_created_group_ids': newly_created_group_ids,
         'pudding_counts_active_by_group': pudding_counts_active_by_group,
         'pudding_counts_completed_by_group': pudding_counts_completed_by_group,
     }
-    
+
     return render(request, 'ice/deshap.html', context)
 
 

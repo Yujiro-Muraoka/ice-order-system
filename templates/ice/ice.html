@@ -238,7 +238,9 @@ window.onload = function() {
 };
     </script>
   <h2>アイスクリーム注文一覧</h2>
-  <p id="active-count" data-auto-refresh-value="{{ active_count }}">未完了オーダー数: {{ active_count }}</p>
+  <p id="active-count" data-auto-refresh-value="{{ active_order_total }}">
+    未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
+  </p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>

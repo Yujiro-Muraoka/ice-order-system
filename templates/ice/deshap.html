@@ -172,7 +172,9 @@
     });
     </script>
   <h2>デシャップ担当画面（ごとに更新）</h2>
-  <p id="deshap-active-count" data-auto-refresh-value="{{ active_count }}">未完了オーダー数: {{ active_count }}</p>
+  <p id="deshap-active-count" data-auto-refresh-value="{{ active_order_total }}">
+    未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
+  </p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 

@@ -199,6 +199,12 @@ def food_kitchen(request):
     
     # キッチン画面ではグループ単位のプリン個数までは不要なので、総数だけコンテキストに渡す。
     active_count = len(active_orders)
+    active_order_total = sum(
+        order.quantity
+        for orders in active_orders.values()
+        for order in orders
+        if not order.is_completed
+    )
     
     # テンプレートに渡すデータを準備
     context = {
@@ -208,6 +214,7 @@ def food_kitchen(request):
         'pudding_count_active': pudding_count_active,
         'pudding_count_completed': pudding_count_completed,
         'active_count': active_count,
+        'active_order_total': active_order_total,
     }
     
     return render(request, 'food/food_kitchen.html', context)
@@ -378,6 +385,7 @@ def food_health_check(request):
     """
     フードシステムのヘルスチェック
     """
+    del request
     try:
         # データベース接続確認
         with connection.cursor() as cursor:
@@ -415,6 +423,7 @@ def food_statistics(request):
     """
     フード注文の統計情報
     """
+    del request
     try:
         today = timezone.now().date()
         
