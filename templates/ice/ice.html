@@ -190,6 +190,7 @@
 
 
   </style>
+  <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
 <body>
     <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
@@ -220,6 +221,12 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   // 今回の値を保存
   localStorage.setItem('ice_active_count', nowCount);
+  
+  // 自動更新機能を開始
+  const autoRefresh = new AutoRefresh({
+    storageKey: 'ice_active_count',
+    interval: 5000
+  });
 });
 // 自動リロードを廃止
 window.onload = function() {

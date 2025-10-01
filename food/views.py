@@ -137,7 +137,12 @@ def food_kitchen(request):
         active_orders: 未完了の注文グループ
         completed_orders: 完了済みの注文グループ（30秒以内）
         now: 現在時刻
+        pudding_count_active: 未完了のアフォガードプリン数
+        pudding_count_completed: 完了済みのアフォガードプリン数
+        active_count: 未完了注文数
     """
+    from ice.models import Order as IceOrder
+    
     now = timezone.now()
     grouped_orders = defaultdict(list)
     
@@ -145,6 +150,9 @@ def food_kitchen(request):
     all_orders = FoodOrder.objects.all().order_by('timestamp')
     for order in all_orders:
         grouped_orders[order.group_id].append(order)
+        # 経過時間を計算
+        order.elapsed_seconds = int((now - order.timestamp).total_seconds())
+        order.elapsed_minutes = order.elapsed_seconds // 60
     
     # 未完了・完了注文を分離
     active_orders = {}
@@ -162,11 +170,43 @@ def food_kitchen(request):
             # 未完了の注文はactive_ordersに追加
             active_orders[group_id] = orders
     
+    # アイスクリームのアフォガードプリン数を計算
+    ice_active_orders = {}
+    ice_completed_orders = {}
+    ice_all_orders = IceOrder.objects.order_by('timestamp')
+    ice_grouped_orders = defaultdict(list)
+    
+    for order in ice_all_orders:
+        ice_grouped_orders[order.group_id].append(order)
+    
+    for group_id, orders in ice_grouped_orders.items():
+        if all(o.is_completed for o in orders):
+            latest = max((o.completed_at for o in orders if o.completed_at), default=None)
+            if latest and now - latest <= timezone.timedelta(seconds=30):
+                ice_completed_orders[group_id] = orders
+        else:
+            ice_active_orders[group_id] = orders
+    
+    # プリン数を計算
+    pudding_count_active = sum(
+        sum(1 for o in orders if o.is_pudding)
+        for orders in ice_active_orders.values()
+    )
+    pudding_count_completed = sum(
+        sum(1 for o in orders if o.is_pudding)
+        for orders in ice_completed_orders.values()
+    )
+    
+    active_count = len(active_orders)
+    
     # テンプレートに渡すデータを準備
     context = {
         'active_orders': active_orders,
         'completed_orders': completed_orders,
         'now': now,
+        'pudding_count_active': pudding_count_active,
+        'pudding_count_completed': pudding_count_completed,
+        'active_count': active_count,
     }
     
     return render(request, 'food/food_kitchen.html', context)

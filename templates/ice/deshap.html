@@ -151,6 +151,7 @@
 
     .logout-bottom { text-align: center; margin-top: 30px; }
   </style>
+  <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
 <body>
     <audio id="role-audio" src="{% static 'sounds/メニューを開く5.mp3' %}"></audio>
@@ -161,6 +162,12 @@
         audio.currentTime = 0;
         audio.play();
       }
+      
+      // 自動更新機能を開始
+      new AutoRefresh({
+        storageKey: 'deshap_active_count',
+        interval: 5000
+      });
     });
     </script>
   <h2>デシャップ担当画面（ごとに更新）</h2>

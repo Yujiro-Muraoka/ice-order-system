@@ -266,6 +266,7 @@
 
 
   </style>
+  <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
 <body>
   <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
@@ -296,6 +297,12 @@
       }
       // 今回の値を保存
       localStorage.setItem('shavedice_active_count', nowCount);
+      
+      // 自動更新機能を開始
+      new AutoRefresh({
+        storageKey: 'shavedice_active_count',
+        interval: 5000
+      });
     });
     // 自動リロード廃止
     window.addEventListener('load', () => {
