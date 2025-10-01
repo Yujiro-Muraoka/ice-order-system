@@ -39,16 +39,36 @@
     }
     .btn { width: 32%; }
     .btn.selected, .clip-btn.selected {
-      background-color: #007bff; color: white; border: 2px solid #0056b3;
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #0056b3;
     }
     .btn-grid, .clip-grid {
-      display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: space-between;
+      margin-bottom: 10px;
     }
-    .ice-list { margin-top: 20px; padding: 10px; border: 1px dashed #888; font-size: 16px; }
-    .logout-bottom { text-align: center; margin-top: 30px; }
+    .ice-list {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #888;
+      font-size: 16px;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
     .add-button {
-      margin: 10px 0; padding: 16px; font-size: 18px; background-color: #28a745; color: white;
-      border: none; border-radius: 8px; width: 100%;
+      margin: 10px 0;
+      padding: 16px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
     }
     .clip-section {
       margin-top: 12px;
@@ -289,9 +309,11 @@
 </script>
 
 <script>
-  document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', () => {
-      sessionStorage.setItem('scrollPos', window.scrollY);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', () => {
+        sessionStorage.setItem('scrollPos', window.scrollY);
+      });
     });
   });
 </script>
@@ -306,73 +328,63 @@
     }
   });
 </script>
-  <script>
-    let selected = {};
-    function selectOption(group, value, button) {
-      selected[group] = value;
-      document.querySelectorAll(`[data-group="${group}"]`).forEach(btn => btn.classList.remove('selected'));
-      button.classList.add('selected');
-      if (group === 'size') toggleFlavor2();
+<script>
+  let selected = {};
+
+  function selectOption(group, value, button) {
+    selected[group] = value;
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(btn => btn.classList.remove('selected'));
+    button.classList.add('selected');
+    if (group === 'size') {
+      toggleFlavor2();
     }
-    function toggleFlavor2() {
-      const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
-      if (selected['size'] === 'S') {
-        selected['flavor2'] = null;
-        flavor2Btns.forEach(btn => { btn.disabled = true; btn.classList.remove('selected'); });
-      } else {
-        flavor2Btns.forEach(btn => btn.disabled = false);
-      }
-    }
-    function selectClipColor(color, button) {
-      document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
-      button.classList.add('selected');
-      document.getElementById('clip_color_input').value = color;
-    }
-    function selectClipNumber(number, button) {
-      document.querySelectorAll('.clip-number-grid .clip-btn').forEach(btn => btn.classList.remove('selected'));
-      const input = document.getElementById('clip_number_input');
-      if (button.classList.contains('selected')) {
-        button.classList.remove('selected');
-        input.value = '';
-      } else {
-        button.classList.add('selected');
-        input.value = number;
-      }
-    }
-    function validateClipSelection() {
-      const color = document.getElementById('clip_color_input').value;
-      const number = document.getElementById('clip_number_input').value;
-      if (!color || !number) {
-        alert("オーダー表の色と番号を選んでください。");
-        return false;
-      }
-      return true;
-    }
-    async function addIce() {
-      if (!selected.size || !selected.container || !selected.flavor1) {
-        alert("サイズ・容器・アイス（1つ目）を選択してください。");
-        return;
-      }
-      if (selected.size === 'W' && !selected.flavor2) {
-        alert("ダブルサイズの場合は2つ目のアイスも選んでください。");
-        return;
-      }
-      const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': '{{ csrf_token }}'
-      };
-      const params = new URLSearchParams({
-        size: selected.size,
-        container: selected.container,
-        flavor1: selected.flavor1,
-        flavor2: selected.flavor2 || ""
+  }
+
+  function toggleFlavor2() {
+    const flavor2Btns = document.querySelectorAll('[data-group="flavor2"]');
+    if (selected.size === 'S') {
+      selected.flavor2 = null;
+      flavor2Btns.forEach(btn => {
+        btn.disabled = true;
+        btn.classList.remove('selected');
       });
-      await fetch('/add_temp_ice/', {
-        method: 'POST', headers: headers, body: params.toString()
+    } else {
+      flavor2Btns.forEach(btn => {
+        btn.disabled = false;
       });
-      location.reload();
     }
-  </script>
+  }
+
+  function selectClipColor(color, button) {
+    document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
+    button.classList.add('selected');
+    document.getElementById('clip_color_input').value = color;
+  }
+
+  function selectClipNumber(number, button) {
+    document.querySelectorAll('.clip-number-grid .clip-btn').forEach(btn => btn.classList.remove('selected'));
+    const input = document.getElementById('clip_number_input');
+    if (button.classList.contains('selected')) {
+      button.classList.remove('selected');
+      input.value = '';
+    } else {
+      button.classList.add('selected');
+      input.value = number;
+    }
+  }
+
+  function validateClipSelection() {
+    const color = document.getElementById('clip_color_input').value;
+    const number = document.getElementById('clip_number_input').value;
+    if (!color || !number) {
+      alert('オーダー表の色と番号を選んでください。');
+      return false;
+    }
+    return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', toggleFlavor2);
+</script>
 
 <script>
   function openHelp() {
@@ -410,7 +422,7 @@
 
 
   <p style="font-weight: bold; color: #6B4226; font-size: 16px; margin-bottom: 10px;">🍮 アフォガードプリン専用の追加はこちら</p>
-  <button onclick="addPudding()" style="
+  <button onclick="addPudding(this)" style="
     background-color: #6B4226;
     color: white;
     padding: 16px;
@@ -453,7 +465,7 @@
 
 
   <form onsubmit="event.preventDefault(); addIce();">
-    <label>サイズ:</label>
+  <p class="item-label">サイズ:</p>
     <div class="select-group">
 <button type="button" class="select-btn" data-group="size" onclick="selectOption('size', 'S', this)">
   シングル (S)
@@ -513,9 +525,9 @@ function changeQty(delta, inputId, displayId) {
 </script>
 
 <script>
-async function addPudding() {
+async function addPudding(button) {
   const quantity = parseInt(document.getElementById('pudding-quantity').value);
-  const btn = event.target;
+  const btn = button;
   btn.disabled = true;
   btn.textContent = "🍮 追加中...";
 
@@ -547,19 +559,19 @@ async function addPudding() {
 
 </script>
 
-    <label>容器:</label>
+<p class="item-label">容器:</p>
 <div class="select-group">
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cup', this)">カップ</button>
 <button type="button" class="select-btn" data-group="container" onclick="selectOption('container', 'cone', this)">コーン</button>
 </div>
 
-<label>アイスクリーム:</label>
+<p class="item-label">アイスクリーム:</p>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor1" onclick="selectOption('flavor1', '{{ flavor }}', this)">{{ flavor }}</button>
   {% endfor %}
 </div>
-<label>アイス（2つ目）※Wのみ:</label>
+<p class="item-label">アイス（2つ目）※Wのみ:</p>
 <div class="flavor-grid">
   {% for flavor in flavors %}
     <button type="button" class="select-btn" data-group="flavor2" onclick="selectOption('flavor2', '{{ flavor }}', this)">{{ flavor }}</button>
@@ -631,14 +643,14 @@ async function addPudding() {
 <!-- 1〜8 -->
 <div class="clip-number-grid">
   {% for i in 1|to:9 %}
-    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
+    <button type="button" class="clip-btn" data-number="{{ i }}" onclick="selectClipNumber(this.dataset.number, this)">{{ i }}</button>
   {% endfor %}
 </div>
 
 <!-- 9〜16 -->
 <div class="clip-number-grid">
   {% for i in 9|to:17 %}
-    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
+    <button type="button" class="clip-btn" data-number="{{ i }}" onclick="selectClipNumber(this.dataset.number, this)">{{ i }}</button>
   {% endfor %}
 </div>
 
