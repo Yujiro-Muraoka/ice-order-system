@@ -89,6 +89,66 @@ def role_select(request):
 
 
 @csrf_exempt
+def add_temp_ice(request):
+    """仮注文をセッションに追加"""
+    if request.method != 'POST':
+        return JsonResponse(
+            {
+                'status': 'error',
+                'message': 'POST以外は許可されていません'
+            },
+            status=405,
+        )
+
+    flavor1 = request.POST.get('flavor1')
+    flavor2 = request.POST.get('flavor2') or None
+    size = request.POST.get('size')
+    container = request.POST.get('container')
+
+    if not (flavor1 and size and container):
+        messages.error(request, '必要な情報が不足しています。')
+        return redirect('register_view')
+
+    ice = {
+        'flavor1': flavor1,
+        'flavor2': flavor2,
+        'size': size,
+        'container': container,
+    }
+
+    temp_ice = request.session.get('temp_ice', [])
+    temp_ice.append(ice)
+    request.session['temp_ice'] = temp_ice
+    request.session.modified = True
+
+    clip_color = request.POST.get('clip_color')
+    clip_number = request.POST.get('clip_number')
+    if clip_color and clip_number:
+        request.session['clip_color'] = clip_color
+        request.session['clip_number'] = clip_number
+        request.session.modified = True
+
+    wants_json = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('accept', '')
+    )
+    if wants_json:
+        return JsonResponse({'status': 'ok'})
+
+    return redirect('register_view')
+
+
+@require_POST
+def add_temp_pudding(request):
+    """仮注文リストにアフォガードプリンを追加"""
+    temp_ice = request.session.get('temp_ice', [])
+    temp_ice.append({'is_pudding': True})
+    request.session['temp_ice'] = temp_ice
+    request.session.modified = True
+    return HttpResponse("ok")
+
+
+@csrf_exempt
 def submit_order_group(request):
     """仮注文を本注文としてDBに保存"""
     if request.method != 'POST':
