@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -53,15 +54,30 @@
       h1 { font-size: 18px; }
     }
   </style>
+  <script src="{% static 'js/auto-refresh.js' %}"></script>
   <script>
-    // ごとにページを自動更新
-    // 自動リロード廃止
+    document.addEventListener('DOMContentLoaded', () => {
+      new AutoRefresh({
+        interval: 5000,
+        storageKey: 'shavedice_wait_time',
+        valueSelector: '#wait-minutes',
+        parseValue: (raw) => {
+          if (raw === null || raw === undefined) {
+            return null;
+          }
+          const match = String(raw).match(/-?\d+(?:\.\d+)?/);
+          return match ? Number(match[0]) : null;
+        },
+        forceReload: true,
+        createButton: false
+      });
+    });
   </script>
 </head>
 <body>
   <div class="container">
     <h1>かき氷の待ち時間</h1>
-    <div class="big">約 {{ wait_minutes }} 分</div>
+    <div class="big" id="wait-minutes" data-auto-refresh-value="{{ wait_minutes }}">約 {{ wait_minutes }} 分</div>
   </div>
 </body>
 </html> 

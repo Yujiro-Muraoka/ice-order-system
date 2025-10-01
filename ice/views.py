@@ -223,6 +223,16 @@ def ice_view(request):
         for orders in completed_orders.values()
     )
     
+    # 一覧上で「どのグループにプリンが何個あるか」を表示するため、グループ単位の個数も計算する。
+    pudding_counts_active_by_group = {
+        group_id: sum(1 for o in orders if o.is_pudding)
+        for group_id, orders in active_orders.items()
+    }
+    pudding_counts_completed_by_group = {
+        group_id: sum(1 for o in orders if o.is_pudding)
+        for group_id, orders in completed_orders.items()
+    }
+
     context = {
         'grouped_orders': active_orders,
         'completed_orders': completed_orders,
@@ -230,6 +240,8 @@ def ice_view(request):
         'active_count': active_count,
         'pudding_count_active': pudding_count_active,
         'pudding_count_completed': pudding_count_completed,
+        'pudding_counts_active_by_group': pudding_counts_active_by_group,
+        'pudding_counts_completed_by_group': pudding_counts_completed_by_group,
     }
     
     context['is_logged_in'] = request.session.get('logged_in', False)
@@ -386,12 +398,24 @@ def deshap_view(request):
             if created_within_3s:
                 newly_created_group_ids.append(group_id)
     
+    # 画面上でグループ毎のプリン数を表示するため、未完了・完了でそれぞれ個数辞書を構築。
+    pudding_counts_active_by_group = {
+        group_id: sum(1 for o in orders if o.is_pudding)
+        for group_id, orders in active_orders.items()
+    }
+    pudding_counts_completed_by_group = {
+        group_id: sum(1 for o in orders if o.is_pudding)
+        for group_id, orders in completed_orders.items()
+    }
+
     context = {
         'grouped_orders': active_orders,
         'completed_orders': completed_orders,
         'now': now,
         'active_count': active_count,
         'newly_created_group_ids': newly_created_group_ids,
+        'pudding_counts_active_by_group': pudding_counts_active_by_group,
+        'pudding_counts_completed_by_group': pudding_counts_completed_by_group,
     }
     
     return render(request, 'ice/deshap.html', context)

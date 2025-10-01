@@ -208,8 +208,8 @@ function unlockAudio() {
 }
 document.body.addEventListener('click', unlockAudio, { once: true });
 window.addEventListener('DOMContentLoaded', function() {
-  // 未完了オーダー数を取得
-  const nowCount = Number(document.getElementById('active-count').textContent.replace(/[^0-9]/g, ''));
+  const activeCountEl = document.getElementById('active-count');
+  const nowCount = Number(activeCountEl?.dataset.autoRefreshValue || 0);
   const prevCount = Number(localStorage.getItem('ice_active_count') || 0);
   // 新規オーダーが入った時だけ音を鳴らす
   if (nowCount > prevCount && audioUnlocked) {
@@ -225,7 +225,8 @@ window.addEventListener('DOMContentLoaded', function() {
   // 自動更新機能を開始
   const autoRefresh = new AutoRefresh({
     storageKey: 'ice_active_count',
-    interval: 5000
+    interval: 5000,
+    valueSelector: '#active-count'
   });
 });
 // 自動リロードを廃止
@@ -237,7 +238,7 @@ window.onload = function() {
 };
     </script>
   <h2>アイスクリーム注文一覧</h2>
-  <p id="active-count">未完了オーダー数: {{ active_count }}</p>
+  <p id="active-count" data-auto-refresh-value="{{ active_count }}">未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -284,11 +285,13 @@ window.onload = function() {
 
 <ul>
 
-{% if pudding_count_active > 0 %}
-  <li style="font-weight: bold; color: #a52a2a;">
-    🍮 アフォガードプリン × {{ pudding_count_active }}個
-  </li>
-{% endif %}
+{% with pudding_count=pudding_counts_active_by_group|get_item:group_id %}
+  {% if pudding_count %}
+    <li style="font-weight: bold; color: #a52a2a;">
+      🍮 アフォガードプリン × {{ pudding_count }}個
+    </li>
+  {% endif %}
+{% endwith %}
 
 
   {% for order in orders %}
@@ -331,11 +334,13 @@ window.onload = function() {
 
       <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
 <ul>
-{% if pudding_count_completed > 0 %}
-  <li style="font-weight: bold; color: #a52a2a;">
-    🍮 アフォガードプリン × {{ pudding_count_completed }}個
-  </li>
-{% endif %}
+{% with pudding_count=pudding_counts_completed_by_group|get_item:group_id %}
+  {% if pudding_count %}
+    <li style="font-weight: bold; color: #a52a2a;">
+      🍮 アフォガードプリン × {{ pudding_count }}個
+    </li>
+  {% endif %}
+{% endwith %}
 
 
 

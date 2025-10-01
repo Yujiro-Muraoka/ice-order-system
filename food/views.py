@@ -197,6 +197,7 @@ def food_kitchen(request):
         for orders in ice_completed_orders.values()
     )
     
+    # キッチン画面ではグループ単位のプリン個数までは不要なので、総数だけコンテキストに渡す。
     active_count = len(active_orders)
     
     # テンプレートに渡すデータを準備

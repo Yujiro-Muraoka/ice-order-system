@@ -166,12 +166,13 @@
       // 自動更新機能を開始
       new AutoRefresh({
         storageKey: 'deshap_active_count',
-        interval: 5000
+        interval: 5000,
+        valueSelector: '#deshap-active-count'
       });
     });
     </script>
   <h2>デシャップ担当画面（ごとに更新）</h2>
-  <p>未完了オーダー数: {{ active_count }}</p>
+  <p id="deshap-active-count" data-auto-refresh-value="{{ active_count }}">未完了オーダー数: {{ active_count }}</p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 
@@ -205,9 +206,11 @@
     {% endif %}
   </p>
 <ul>
-  {% if pudding_count_active > 0 %}
-    <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count_active }}個</li>
-  {% endif %}
+  {% with pudding_count=pudding_counts_active_by_group|get_item:group_id %}
+    {% if pudding_count %}
+      <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count }}個</li>
+    {% endif %}
+  {% endwith %}
 
   {% for order in orders %}
     {% if not order.is_pudding %}
@@ -251,9 +254,11 @@
 {% endif %}
 
 <ul>
-  {% if pudding_count_completed > 0 %}
-    <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count_completed }}個</li>
-  {% endif %}
+  {% with pudding_count=pudding_counts_completed_by_group|get_item:group_id %}
+    {% if pudding_count %}
+      <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × {{ pudding_count }}個</li>
+    {% endif %}
+  {% endwith %}
 
   {% for order in orders %}
     {% if not order.is_pudding %}
