@@ -209,10 +209,10 @@ function unlockAudio() {
 document.body.addEventListener('click', unlockAudio, { once: true });
 window.addEventListener('DOMContentLoaded', function() {
   const activeCountEl = document.getElementById('active-count');
-  const nowCount = Number(activeCountEl?.dataset.autoRefreshValue || 0);
-  const prevCount = Number(localStorage.getItem('ice_active_count') || 0);
-  // 新規オーダーが入った時だけ音を鳴らす
-  if (nowCount > prevCount && audioUnlocked) {
+  const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
+  const prevItems = Number(localStorage.getItem('ice_active_items') || 0);
+  // 実際のアイテム数が増加した時だけ通知音
+  if (nowItems > prevItems && audioUnlocked) {
     const audio = document.getElementById('notify-audio');
     if (audio) {
       audio.currentTime = 0;
@@ -220,11 +220,11 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   }
   // 今回の値を保存
-  localStorage.setItem('ice_active_count', nowCount);
+  localStorage.setItem('ice_active_items', nowItems);
   
   // 自動更新機能を開始
   const autoRefresh = new AutoRefresh({
-    storageKey: 'ice_active_count',
+    storageKey: 'ice_refresh_value',
     interval: 5000,
     valueSelector: '#active-count'
   });
@@ -238,7 +238,10 @@ window.onload = function() {
 };
     </script>
   <h2>アイスクリーム注文一覧</h2>
-  <p id="active-count" data-auto-refresh-value="{{ active_order_total }}">
+  <p id="active-count"
+     data-auto-refresh-value="{{ refresh_value }}"
+     data-active-items="{{ active_order_total }}"
+  >
     未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
   </p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>

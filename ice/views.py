@@ -272,6 +272,12 @@ def ice_view(request):
     
     active_count = len(active_orders)
     active_order_total = _count_active_order_items(active_orders)
+
+    # 新規オーダーが追加されたが、同時に完了も発生して件数がトータルで変わらない場合に
+    # 自動更新が発火しないのを避けるため、最新の Order.id を組み込んだ合成値を作る。
+    # （active_order_total * 1_000_000 + latest_order_id）とすることで、件数変化 or id 変化のどちらかで必ず値が増加。
+    latest_order_id = Order.objects.order_by('-id').values_list('id', flat=True).first() or 0
+    refresh_value = active_order_total * 1_000_000 + latest_order_id
     
     # プリン数を計算
     pudding_count_active = sum(
@@ -299,6 +305,7 @@ def ice_view(request):
         'now': now,
         'active_count': active_count,
         'active_order_total': active_order_total,
+    'refresh_value': refresh_value,
         'pudding_count_active': pudding_count_active,
         'pudding_count_completed': pudding_count_completed,
         'pudding_counts_active_by_group': pudding_counts_active_by_group,
@@ -455,12 +462,13 @@ def update_status(request, group_id, new_status):
 
 def health_check(request):
     """ヘルスチェック"""
+    del request
     return HttpResponse("OK")
 
 
 def api_active_count(request):
     """未完了オーダー数を返すAPI"""
-    from .models import Order
+    del request
     active_count = Order.objects.filter(is_completed=False).count()
     return JsonResponse({'active_count': active_count})
 
