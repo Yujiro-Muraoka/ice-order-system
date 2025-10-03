@@ -196,10 +196,10 @@
     document.body.addEventListener('click', unlockAudio, { once: true });
     window.addEventListener('DOMContentLoaded', function() {
       const activeCountEl = document.getElementById('food-active-count');
-      const nowCount = Number(activeCountEl?.dataset.autoRefreshValue || 0);
-      const prevCount = Number(localStorage.getItem('food_active_count') || 0);
-      // 新規オーダーが入った時だけ音を鳴らす
-      if (nowCount > prevCount) {
+      const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
+      const prevItems = Number(localStorage.getItem('food_active_items') || 0);
+      // 実アイテム数が増えた時だけ音を鳴らす
+      if (nowItems > prevItems) {
         const audio = document.getElementById('notify-audio');
         if (audio) {
           audio.currentTime = 0;
@@ -207,18 +207,21 @@
         }
       }
       // 今回の値を保存
-      localStorage.setItem('food_active_count', nowCount);
+      localStorage.setItem('food_active_items', nowItems);
       
       // 自動更新機能を開始
       new AutoRefresh({
-        storageKey: 'food_active_count',
+        storageKey: 'food_refresh_value',
         interval: 5000,
         valueSelector: '#food-active-count'
       });
     });
     </script>
   <h2>フード注文一覧</h2>
-  <p id="food-active-count" data-auto-refresh-value="{{ active_order_total }}">
+  <p id="food-active-count"
+     data-auto-refresh-value="{{ refresh_value }}"
+     data-active-items="{{ active_order_total }}"
+  >
     未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
   </p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>

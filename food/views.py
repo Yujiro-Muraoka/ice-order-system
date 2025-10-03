@@ -22,6 +22,26 @@ from .models import FoodOrder
 import time
 
 
+def _split_active_completed(grouped, now):
+    active = {}
+    completed = {}
+    for gid, ords in grouped.items():
+        if all(o.is_completed for o in ords):
+            latest = max((o.completed_at for o in ords if o.completed_at), default=None)
+            if latest and now - latest <= timezone.timedelta(seconds=30):
+                completed[gid] = ords
+        else:
+            active[gid] = ords
+    return active, completed
+
+
+def _group_by_group_id(queryset):
+    grouped = defaultdict(list)
+    for obj in queryset:
+        grouped[obj.group_id].append(obj)
+    return grouped
+
+
 def food_register(request):
     """
     フード注文登録画面を表示するビュー
@@ -142,33 +162,21 @@ def food_kitchen(request):
         active_count: 未完了注文数
     """
     from ice.models import Order as IceOrder
-    
+
     now = timezone.now()
-    grouped_orders = defaultdict(list)
-    
-    # 全注文をグループIDでグループ化
-    all_orders = FoodOrder.objects.all().order_by('timestamp')
-    for order in all_orders:
-        grouped_orders[order.group_id].append(order)
-        # 経過時間を計算
-        order.elapsed_seconds = int((now - order.timestamp).total_seconds())
-        order.elapsed_minutes = order.elapsed_seconds // 60
-    
-    # 未完了・完了注文を分離
-    active_orders = {}
-    completed_orders = {}
-    
-    for group_id, orders in grouped_orders.items():
-        # グループ内の全注文が完了しているかチェック
-        if all(o.is_completed for o in orders):
-            # 完了時刻の最新を取得
-            latest = max((o.completed_at for o in orders if o.completed_at), default=None)
-            # 30秒以内に完了した注文のみ表示
-            if latest and now - latest <= timezone.timedelta(seconds=30):
-                completed_orders[group_id] = orders
-        else:
-            # 未完了の注文はactive_ordersに追加
-            active_orders[group_id] = orders
+
+    # Food orders
+    all_food = FoodOrder.objects.all().order_by('timestamp')
+    for o in all_food:
+        o.elapsed_seconds = int((now - o.timestamp).total_seconds())
+        o.elapsed_minutes = o.elapsed_seconds // 60
+    food_grouped = _group_by_group_id(all_food)
+    active_orders, completed_orders = _split_active_completed(food_grouped, now)
+
+    # Ice orders for pudding counts only
+    ice_all = IceOrder.objects.order_by('timestamp')
+    ice_grouped = _group_by_group_id(ice_all)
+    ice_active, ice_completed = _split_active_completed(ice_grouped, now)
     
     # アイスクリームのアフォガードプリン数を計算
     ice_active_orders = {}
@@ -189,12 +197,12 @@ def food_kitchen(request):
     
     # プリン数を計算
     pudding_count_active = sum(
-        sum(1 for o in orders if o.is_pudding)
-        for orders in ice_active_orders.values()
+        sum(1 for o in orders if getattr(o, 'is_pudding', False))
+        for orders in ice_active.values()
     )
     pudding_count_completed = sum(
-        sum(1 for o in orders if o.is_pudding)
-        for orders in ice_completed_orders.values()
+        sum(1 for o in orders if getattr(o, 'is_pudding', False))
+        for orders in ice_completed.values()
     )
     
     # キッチン画面ではグループ単位のプリン個数までは不要なので、総数だけコンテキストに渡す。
@@ -205,6 +213,12 @@ def food_kitchen(request):
         for order in orders
         if not order.is_completed
     )
+
+    # アイス画面と同様に、新規注文と同時に別注文が完了して件数が差し引きゼロになるケースでも
+    # 自動更新が発火するよう合成値を導入する。
+    # 件数が同じでも最新IDが増えれば refresh_value が必ず増加する。
+    latest_order_id = FoodOrder.objects.order_by('-id').values_list('id', flat=True).first() or 0
+    refresh_value = active_order_total * 1_000_000 + latest_order_id
     
     # テンプレートに渡すデータを準備
     context = {
@@ -215,6 +229,7 @@ def food_kitchen(request):
         'pudding_count_completed': pudding_count_completed,
         'active_count': active_count,
         'active_order_total': active_order_total,
+        'refresh_value': refresh_value,
     }
     
     return render(request, 'food/food_kitchen.html', context)
