@@ -183,37 +183,26 @@
     <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
     <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
-    let audioUnlocked = false;
-    function unlockAudio() {
-      if (!audioUnlocked) {
-        const silent = document.getElementById('silent-audio');
-        if (silent) {
-          silent.play().catch(()=>{});
-        }
-        audioUnlocked = true;
-      }
-    }
-    document.body.addEventListener('click', unlockAudio, { once: true });
     window.addEventListener('DOMContentLoaded', function() {
+      // 通知音の再生ロジック
       const activeCountEl = document.getElementById('food-active-count');
       const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
       const prevItems = Number(localStorage.getItem('food_active_items') || 0);
-      // 実アイテム数が増えた時だけ音を鳴らす
       if (nowItems > prevItems) {
         const audio = document.getElementById('notify-audio');
         if (audio) {
           audio.currentTime = 0;
-          audio.play();
+          audio.play().catch(e => console.error("Audio play failed:", e));
         }
       }
-      // 今回の値を保存
       localStorage.setItem('food_active_items', nowItems);
-      
+
       // 自動更新機能を開始
       new AutoRefresh({
         storageKey: 'food_refresh_value',
         interval: 5000,
-        valueSelector: '#food-active-count'
+        valueSelector: '#food-active-count',
+        scrollStorageKey: 'food_scroll_pos'
       });
     });
     </script>
@@ -359,49 +348,7 @@
 
 </script>
 
-<script>
-// 自動リロード廃止
 
-window.addEventListener('load', () => {
-  const pos = sessionStorage.getItem('scrollPos');
-  if (pos !== null) {
-    window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
-    sessionStorage.removeItem('scrollPos');
-  }
-});
-</script>
-
-
-<script>
-  function openHelp() {
-    document.getElementById('helpModal').style.display = 'block';
-    localStorage.setItem('helpVisible', 'true');
-  }
-
-  function closeHelp() {
-    document.getElementById('helpModal').style.display = 'none';
-    localStorage.setItem('helpVisible', 'false');
-  }
-</script>
-
-
-<script>
-  // フォーム送信時にスクロール位置を保存
-  document.querySelectorAll('form[action^="/complete_group/"]').forEach(form => {
-    form.addEventListener('submit', () => {
-      sessionStorage.setItem('scrollPos', window.scrollY);
-    });
-  });
-
-  // 読み込み後にスクロール位置を復元（1回だけ）
-  window.addEventListener('load', () => {
-    const pos = sessionStorage.getItem('scrollPos');
-    if (pos !== null) {
-      window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
-      sessionStorage.removeItem('scrollPos');
-    }
-  });
-</script>
 <script>
   setInterval(updateCountdowns, 1000);  // ← 毎秒1回、カウントダウン更新
 </script>

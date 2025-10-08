@@ -272,48 +272,36 @@
   <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
   <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
-    let audioUnlocked = false;
-    function unlockAudio() {
-      if (!audioUnlocked) {
-        const silent = document.getElementById('silent-audio');
-        if (silent) {
-          silent.play().catch(()=>{});
-        }
-        audioUnlocked = true;
-      }
-    }
-    document.body.addEventListener('click', unlockAudio, { once: true });
     window.addEventListener('DOMContentLoaded', function() {
-      // 未完了オーダー数を取得
-      const nowCount = Number(document.querySelector('p').textContent.replace(/[^0-9]/g, ''));
-      const prevCount = Number(localStorage.getItem('shavedice_active_count') || 0);
-      // 新規オーダーが入った時だけ音を鳴らす
-      if (nowCount > prevCount) {
+      // 通知音の再生ロジック
+      const activeCountEl = document.getElementById('shavedice-active-count');
+      const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
+      const prevItems = Number(localStorage.getItem('shavedice_active_items') || 0);
+      if (nowItems > prevItems) {
         const audio = document.getElementById('notify-audio');
         if (audio) {
           audio.currentTime = 0;
-          audio.play();
+          audio.play().catch(e => console.error("Audio play failed:", e));
         }
       }
-      // 今回の値を保存
-      localStorage.setItem('shavedice_active_count', nowCount);
-      
+      localStorage.setItem('shavedice_active_items', nowItems);
+
       // 自動更新機能を開始
       new AutoRefresh({
-        storageKey: 'shavedice_active_count',
-        interval: 5000
+        storageKey: 'shavedice_refresh_value',
+        interval: 5000,
+        valueSelector: '#shavedice-active-count',
+        scrollStorageKey: 'shavedice_scroll_pos'
       });
-    });
-    // 自動リロード廃止
-    window.addEventListener('load', () => {
-      const scroll = localStorage.getItem('shavedice_kitchen_scroll');
-      if (scroll) {
-        window.scrollTo(0, parseInt(scroll));
-      }
     });
     </script>
   <h2>かき氷注文一覧（ごとに更新）</h2>
-  <p>未完了オーダー数: {{ active_count }}</p>
+  <p id="shavedice-active-count"
+     data-auto-refresh-value="{{ refresh_value }}"
+     data-active-items="{{ active_order_total }}"
+  >
+    未完了オーダー数: {{ active_count }}
+  </p>
   <p>最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
@@ -422,20 +410,7 @@
     });
   }
 </script>
-<script>
-  window.onload = function() {
-    const scroll = localStorage.getItem('shavedice_kitchen_scroll');
-    if (scroll !== null) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(scroll));
-      }, 100);
-    }
-    // helpModalの初期表示（初回のみ）
-    if (localStorage.getItem('helpVisible') === 'true') {
-      document.getElementById('helpModal').style.display = 'block';
-    }
-  };
-</script>
+
 <script>
   function openHelp() {
     document.getElementById('helpModal').style.display = 'block';
