@@ -18,9 +18,10 @@ class ShavedIceOrder(models.Model):
     """かき氷注文を管理するモデル"""
     
     FLAVOR_CHOICES = [
-        ('抹茶', '抹茶'),
-        ('いちご', 'いちご'),
-        ('ゆず', 'ゆず'),
+        ('🍧いちご🍧', '🍧いちご🍧'),
+        ('🍧抹茶🍧', '🍧抹茶🍧'),
+        ('🍧ほうじ茶🍧', '🍧ほうじ茶🍧'),
+        ('🍧ゆず🍧', '🍧ゆず🍧'),
     ]
     
     flavor = models.CharField(max_length=50, choices=FLAVOR_CHOICES)  # フレーバー

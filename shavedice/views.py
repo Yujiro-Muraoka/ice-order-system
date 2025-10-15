@@ -11,6 +11,36 @@ from food.models import FoodOrder
 import time
 
 
+def _get_order_context():
+    """キッチンビューとデシャップビューで共通のコンテキストを取得する"""
+    now = timezone.localtime()
+    
+    # 注文を取得
+    active_orders = ShavedIceOrder.objects.filter(is_completed=False).order_by('timestamp')
+    completed_orders = ShavedIceOrder.objects.filter(is_completed=True).order_by('-completed_at')
+    
+    # グループ化
+    grouped_active = {}
+    grouped_completed = {}
+    
+    for order in active_orders:
+        delta = now - order.timestamp
+        order.elapsed_minutes = int(delta.total_seconds() // 60)
+        grouped_active.setdefault(order.group_id, []).append(order)
+    
+    for order in completed_orders:
+        # 完了から30秒以内のみ表示
+        if order.completed_at and (now - order.completed_at).total_seconds() <= 30:
+            grouped_completed.setdefault(order.group_id, []).append(order)
+            
+    return {
+        "grouped_orders": grouped_active,
+        "completed_orders": grouped_completed,
+        "now": now,
+        "active_count": len(grouped_active),
+    }
+
+
 def shavedice_register(request):
     """かき氷注文登録画面を表示"""
     temp_ice = request.session.get("temp_ice", [])
@@ -114,51 +144,10 @@ def submit_order_group(request):
     return redirect('shavedice_register')
 
 
-def register_view(request):
-    """注文登録画面を表示（代替実装）"""
-    temp_ice = request.session.get('temp_ice', [])
-    
-    # フレーバー一覧
-    flavors = ["🍧いちご🍧", "🍧抹茶🍧", "🍧ほうじ茶🍧", "🍧ゆず🍧"]
-    
-    context = {
-        'flavors': flavors,
-        'temp_ice': temp_ice,
-    }
-    
-    return render(request, 'shavedice/shavedice_register.html', context)
-
-
 def shavedice_kitchen(request):
     """かき氷キッチン画面を表示"""
-    now = timezone.localtime()
-    
-    # 注文を取得
-    active_orders = ShavedIceOrder.objects.filter(is_completed=False).order_by('timestamp')
-    completed_orders = ShavedIceOrder.objects.filter(is_completed=True).order_by('-completed_at')
-    
-    # グループ化
-    grouped_active = {}
-    grouped_completed = {}
-    
-    for order in active_orders:
-        delta = now - order.timestamp
-        order.elapsed_minutes = int(delta.total_seconds() // 60)
-        grouped_active.setdefault(order.group_id, []).append(order)
-    
-    for order in completed_orders:
-        # 完了から30秒以内のみ表示
-        if order.completed_at and (now - order.completed_at).total_seconds() <= 30:
-            grouped_completed.setdefault(order.group_id, []).append(order)
-    
-    context = {
-        "grouped_orders": grouped_active,
-        "completed_orders": grouped_completed,
-        "now": now,
-        "active_count": len(grouped_active),
-        "debug": True
-    }
-    
+    context = _get_order_context()
+    context["debug"] = True 
     return render(request, "shavedice/shavedice_kitchen.html", context)
 
 
@@ -228,34 +217,6 @@ def complete_group(request, group_id):
     return redirect('shavedice_kitchen')
 
 
-def get_grouped_active_orders():
-    """未完了注文をグループごとにまとめて返す"""
-    from collections import defaultdict
-    import datetime
-    
-    grouped = defaultdict(list)
-    now_time = timezone.now()
-    
-    active_orders = ShavedIceOrder.objects.filter(is_completed=False).order_by('timestamp')
-    for order in active_orders:
-        delta = now_time - order.timestamp
-        order.elapsed_minutes = int(delta.total_seconds() // 60)
-        grouped[order.group_id].append(order)
-    
-    return grouped
-
-
-def get_grouped_completed_orders():
-    """完了注文をグループごとにまとめて返す"""
-    completed_orders = ShavedIceOrder.objects.filter(is_completed=True).order_by('-completed_at')
-    grouped = defaultdict(list)
-    
-    for order in completed_orders:
-        grouped[order.group_id].append(order)
-    
-    return grouped
-
-
 @csrf_protect
 def delete_group(request, group_id):
     """指定グループの注文を削除"""
@@ -295,25 +256,7 @@ def shavedice_update_status(request, group_id, new_status):
 
 def shavedice_deshap_view(request):
     """かき氷デシャップ担当画面"""
-    now = timezone.localtime()
-    active_orders = ShavedIceOrder.objects.filter(is_completed=False).order_by('timestamp')
-    completed_orders = ShavedIceOrder.objects.filter(is_completed=True).order_by('-completed_at')
-    grouped_active = {}
-    grouped_completed = {}
-    for order in active_orders:
-        delta = now - order.timestamp
-        order.elapsed_minutes = int(delta.total_seconds() // 60)
-        grouped_active.setdefault(order.group_id, []).append(order)
-    for order in completed_orders:
-        # 完了から30秒以内のみ表示
-        if order.completed_at and (now - order.completed_at).total_seconds() <= 30:
-            grouped_completed.setdefault(order.group_id, []).append(order)
-    context = {
-        "grouped_orders": grouped_active,
-        "completed_orders": grouped_completed,
-        "now": now,
-        "active_count": len(grouped_active),
-    }
+    context = _get_order_context()
     return render(request, "shavedice/deshap.html", context)
 
 
