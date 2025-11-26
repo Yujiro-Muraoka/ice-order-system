@@ -9,25 +9,32 @@
 
 class AutoRefresh {
   constructor(options = {}) {
-    this.storageKey = options.storageKey || 'auto_refresh_last_value';
     this.interval = options.interval || 5000;
     this.valueSelector = options.valueSelector || '[data-auto-refresh-value]';
     this.scrollStorageKey = options.scrollStorageKey || 'auto_refresh_scroll_pos';
+    this.pollUrl = options.pollUrl || null;
+    this.forceReload = Boolean(options.forceReload);
+    this.parseValue =
+      typeof options.parseValue === 'function'
+        ? options.parseValue
+        : this.defaultParseValue;
+    this.isPolling = false;
+    this.lastValue = this.parseValue(this.getCurrentValue());
+
     this.init();
   }
 
   init() {
-    // ページ読み込み時にスクロール位置を復元
-    window.addEventListener('load', () => {
-      const savedPos = sessionStorage.getItem(this.scrollStorageKey);
-      if (savedPos !== null) {
-        window.scrollTo(0, parseInt(savedPos, 10));
-        sessionStorage.removeItem(this.scrollStorageKey);
-      }
-    });
-
-    // 定期的に更新をチェック
+    window.addEventListener('load', () => this.restoreScrollPosition());
     this.start();
+  }
+
+  defaultParseValue(raw) {
+    if (raw === null || raw === undefined || raw === '') {
+      return null;
+    }
+    const numeric = Number(raw);
+    return Number.isNaN(numeric) ? String(raw) : numeric;
   }
 
   getCurrentValue() {
@@ -36,36 +43,88 @@ class AutoRefresh {
   }
 
   start() {
-    const initialValue = this.getCurrentValue();
-    if (initialValue !== null) {
-      localStorage.setItem(this.storageKey, initialValue);
+    if (this.forceReload) {
+      this.timerId = setInterval(() => this.reloadPage(), this.interval);
+      return;
     }
 
-    setInterval(() => {
-      this.checkForUpdate();
+    this.timerId = setInterval(() => {
+      void this.checkForUpdate();
     }, this.interval);
   }
 
-  checkForUpdate() {
-    const storedValue = localStorage.getItem(this.storageKey);
-    const currentValue = this.getCurrentValue();
-
-    // currentValueがnullでなく、かつstoredValueと異なる場合にリロード
-    if (currentValue !== null && storedValue !== currentValue) {
-      this.reloadPage();
+  async checkForUpdate() {
+    if (this.isPolling) {
+      return;
+    }
+    this.isPolling = true;
+    try {
+      const latestValue = await this.fetchLatestValue();
+      if (latestValue === null) {
+        return;
+      }
+      if (this.lastValue === null) {
+        this.lastValue = latestValue;
+        return;
+      }
+      if (latestValue !== this.lastValue) {
+        this.reloadPage();
+      }
+    } catch (error) {
+      console.warn('AutoRefresh polling failed:', error);
+    } finally {
+      this.isPolling = false;
     }
   }
 
+  async fetchLatestValue() {
+    if (!this.pollUrl) {
+      return this.parseValue(this.getCurrentValue());
+    }
+
+    const response = await fetch(this.pollUrl, {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Polling responded with ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const raw =
+      payload.value ??
+      payload.refresh_value ??
+      payload.refreshValue ??
+      payload.active_order_total ??
+      null;
+
+    return this.parseValue(raw);
+  }
+
   reloadPage() {
-    // リロード前に現在のスクロール位置を保存
     sessionStorage.setItem(this.scrollStorageKey, window.scrollY.toString());
-    // ページをリロード
     window.location.reload();
   }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-  AutoRefresh.restoreScrollPosition();
-});
+  restoreScrollPosition() {
+    const savedPos = sessionStorage.getItem(this.scrollStorageKey);
+    if (savedPos !== null) {
+      window.scrollTo(0, parseInt(savedPos, 10));
+      sessionStorage.removeItem(this.scrollStorageKey);
+    }
+  }
+
+  static restoreScrollPosition(key = 'auto_refresh_scroll_pos') {
+    const savedPos = sessionStorage.getItem(key);
+    if (savedPos !== null) {
+      window.scrollTo(0, parseInt(savedPos, 10));
+      sessionStorage.removeItem(key);
+    }
+  }
+}
 
 window.AutoRefresh = AutoRefresh;

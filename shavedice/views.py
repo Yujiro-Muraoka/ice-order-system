@@ -8,7 +8,29 @@ from datetime import timedelta
 from django.contrib import messages
 from .models import ShavedIceOrder
 from food.models import FoodOrder
+from django.db.models import Count, Max, Q
 import time
+
+
+def _calculate_shavedice_refresh_metrics():
+    aggregates = ShavedIceOrder.objects.aggregate(
+        active_items=Count('id', filter=Q(is_completed=False)),
+        latest_id=Max('id'),
+        latest_status_ts=Max('status_modified_at'),
+    )
+    active_order_total = aggregates['active_items'] or 0
+    latest_order_id = aggregates['latest_id'] or 0
+    latest_status_ts = aggregates['latest_status_ts']
+    status_marker = (
+        str(latest_status_ts.timestamp()) if latest_status_ts else '0'
+    )
+    refresh_value = f"{active_order_total}:{latest_order_id}:{status_marker}"
+    return {
+        'active_order_total': active_order_total,
+        'latest_order_id': latest_order_id,
+        'latest_status_marker': status_marker,
+        'refresh_value': refresh_value,
+    }
 
 
 def _get_order_context():
@@ -33,11 +55,15 @@ def _get_order_context():
         if order.completed_at and (now - order.completed_at).total_seconds() <= 30:
             grouped_completed.setdefault(order.group_id, []).append(order)
             
+    metrics = _calculate_shavedice_refresh_metrics()
+
     return {
         "grouped_orders": grouped_active,
         "completed_orders": grouped_completed,
         "now": now,
         "active_count": len(grouped_active),
+        "active_order_total": metrics['active_order_total'],
+        "refresh_value": metrics['refresh_value'],
     }
 
 
@@ -49,7 +75,9 @@ def shavedice_register(request):
     
     context = {
         "temp_ice": temp_ice,
-        "flavor_choices": flavor_choices
+        "flavor_choices": flavor_choices,
+        "clip_numbers_first": list(range(1, 9)),
+        "clip_numbers_second": list(range(9, 17)),
     }
     
     return render(request, "shavedice/shavedice_register.html", context)
@@ -148,6 +176,14 @@ def shavedice_kitchen(request):
     """かき氷キッチン画面を表示"""
     context = _get_order_context()
     context["debug"] = True 
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': context['refresh_value'],
+            'refresh_value': context['refresh_value'],
+            'active_order_total': context['active_order_total'],
+            'active_count': context['active_count'],
+            'timestamp': context['now'].isoformat(),
+        })
     return render(request, "shavedice/shavedice_kitchen.html", context)
 
 
@@ -250,13 +286,24 @@ def delete_temp_ice(request, index):
 def shavedice_update_status(request, group_id, new_status):
     """かき氷デシャップ画面からグループの状態を更新"""
     if request.method == 'POST':
-        ShavedIceOrder.objects.filter(group_id=group_id).update(status=new_status)
+        ShavedIceOrder.objects.filter(group_id=group_id).update(
+            status=new_status,
+            status_modified_at=timezone.now(),
+        )
     return redirect('shavedice_deshap')
 
 
 def shavedice_deshap_view(request):
     """かき氷デシャップ担当画面"""
     context = _get_order_context()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': context['refresh_value'],
+            'refresh_value': context['refresh_value'],
+            'active_order_total': context['active_order_total'],
+            'active_count': context['active_count'],
+            'timestamp': context['now'].isoformat(),
+        })
     return render(request, "shavedice/deshap.html", context)
 
 
@@ -271,4 +318,11 @@ def wait_time_view(request):
         'uncompleted_count': uncompleted_count,
         'wait_minutes': wait_minutes,
     }
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': wait_minutes,
+            'wait_minutes': wait_minutes,
+            'uncompleted_count': uncompleted_count,
+            'timestamp': timezone.now().isoformat(),
+        })
     return render(request, 'shavedice/wait_time.html', context)

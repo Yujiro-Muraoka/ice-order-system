@@ -18,6 +18,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from collections import defaultdict, Counter
+from django.db.models import Sum, Max, Q
 from .models import FoodOrder
 import time
 
@@ -40,6 +41,21 @@ def _group_by_group_id(queryset):
     for obj in queryset:
         grouped[obj.group_id].append(obj)
     return grouped
+
+
+def _calculate_food_refresh_metrics():
+    aggregates = FoodOrder.objects.aggregate(
+        active_items=Sum('quantity', filter=Q(is_completed=False)),
+        latest_id=Max('id'),
+    )
+    active_order_total = aggregates['active_items'] or 0
+    latest_order_id = aggregates['latest_id'] or 0
+    refresh_value = active_order_total * 1_000_000 + latest_order_id
+    return {
+        'active_order_total': active_order_total,
+        'latest_order_id': latest_order_id,
+        'refresh_value': refresh_value,
+    }
 
 
 def food_register(request):
@@ -214,11 +230,9 @@ def food_kitchen(request):
         if not order.is_completed
     )
 
-    # アイス画面と同様に、新規注文と同時に別注文が完了して件数が差し引きゼロになるケースでも
-    # 自動更新が発火するよう合成値を導入する。
-    # 件数が同じでも最新IDが増えれば refresh_value が必ず増加する。
-    latest_order_id = FoodOrder.objects.order_by('-id').values_list('id', flat=True).first() or 0
-    refresh_value = active_order_total * 1_000_000 + latest_order_id
+    metrics = _calculate_food_refresh_metrics()
+    active_order_total = metrics['active_order_total']
+    refresh_value = metrics['refresh_value']
     
     # テンプレートに渡すデータを準備
     context = {
@@ -231,6 +245,15 @@ def food_kitchen(request):
         'active_order_total': active_order_total,
         'refresh_value': refresh_value,
     }
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': refresh_value,
+            'refresh_value': refresh_value,
+            'active_order_total': active_order_total,
+            'active_count': active_count,
+            'timestamp': now.isoformat(),
+        })
     
     return render(request, 'food/food_kitchen.html', context)
 

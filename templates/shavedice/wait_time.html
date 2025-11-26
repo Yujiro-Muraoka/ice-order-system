@@ -61,6 +61,7 @@
         interval: 5000,
         storageKey: 'shavedice_wait_time',
         valueSelector: '#wait-minutes',
+        pollUrl: "{% url 'shavedice_wait_time' %}?format=json",
         parseValue: (raw) => {
           if (raw === null || raw === undefined) {
             return null;

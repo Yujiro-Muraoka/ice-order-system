@@ -35,6 +35,7 @@ class ShavedIceOrder(models.Model):
     clip_number = models.IntegerField(default=0)  # クリップ番号（未指定時は0番）
     timestamp = models.DateTimeField(auto_now_add=True)  # 注文受付時刻
     completed_at = models.DateTimeField(null=True, blank=True)  # 完了時刻
+    status_modified_at = models.DateTimeField(auto_now=True)  # 状態変更時刻
     status = models.CharField(max_length=10, choices=ORDER_STATUS_CHOICES, default='ok')  # 注文状態
     is_auto_stopped = models.BooleanField(default=False)  # 自動STOPかどうか
     note = models.TextField(blank=True, null=True)  # 備考欄
@@ -52,6 +53,7 @@ class ShavedIceOrder(models.Model):
         # パフォーマンス最適化のためのインデックス
         indexes = [
             models.Index(fields=['status', 'is_completed'], name='shavedice_status_completed_idx'),
+            models.Index(fields=['status_modified_at'], name='shavedice_status_modified_idx'),
             models.Index(fields=['clip_color', 'clip_number'], name='shavedice_clip_idx'),
             models.Index(fields=['group_id'], name='shavedice_group_idx'),
             models.Index(fields=['timestamp'], name='shavedice_timestamp_idx'),

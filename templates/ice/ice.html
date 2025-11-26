@@ -215,7 +215,8 @@ window.addEventListener('DOMContentLoaded', function() {
     storageKey: 'ice_refresh_value',
     interval: 5000,
     valueSelector: '#active-count',
-    scrollStorageKey: 'ice_scroll_pos'
+    scrollStorageKey: 'ice_scroll_pos',
+    pollUrl: "{% url 'ice_view' %}?format=json"
   });
 });
 </script>

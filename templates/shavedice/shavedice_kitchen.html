@@ -291,7 +291,8 @@
         storageKey: 'shavedice_refresh_value',
         interval: 5000,
         valueSelector: '#shavedice-active-count',
-        scrollStorageKey: 'shavedice_scroll_pos'
+        scrollStorageKey: 'shavedice_scroll_pos',
+        pollUrl: "{% url 'shavedice_kitchen' %}?format=json"
       });
     });
     </script>

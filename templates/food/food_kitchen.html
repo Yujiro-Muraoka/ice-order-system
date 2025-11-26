@@ -202,7 +202,8 @@
         storageKey: 'food_refresh_value',
         interval: 5000,
         valueSelector: '#food-active-count',
-        scrollStorageKey: 'food_scroll_pos'
+        scrollStorageKey: 'food_scroll_pos',
+        pollUrl: "{% url 'food_kitchen' %}?format=json"
       });
     });
     </script>

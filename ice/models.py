@@ -44,6 +44,7 @@ class Order(models.Model):
     clip_color = models.CharField(max_length=10, choices=CLIP_COLOR_CHOICES)  # クリップ色
     clip_number = models.IntegerField()  # クリップ番号
     completed_at = models.DateTimeField(null=True, blank=True)  # 完了時刻
+    status_modified_at = models.DateTimeField(auto_now=True)  # 状態変更時刻
     is_auto_stopped = models.BooleanField(default=False)  # 自動STOPかどうか
     note = models.TextField(blank=True, null=True)  # 備考欄
     is_pudding = models.BooleanField(default=False, verbose_name='アフォガードプリン')  # アフォガードプリンかどうか
@@ -61,6 +62,7 @@ class Order(models.Model):
         # パフォーマンス最適化のためのインデックス
         indexes = [
             models.Index(fields=['status', 'is_completed'], name='ice_status_completed_idx'),
+            models.Index(fields=['status_modified_at'], name='ice_status_modified_idx'),
             models.Index(fields=['clip_color', 'clip_number'], name='ice_clip_idx'),
             models.Index(fields=['group_id'], name='ice_group_idx'),
             models.Index(fields=['timestamp'], name='ice_timestamp_idx'),

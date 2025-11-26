@@ -8,6 +8,7 @@ from collections import defaultdict
 from datetime import timedelta
 from .models import Order, FLAVOR_CHOICES
 from food.models import FoodOrder
+from django.db.models import Count, Max, Q
 import time
 
 # 共有パスコード
@@ -51,7 +52,11 @@ def _update_hold_status():
     if not pending_groups:
         return
     new_status = 'ok' if len(pending_groups) <= 3 else 'stop'
-    Order.objects.filter(group_id__in=pending_groups).update(status=new_status)
+    now = timezone.now()
+    Order.objects.filter(group_id__in=pending_groups).update(
+        status=new_status,
+        status_modified_at=now,
+    )
 
 
 def _find_recent_groups(grouped_orders, threshold_seconds=3, reference_time=None):
@@ -78,6 +83,29 @@ def _count_active_order_items(active_orders):
         for order in orders
         if not order.is_completed
     )
+
+
+def _calculate_ice_refresh_metrics():
+    aggregates = Order.objects.aggregate(
+        active_items=Count('id', filter=Q(is_completed=False)),
+        latest_id=Max('id'),
+        latest_status_ts=Max('status_modified_at'),
+    )
+    active_order_total = aggregates['active_items'] or 0
+    latest_order_id = aggregates['latest_id'] or 0
+    latest_status_ts = aggregates['latest_status_ts']
+    status_marker = (
+        str(latest_status_ts.timestamp())
+        if latest_status_ts
+        else '0'
+    )
+    refresh_value = f"{active_order_total}:{latest_order_id}:{status_marker}"
+    return {
+        'active_order_total': active_order_total,
+        'latest_order_id': latest_order_id,
+        'latest_status_marker': status_marker,
+        'refresh_value': refresh_value,
+    }
 
 
 def role_select(request):
@@ -271,13 +299,9 @@ def ice_view(request):
             active_orders[group_id] = orders
     
     active_count = len(active_orders)
-    active_order_total = _count_active_order_items(active_orders)
-
-    # 新規オーダーが追加されたが、同時に完了も発生して件数がトータルで変わらない場合に
-    # 自動更新が発火しないのを避けるため、最新の Order.id を組み込んだ合成値を作る。
-    # （active_order_total * 1_000_000 + latest_order_id）とすることで、件数変化 or id 変化のどちらかで必ず値が増加。
-    latest_order_id = Order.objects.order_by('-id').values_list('id', flat=True).first() or 0
-    refresh_value = active_order_total * 1_000_000 + latest_order_id
+    metrics = _calculate_ice_refresh_metrics()
+    active_order_total = metrics['active_order_total']
+    refresh_value = metrics['refresh_value']
     
     # プリン数を計算
     pudding_count_active = sum(
@@ -313,6 +337,15 @@ def ice_view(request):
     }
     
     context['is_logged_in'] = request.session.get('logged_in', False)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': refresh_value,
+            'refresh_value': refresh_value,
+            'active_order_total': active_order_total,
+            'active_count': active_count,
+            'timestamp': now.isoformat(),
+        })
+
     return render(request, 'ice/ice.html', context)
 
 
@@ -422,7 +455,8 @@ def deshap_view(request):
     active_orders, completed_orders = _separate_active_completed(grouped_orders, now)
 
     active_count = len(active_orders)
-    active_order_total = _count_active_order_items(active_orders)
+    metrics = _calculate_ice_refresh_metrics()
+    active_order_total = metrics['active_order_total']
     newly_created_group_ids = _find_recent_groups(grouped_orders, reference_time=now)
     pudding_counts_active_by_group = _count_pudding_by_group(active_orders)
     pudding_counts_completed_by_group = _count_pudding_by_group(completed_orders)
@@ -436,7 +470,17 @@ def deshap_view(request):
         'newly_created_group_ids': newly_created_group_ids,
         'pudding_counts_active_by_group': pudding_counts_active_by_group,
         'pudding_counts_completed_by_group': pudding_counts_completed_by_group,
+        'refresh_value': metrics['refresh_value'],
     }
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': metrics['refresh_value'],
+            'refresh_value': metrics['refresh_value'],
+            'active_order_total': active_order_total,
+            'active_count': active_count,
+            'timestamp': now.isoformat(),
+        })
 
     return render(request, 'ice/deshap.html', context)
 
@@ -455,7 +499,10 @@ def delete_all_pudding(request):
 def update_status(request, group_id, new_status):
     """指定グループの状態を更新"""
     if request.method == 'POST':
-        Order.objects.filter(group_id=group_id).update(status=new_status)
+        Order.objects.filter(group_id=group_id).update(
+            status=new_status,
+            status_modified_at=timezone.now(),
+        )
 
     return redirect('deshap')
 
