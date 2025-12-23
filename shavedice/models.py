@@ -27,6 +27,8 @@ class ShavedIceOrder(models.Model):
     flavor = models.CharField(max_length=50, choices=FLAVOR_CHOICES)  # フレーバー
     group_id = models.CharField(max_length=50, default='')  # グループID
     is_completed = models.BooleanField(default=False)  # 完了フラグ
+
+
     clip_color = models.CharField(
         max_length=10,
         choices=CLIP_COLOR_CHOICES,
@@ -39,6 +41,8 @@ class ShavedIceOrder(models.Model):
     status = models.CharField(max_length=10, choices=ORDER_STATUS_CHOICES, default='ok')  # 注文状態
     is_auto_stopped = models.BooleanField(default=False)  # 自動STOPかどうか
     note = models.TextField(blank=True, null=True)  # 備考欄
+
+    
     
     def __str__(self):
         """管理画面等での表示用"""
