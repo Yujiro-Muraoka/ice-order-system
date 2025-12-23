@@ -22,15 +22,25 @@ class AutoRefresh {
         ? options.parseValue
         : this.defaultParseValue;
     this.isPolling = false;
-    this.lastValue = this.parseValue(this.getCurrentValue());
+    this.lastValue = null;
     this.fallbackTimerId = null;
 
     this.init();
   }
 
   init() {
+    const setup = () => {
+      this.lastValue = this.parseValue(this.getCurrentValue());
+      this.start();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setup, { once: true });
+    } else {
+      setup();
+    }
+
     window.addEventListener('load', () => this.restoreScrollPosition());
-    this.start();
   }
 
   defaultParseValue(raw) {
