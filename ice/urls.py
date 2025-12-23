@@ -6,8 +6,10 @@ urlpatterns = [
     path('', views.role_select, name='role_select'),
     path('register/', views.register_view, name='register_view'),
     path('register/', views.register_view, name='register'),  # backward compatibility
+    path('register', views.register_view),  # allow access without trailing slash
     path('ice/', views.ice_view, name='ice_view'),
     path('ice/', views.ice_view, name='ice'),  # backward compatibility
+    path('ice', views.ice_view),  # allow access without trailing slash
     path('complete/<int:order_id>/', views.complete_order, name='complete_order'),
     path('detail/<int:order_id>/', views.order_detail, name='order_detail'),
     path('login/', views_auth.login_view, name='login'),
