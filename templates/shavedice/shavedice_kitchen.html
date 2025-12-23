@@ -292,7 +292,9 @@
         interval: 5000,
         valueSelector: '#shavedice-active-count',
         scrollStorageKey: 'shavedice_scroll_pos',
-        pollUrl: "{% url 'shavedice_kitchen' %}?format=json"
+        pollUrl: "{% url 'shavedice_kitchen' %}?format=json",
+        fallbackReloadMs: 15000,  /* 15秒で強制リロード（ポーリング失敗時の保険） */
+        maxFailuresBeforeReload: 2
       });
     });
     </script>
