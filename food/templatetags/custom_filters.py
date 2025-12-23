@@ -16,3 +16,12 @@ def filter_menu(temp_list, menu_name):
 def get_item(dictionary, key):
     """辞書から指定キーの値を取得するカスタムフィルタ"""
     return dictionary.get(key)
+
+
+@register.filter
+def to(value, end):
+    """指定値からendまでのrangeを返すカスタムフィルタ"""
+    try:
+        return range(int(value), int(end))
+    except Exception:
+        return range(0)
