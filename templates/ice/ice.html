@@ -294,7 +294,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 
     {% if orders.0.status != 'stop' %}
-<form method="post" action="/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
+<form method="post" action="/ice/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
   {% csrf_token %}
   <button type="submit" class="complete-button">✅ このオーダーを完了</button>
 </form>

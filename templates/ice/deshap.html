@@ -235,12 +235,12 @@
 
 
   <!-- OK / STOP 切替ボタン -->
-  <form method="post" action="/update_status/{{ orders.0.group_id }}/stop/">
+  <form method="post" action="/ice/update_status/{{ orders.0.group_id }}/stop/">
     {% csrf_token %}
     <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
   </form>
 
-  <form method="post" action="/update_status/{{ orders.0.group_id }}/ok/">
+  <form method="post" action="/ice/update_status/{{ orders.0.group_id }}/ok/">
     {% csrf_token %}
     <button type="submit" class="complete-button ok-button">✅ OK にする</button>
   </form>
