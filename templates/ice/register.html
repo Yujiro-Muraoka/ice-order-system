@@ -583,7 +583,7 @@ async function addPudding(button) {
   </form>
 
   {% if temp_ice %}
-  <form method="post" action="/submit_order_group/" onsubmit="return validateClipSelection();">
+  <form method="post" action="/ice/submit_order_group/" onsubmit="return validateClipSelection();">
     {% csrf_token %}
 
 
@@ -595,7 +595,7 @@ async function addPudding(button) {
     <strong class="item-label" style="color: #a52a2a;">
       🍮 アフォガードプリン × {{ pudding_count }}個
     </strong>
-    <a href="/delete_all_pudding/" style="color: red; margin-left: 8px;">[すべて削除]</a>
+    <a href="/ice/delete_all_pudding/" style="color: red; margin-left: 8px;">[すべて削除]</a>
   </li>
 {% endif %}
 
@@ -615,7 +615,7 @@ async function addPudding(button) {
           <span class="item-value">
             {{ ice.flavor1 }}{% if ice.flavor2 %} ＋ {{ ice.flavor2 }}{% endif %}
           </span>
-          <a href="/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
+          <a href="/ice/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
         </div>
       </li>
     {% endif %}
