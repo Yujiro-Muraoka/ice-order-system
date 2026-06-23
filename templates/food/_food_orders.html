@@ -1,0 +1,74 @@
+{% load custom_filters %}
+{% for group_id, orders in active_orders.items %}
+<div class="order-card">
+  <p class="clip-id">
+    🧾 オーダー番号:
+    <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+      {{ orders.0.clip_number }}
+    </span>
+  </p>
+  <p class="status-line">
+    状態:
+    {% if orders.0.status == 'ok' %}
+      🟢 作成OK
+    {% elif orders.0.status == 'stop' %}
+      🔴 STOP中
+    {% endif %}
+  </p>
+  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+  {% if orders.0.note %}
+    <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+  {% endif %}
+  <ul>
+    {% for order in orders %}
+      <li>
+        <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+        <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+          {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+        </span>
+        <form method="post" action="/food/complete_order/{{ order.id }}/" class="async-action" style="display:inline; margin-left:8px;">
+          {% csrf_token %}
+          <button type="submit" style="font-size:13px; padding:4px 10px; border-radius:6px; background:#4CAF50; color:white; border:none; cursor:pointer;">この注文だけ完了</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+  {% if orders.0.status != 'stop' %}
+    <form method="post" action="/food/complete_group/{{ orders.0.group_id }}/" class="async-action">
+      {% csrf_token %}
+      <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+    </form>
+  {% else %}
+    <p style="color: red; font-weight: bold; margin-top: 12px;">
+      🔒 STOP中のため完了できません
+    </p>
+  {% endif %}
+</div>
+{% endfor %}
+
+<hr>
+<p>完了済み注文（30秒後に自動で非表示）</p>
+{% for group_id, orders in completed_orders.items %}
+  {% with latest=orders|last %}
+    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+      <p>🧾 オーダー番号:
+        {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
+      </p>
+      <p>✅ 完了済み</p>
+      {% if orders.0.note %}
+        <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+      {% endif %}
+      <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
+      <ul>
+        {% for order in orders %}
+          <li>
+            <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+            <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+              {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endwith %}
+{% endfor %}

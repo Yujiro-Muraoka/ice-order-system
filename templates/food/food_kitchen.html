@@ -56,11 +56,15 @@
       border: none;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      touch-action: manipulation;
+      transition: background-color 0.2s ease;
     }
     .complete-button:hover {
       background-color: #1976D2;
-      transform: scale(0.98);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
     }
     .disabled-message {
       color: red;
@@ -177,34 +181,101 @@
 
 
   </style>
-  <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
 <body>
     <audio id="notify-audio" src="{% static 'sounds/FOGバレ音.mp3' %}"></audio>
     <audio id="silent-audio" src="{% static 'sounds/silent.mp3' %}"></audio>
     <script>
-    window.addEventListener('DOMContentLoaded', function() {
-      // 通知音の再生ロジック
-      const activeCountEl = document.getElementById('food-active-count');
-      const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
-      const prevItems = Number(localStorage.getItem('food_active_items') || 0);
-      if (nowItems > prevItems) {
-        const audio = document.getElementById('notify-audio');
-        if (audio) {
-          audio.currentTime = 0;
-          audio.play().catch(e => console.error("Audio play failed:", e));
-        }
-      }
-      localStorage.setItem('food_active_items', nowItems);
+    const FOOD_POLL_URL = "{% url 'food_kitchen' %}?format=json";
+    let foodRefreshValue = "{{ refresh_value }}";
+    let foodActiveItems = Number("{{ active_order_total }}");
+    let foodLatestOrderId = Number("{{ latest_order_id }}");
+    let foodPollInFlight = false;
 
-      // 自動更新機能を開始
-      new AutoRefresh({
-        storageKey: 'food_refresh_value',
-        interval: 5000,
-        valueSelector: '#food-active-count',
-        scrollStorageKey: 'food_scroll_pos',
-        pollUrl: "{% url 'food_kitchen' %}?format=json"
+    function playNewOrderSound() {
+      const audio = document.getElementById('notify-audio');
+      if (!audio) return;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+
+    function updateFoodSummary(payload) {
+      const activeCountEl = document.getElementById('food-active-count');
+      const updatedEl = document.getElementById('food-last-updated');
+      if (activeCountEl) {
+        activeCountEl.dataset.autoRefreshValue = payload.refresh_value;
+        activeCountEl.dataset.activeItems = payload.active_order_total;
+        activeCountEl.textContent = `未完了オーダー数: ${payload.active_count}グループ / ${payload.active_order_total}件`;
+      }
+      if (updatedEl && payload.timestamp) {
+        updatedEl.textContent = `最終更新: ${new Date(payload.timestamp).toLocaleTimeString('ja-JP', { hour12: false })}`;
+      }
+    }
+
+    function replaceFoodOrders(html) {
+      const region = document.getElementById('food-orders-region');
+      if (region && typeof html === 'string') {
+        region.innerHTML = html;
+        updateCountdowns();
+      }
+    }
+
+    async function refreshFoodOrders({ force = false } = {}) {
+      if (foodPollInFlight) return;
+      foodPollInFlight = true;
+      try {
+        const response = await fetch(FOOD_POLL_URL, {
+          cache: 'no-store',
+          headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        if (!response.ok) throw new Error(`poll failed: ${response.status}`);
+        const payload = await response.json();
+        const latestItems = Number(payload.active_order_total || 0);
+        const latestId = Number(payload.latest_order_id || 0);
+        const changed = force || payload.refresh_value !== foodRefreshValue;
+        if (changed) {
+          if (latestItems > foodActiveItems || latestId > foodLatestOrderId) {
+            playNewOrderSound();
+          }
+          updateFoodSummary(payload);
+          replaceFoodOrders(payload.html);
+          foodRefreshValue = payload.refresh_value;
+          foodActiveItems = latestItems;
+          foodLatestOrderId = latestId;
+        }
+      } catch (error) {
+        console.warn('Food partial refresh failed:', error);
+      } finally {
+        foodPollInFlight = false;
+      }
+    }
+
+    async function submitFoodAction(form) {
+      const submitter = form.querySelector('button[type="submit"]');
+      if (submitter) submitter.disabled = true;
+      try {
+        await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        await refreshFoodOrders({ force: true });
+      } finally {
+        if (submitter) submitter.disabled = false;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('submit', function(event) {
+        const form = event.target.closest('form.async-action');
+        if (!form) return;
+        event.preventDefault();
+        void submitFoodAction(form);
       });
+      setInterval(() => refreshFoodOrders(), 3000);
     });
     </script>
   <h2>フード注文一覧</h2>
@@ -214,13 +285,7 @@
   >
     未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
   </p>
-  <p>最終更新: {{ now|time:"H:i:s" }}</p>
-{% if pudding_count_active > 0 %}
-  <p style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン待ち: {{ pudding_count_active }}個</p>
-{% endif %}
-{% if pudding_count_completed > 0 %}
-  <p style="font-weight: bold; color: #795548;">🍮 完了済みプリン: {{ pudding_count_completed }}個</p>
-{% endif %}
+  <p id="food-last-updated">最終更新: {{ now|time:"H:i:s" }}</p>
 
 <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
 <div id="helpModal">
@@ -236,91 +301,9 @@
 
 </div>
 
-
-  {% for group_id, orders in active_orders.items %}
-<div class="order-card">
-<p class="clip-id">
-  🧾 オーダー番号:
-  <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
-    {{ orders.0.clip_number }}
-  </span>
-</p>
-
-
-  <p class="status-line">
-    状態:
-    {% if orders.0.status == 'ok' %}
-      🟢 作成OK
-    {% elif orders.0.status == 'stop' %}
-      🔴 STOP中
-      {% if orders.0.is_auto_stopped %}<span style="color: red;">（自動）</span>{% endif %}
-    {% endif %}
-  </p>
-
-  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
-{% if orders.0.note %}
-  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
-{% endif %}
-
-<ul>
-  {% for order in orders %}
-    <li>
-      <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
-      <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
-        {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
-      </span>
-      <form method="post" action="/food/complete_order/{{ order.id }}/" style="display:inline; margin-left:8px;">
-        {% csrf_token %}
-        <button type="submit" style="font-size:13px; padding:4px 10px; border-radius:6px; background:#4CAF50; color:white; border:none; cursor:pointer;">この注文だけ完了</button>
-      </form>
-    </li>
-  {% endfor %}
-</ul>
-
-
-    {% if orders.0.status != 'stop' %}
-<form method="post" action="/food/complete_group/{{ orders.0.group_id }}/" onsubmit="return showCompleteMessage();">
-  {% csrf_token %}
-  <button type="submit" class="complete-button">✅ このオーダーを完了</button>
-</form>
-
-    {% else %}
-      <p style="color: red; font-weight: bold; margin-top: 12px;">
-        🔒 STOP中のため完了できません
-      </p>
-    {% endif %}
+  <div id="food-orders-region">
+    {% include "food/_food_orders.html" %}
   </div>
-{% endfor %}
-  <hr>
-  <p>完了済み注文（30秒後に自動で非表示）</p>
-
-  {% for group_id, orders in completed_orders.items %}
-    {% with latest=orders|last %}
-    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
-      <p>🧾 オーダー番号:
-        {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
-      </p>
-      <p>✅ 完了済み</p>
-      {% if orders.0.note %}
-  <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
-{% endif %}
-
-      <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
-<ul>
-{% for order in orders %}
-  <li>
-    <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
-    <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
-      {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
-    </span>
-  </li>
-{% endfor %}
-</ul>
-
-    </div>
-    {% endwith %}
-  {% endfor %}
-
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>

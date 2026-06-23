@@ -15,6 +15,7 @@ cafeMuji - フード注文管理システム
 """
 
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from collections import defaultdict, Counter
@@ -110,8 +111,13 @@ def _get_food_order_context():
         'now': now,
         'active_count': len(active_orders),
         'active_order_total': metrics['active_order_total'],
+        'latest_order_id': metrics['latest_order_id'],
         'refresh_value': metrics['refresh_value'],
     }
+
+
+def _food_orders_partial(context, request, template_name='food/_food_orders.html'):
+    return render_to_string(template_name, context, request=request)
 
 
 def food_register(request):
@@ -232,72 +238,19 @@ def food_kitchen(request):
         active_orders: 未完了の注文グループ
         completed_orders: 完了済みの注文グループ（30秒以内）
         now: 現在時刻
-        pudding_count_active: 未完了のアフォガードプリン数
-        pudding_count_completed: 完了済みのアフォガードプリン数
         active_count: 未完了注文数
     """
-    from ice.models import Order as IceOrder
-
     context = _get_food_order_context()
     now = context['now']
-    active_orders = context['active_orders']
-
-    # Ice orders for pudding counts only
-    ice_all = IceOrder.objects.order_by('timestamp')
-    ice_grouped = _group_by_group_id(ice_all)
-    ice_active, ice_completed = _split_active_completed(ice_grouped, now)
-    
-    # アイスクリームのアフォガードプリン数を計算
-    ice_active_orders = {}
-    ice_completed_orders = {}
-    ice_all_orders = IceOrder.objects.order_by('timestamp')
-    ice_grouped_orders = defaultdict(list)
-    
-    for order in ice_all_orders:
-        ice_grouped_orders[order.group_id].append(order)
-    
-    for group_id, orders in ice_grouped_orders.items():
-        if all(o.is_completed for o in orders):
-            latest = max((o.completed_at for o in orders if o.completed_at), default=None)
-            if latest and now - latest <= timezone.timedelta(seconds=30):
-                ice_completed_orders[group_id] = orders
-        else:
-            ice_active_orders[group_id] = orders
-    
-    # プリン数を計算
-    pudding_count_active = sum(
-        sum(1 for o in orders if getattr(o, 'is_pudding', False))
-        for orders in ice_active.values()
-    )
-    pudding_count_completed = sum(
-        sum(1 for o in orders if getattr(o, 'is_pudding', False))
-        for orders in ice_completed.values()
-    )
-    
-    # キッチン画面ではグループ単位のプリン個数までは不要なので、総数だけコンテキストに渡す。
-    active_count = len(active_orders)
-    active_order_total = sum(
-        order.quantity
-        for orders in active_orders.values()
-        for order in orders
-        if not order.is_completed
-    )
-
-    metrics = _calculate_food_refresh_metrics()
-    active_order_total = metrics['active_order_total']
-    refresh_value = metrics['refresh_value']
-    
-    context.update({
-        'pudding_count_active': pudding_count_active,
-        'pudding_count_completed': pudding_count_completed,
-    })
     
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
         return JsonResponse({
-            'value': refresh_value,
-            'refresh_value': refresh_value,
-            'active_order_total': active_order_total,
-            'active_count': active_count,
+            'value': context['refresh_value'],
+            'refresh_value': context['refresh_value'],
+            'active_order_total': context['active_order_total'],
+            'active_count': context['active_count'],
+            'latest_order_id': context['latest_order_id'],
+            'html': _food_orders_partial(context, request),
             'timestamp': now.isoformat(),
         })
     
@@ -326,6 +279,8 @@ def complete_food_group(request, group_id):
             group_id=group_id, 
             is_completed=False
         ).update(is_completed=True, completed_at=now)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'ok'})
     
     return redirect('food_kitchen')
 
@@ -344,6 +299,8 @@ def complete_food_order(request, order_id):
             order.save()
         except FoodOrder.DoesNotExist:
             pass
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'ok'})
     return redirect('food_kitchen')
 
 
@@ -354,6 +311,8 @@ def food_update_status(request, group_id, new_status):
         FoodOrder.objects.filter(group_id=group_id, is_completed=False).update(
             status=new_status
         )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'ok'})
     return redirect('food_deshap')
 
 
@@ -366,6 +325,8 @@ def food_deshap_view(request):
             'refresh_value': context['refresh_value'],
             'active_order_total': context['active_order_total'],
             'active_count': context['active_count'],
+            'latest_order_id': context['latest_order_id'],
+            'html': _food_orders_partial(context, request, 'food/_food_deshap_orders.html'),
             'timestamp': context['now'].isoformat(),
         })
     return render(request, "food/food_deshap.html", context)
