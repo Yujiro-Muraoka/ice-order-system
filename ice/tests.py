@@ -87,10 +87,29 @@ class IceOrderViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'シングル')
         self.assertContains(response, 'ダブル')
+
+    def test_prefixed_ice_register_view(self):
+        """役割選択画面から使われるアイス注文登録URLのテスト"""
+        response = self.client.get('/ice/register/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'シングル')
+        self.assertContains(response, 'ダブル')
     
     def test_ice_view(self):
         """アイス作成画面のテスト"""
         response = self.client.get(reverse('ice_view'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.test_order.group_id)
+
+    def test_prefixed_ice_view(self):
+        """役割選択画面から使われるアイス作成URLのテスト"""
+        response = self.client.get('/ice/ice/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.test_order.group_id)
+
+    def test_prefixed_deshap_view(self):
+        """役割選択画面から使われるデシャップURLのテスト"""
+        response = self.client.get('/ice/deshap/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.test_order.group_id)
     
@@ -102,6 +121,26 @@ class IceOrderViewTest(TestCase):
             'flavor1': 'jersey'
         })
         self.assertEqual(response.status_code, 302)
+
+    def test_prefixed_submit_order_group(self):
+        """登録画面テンプレートが使う注文確定URLのテスト"""
+        session = self.client.session
+        session['temp_ice'] = [{
+            'size': 'S',
+            'container': 'cup',
+            'flavor1': 'jersey',
+            'flavor2': '',
+        }]
+        session.save()
+
+        response = self.client.post('/ice/submit_order_group/', {
+            'clip_color': 'yellow',
+            'clip_number': '2',
+            'note': 'test',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Order.objects.filter(clip_number=2, note='test').exists())
     
     def test_complete_ice_order(self):
         """アイス注文完了処理のテスト"""

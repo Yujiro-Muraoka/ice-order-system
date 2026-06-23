@@ -33,11 +33,20 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-6ox6xy4q1mlro#_kngpxe
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 # アクセスを許可するホスト名のリスト（本番環境対応）
-ALLOWED_HOSTS = []
-if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
-    ALLOWED_HOSTS.append(os.environ.get('RENDER_EXTERNAL_HOSTNAME'))
+def _split_env_list(value):
+    if not value:
+        return []
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+ALLOWED_HOSTS = _split_env_list(os.environ.get('ALLOWED_HOSTS'))
+render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_hostname and render_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_hostname)
 if DEBUG:
-    ALLOWED_HOSTS.extend(['192.168.68.59', '.onrender.com', 'localhost', '127.0.0.1'])
+    ALLOWED_HOSTS.extend(['192.168.68.59', '.onrender.com', 'localhost', '127.0.0.1', '[::1]'])
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
 
 # ==================== アプリケーション設定 ====================

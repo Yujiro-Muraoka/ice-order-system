@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フード注文入力</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      margin: 0;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .menu-btn {
+      width: 48%;
+      padding: 16px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 2px solid #2196F3;
+      background: #f2f2f2;
+      color: #2196F3;
+      font-weight: bold;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      box-sizing: border-box;
+    }
+    .menu-btn.selected {
+      background: #2196F3;
+      color: #fff;
+      border-color: #1976D2;
+    }
+    .menu-row {
+      display: flex;
+      gap: 4%;
+      margin-bottom: 12px;
+    }
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .qty-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      line-height: 1;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #f8f8f8;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qty-btn:active {
+      background: #e0e0e0;
+    }
+    .add-button {
+      margin: 10px 0;
+      padding: 16px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .add-button:active {
+      background-color: #218838;
+    }
+    .ice-list {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px dashed #888;
+      font-size: 16px;
+      background: #fff;
+      border-radius: 10px;
+    }
+    .clip-color-row {
+      display: flex;
+      gap: 12px;
+      margin: 8px 0 16px;
+      justify-content: center;
+    }
+    .clip-btn {
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      background-color: #f0f0f0;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 48%;
+    }
+    .clip-btn.selected {
+      background-color: #2196F3;
+      color: white;
+      border-color: #1976D2;
+    }
+    .clip-btn:not(.selected):hover {
+      background-color: #e0e0e0;
+    }
+    .clip-number-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+      width: auto;
+      max-width: 200px;
+    }
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      font-size: 16px;
+      border-radius: 8px;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 600px) {
+      .menu-row {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .menu-btn,
+      .clip-btn {
+        width: 100%;
+      }
+      .clip-number-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🍽️ フード注文入力 🍽️</h1>
+  <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+  <div id="helpModal">
+    <h3>🧾 操作ガイド</h3>
+    <ul>
+      <li>🍔 メニューを選択してください</li>
+      <li>➕ 個数を選択し「追加」ボタンで仮注文リストに追加されます</li>
+      <li>✅ すべて追加したら「注文を確定」ボタンで送信してください</li>
+      <li>🟡⚪️ クリップ番号と色も必ず選択してください</li>
+    </ul>
+    <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+  </div>
+
+  <div class="menu-row">
+    <button type="button" class="menu-btn" id="karaageBtn" onclick="selectMenu('からあげ丼', this)">🍗 からあげ丼</button>
+    <button type="button" class="menu-btn" id="lurowfanBtn" onclick="selectMenu('ルーロー飯', this)">🐷 ルーロー飯</button>
+  </div>
+  <div class="quantity-selector">
+    <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+    <span id="quantity-value" style="font-size: 20px; min-width: 24px; text-align: center;">1</span>個
+    <button type="button" class="qty-btn" onclick="changeQty(1)">＋</button>
+    <input type="hidden" id="food-quantity" value="1">
+  </div>
+  <div class="menu-row">
+    <button type="button" class="menu-btn" id="eatInBtn" onclick="selectEatIn(true, this)">🍽️ 店内</button>
+    <button type="button" class="menu-btn" id="takeoutBtn" onclick="selectEatIn(false, this)">🥡 テイクアウト</button>
+    <input type="hidden" id="eat-in" value="">
+  </div>
+  <button class="add-button" onclick="addFood()">➕ 追加</button>
+
+  
+    <p>まだ何も追加されていません。</p>
+  
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+<script>
+let selectedMenu = 'からあげ丼';
+let selectedEatIn = null;
+function selectMenu(menu, btn) {
+  selectedMenu = menu;
+  document.getElementById('karaageBtn').classList.remove('selected');
+  document.getElementById('lurowfanBtn').classList.remove('selected');
+  btn.classList.add('selected');
+}
+function selectEatIn(eatIn, btn) {
+  selectedEatIn = eatIn;
+  var eatInBtn = document.getElementById('eatInBtn');
+  var takeoutBtn = document.getElementById('takeoutBtn');
+  if (eatInBtn) eatInBtn.classList.remove('selected');
+  if (takeoutBtn) takeoutBtn.classList.remove('selected');
+  btn.classList.add('selected');
+  document.getElementById('eat-in').value = eatIn ? '1' : '0';
+}
+function changeQty(delta) {
+  const min = 1, max = 5;
+  let val = parseInt(document.getElementById('food-quantity').value);
+  val = Math.max(min, Math.min(max, val + delta));
+  document.getElementById('food-quantity').value = val;
+  document.getElementById('quantity-value').textContent = val;
+}
+function addFood() {
+  if (selectedEatIn === null) {
+    alert('店内/テイクアウトを選択してください');
+    return;
+  }
+  const menu = selectedMenu;
+  const quantity = parseInt(document.getElementById('food-quantity').value);
+  const eatIn = document.getElementById('eat-in').value;
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/food/add_temp_food/';
+  const csrf = document.createElement('input');
+  csrf.type = 'hidden';
+  csrf.name = 'csrfmiddlewaretoken';
+  csrf.value = 'Te6TTBCXoa5wfRZ6SrRPMQsy71J7euOVam47UBZEIKvWMV7pRiIjM3lwAu1MsJG6';
+  const menuInput = document.createElement('input');
+  menuInput.type = 'hidden';
+  menuInput.name = 'menu';
+  menuInput.value = menu;
+  const qty = document.createElement('input');
+  qty.type = 'hidden';
+  qty.name = 'quantity';
+  qty.value = quantity;
+  const eatInInput = document.createElement('input');
+  eatInInput.type = 'hidden';
+  eatInInput.name = 'eat_in';
+  eatInInput.value = eatIn;
+  form.appendChild(csrf);
+  form.appendChild(menuInput);
+  form.appendChild(qty);
+  form.appendChild(eatInInput);
+  document.body.appendChild(form);
+  form.submit();
+}
+function selectClipColor(color, button) {
+  document.querySelectorAll('[data-clip]').forEach(btn => btn.classList.remove('selected'));
+  button.classList.add('selected');
+  document.getElementById('clip_color_input').value = color;
+}
+function selectClipNumber(number, button) {
+  document.querySelectorAll('.clip-number-grid .clip-btn').forEach(btn => btn.classList.remove('selected'));
+  const input = document.getElementById('clip_number_input');
+  if (button.classList.contains('selected')) {
+    button.classList.remove('selected');
+    input.value = '';
+  } else {
+    button.classList.add('selected');
+    input.value = number;
+  }
+}
+function validateClipSelection() {
+  const color = document.getElementById('clip_color_input').value;
+  const number = document.getElementById('clip_number_input').value;
+  if (!color || !number) {
+    alert('クリップの色と番号を選択してください。');
+    return false;
+  }
+  return true;
+}
+function openHelp() {
+  document.getElementById('helpModal').style.display = 'block';
+  localStorage.setItem('helpVisible', 'true');
+}
+function closeHelp() {
+  document.getElementById('helpModal').style.display = 'none';
+  localStorage.setItem('helpVisible', 'false');
+}
+window.onload = function() {
+  if (localStorage.getItem('helpVisible') === 'true') {
+    document.getElementById('helpModal').style.display = 'block';
+  }
+  // デフォルト選択
+  document.getElementById('karaageBtn').classList.add('selected');
+};
+</script>
+</body>
+</html>

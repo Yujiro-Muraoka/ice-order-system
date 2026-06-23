@@ -1,0 +1,365 @@
+
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デシャップ担当画面</title>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      padding: 20px; 
+      max-width: 600px; 
+      margin: auto; 
+    }
+    .order-card {
+      background: #f9f9f9 ;
+      border: 2px solid #999 ;
+      border-radius: 12px ;
+      margin-bottom: 24px ;
+      padding: 16px ;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) ;
+    }
+    .order-card p {
+      margin: 4px 0;
+    }
+    .order-card:hover {
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .order-header {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .order-card.flash {
+      animation: flashEffect 0.4s ease;
+    }
+    .status-ok {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .status-stop {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    .complete-button {
+      padding: 14px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 10px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    /* STOPボタン */
+    .stop-button {
+      background-color: #f44336;
+      color: #fff;
+    }
+    .stop-button:hover {
+      background-color: #d32f2f;
+      transform: scale(0.98);
+    }
+    /* OKボタン */
+    .ok-button {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    .ok-button:hover {
+      background-color: #388e3c;
+      transform: scale(0.98);
+    }
+    .complete-button:first-of-type {
+      margin-bottom: 8px;
+    }
+    .clip-id {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .clip-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: white;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+
+    .clip-badge.yellow {
+      background-color: #f1c40f;
+    }
+
+    .clip-badge.white {
+      background-color: #bdc3c7;
+    }
+    .item-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .flavor-strong {
+      font-weight: bold;
+      color: #444;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;                      /* 横基準を中央に */
+      transform: translateX(-50%);    /* 横方向に自分の幅の半分だけ左にずらす */
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+
+    .logout-bottom { text-align: center; margin-top: 30px; }
+  </style>
+  <script src="http://127.0.0.1:8000/static/js/auto-refresh.js"></script>
+</head>
+<body>
+    <audio id="role-audio" src="http://127.0.0.1:8000/static/sounds/%E3%83%A1%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%92%E9%96%8B%E3%81%8F5.mp3"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('role-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+      
+      // 自動更新機能を開始
+      new AutoRefresh({
+        storageKey: 'deshap_active_count',
+        interval: 5000,
+        valueSelector: '#deshap-active-count',
+        scrollStorageKey: 'deshap_scroll_pos',
+        pollUrl: "/deshap/?format=json"
+      });
+    });
+    </script>
+  <h2>デシャップ担当画面（ごとに更新）</h2>
+  <p id="deshap-active-count"
+     data-auto-refresh-value="2:95:1766453096.362563"
+     data-active-items="2">
+    未完了オーダー数: 2グループ / 2件
+  </p>
+  <p>最終更新: 14:53:49</p>
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+
+<div id="helpModal">
+  <h3>🧾 デシャップ操作ガイド</h3>
+  <ul>
+    <li>STOP中のオーダーはアイス作成が保留中です</li>
+    <li>「OK」に切り替えるとアイス担当が作成できます</li>
+    <li>作成タイミングはフードと連携して調整してください</li>
+  </ul>
+  <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+</div>
+
+<div class="order-card">
+  <p class="clip-id">
+    🧾 オーダー番号:
+    <span class="clip-badge yellow">
+      1
+    </span>
+  </p>
+  <p class="status-line">
+    
+
+    状態:
+    
+      🟢 作成OK
+    
+  </p>
+<ul>
+  
+    
+      <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × 1個</li>
+    
+  
+
+  
+    
+  
+</ul>
+
+
+  <!-- OK / STOP 切替ボタン -->
+  <form method="post" action="http://127.0.0.1:8000/ice/update_status/yellow-1-1758698165936/stop/">
+    <input type="hidden" name="csrfmiddlewaretoken" value="ptugmSC3cL1ycuVV8urmdDEJGZu7IQUWztoQfSyd4kWCkIIF2nzOIH1EDQV4Kjv9">
+    <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
+  </form>
+
+  <form method="post" action="http://127.0.0.1:8000/ice/update_status/yellow-1-1758698165936/ok/">
+    <input type="hidden" name="csrfmiddlewaretoken" value="ptugmSC3cL1ycuVV8urmdDEJGZu7IQUWztoQfSyd4kWCkIIF2nzOIH1EDQV4Kjv9">
+    <button type="submit" class="complete-button ok-button">✅ OK にする</button>
+  </form>
+</div>
+
+<div class="order-card">
+  <p class="clip-id">
+    🧾 オーダー番号:
+    <span class="clip-badge yellow">
+      10
+    </span>
+  </p>
+  <p class="status-line">
+    
+
+    状態:
+    
+      🟢 作成OK
+    
+  </p>
+<ul>
+  
+    
+      <li style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン × 1個</li>
+    
+  
+
+  
+    
+  
+</ul>
+
+
+  <!-- OK / STOP 切替ボタン -->
+  <form method="post" action="http://127.0.0.1:8000/ice/update_status/yellow-10-1758698320293/stop/">
+    <input type="hidden" name="csrfmiddlewaretoken" value="ptugmSC3cL1ycuVV8urmdDEJGZu7IQUWztoQfSyd4kWCkIIF2nzOIH1EDQV4Kjv9">
+    <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
+  </form>
+
+  <form method="post" action="http://127.0.0.1:8000/ice/update_status/yellow-10-1758698320293/ok/">
+    <input type="hidden" name="csrfmiddlewaretoken" value="ptugmSC3cL1ycuVV8urmdDEJGZu7IQUWztoQfSyd4kWCkIIF2nzOIH1EDQV4Kjv9">
+    <button type="submit" class="complete-button ok-button">✅ OK にする</button>
+  </form>
+</div>
+
+
+  <hr>
+  <p>完了済みオーダー（30秒後に自動で非表示）</p>
+
+  
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+
+  <script>
+    // 完了済みオーダーの非表示ロジック
+  function updateCountdowns() {
+    const now = new Date().getTime();
+    document.querySelectorAll('.order-card.completed').forEach(card => {
+      const completedAt = new Date(card.dataset.completed.replace(' ', 'T') + '+09:00').getTime();
+      const elapsed = Math.floor((now - completedAt) / 1000);
+      const remaining = 30 - elapsed;
+
+      const countdownEl = card.querySelector('.countdown');
+      if (countdownEl) {
+        countdownEl.textContent = remaining > 0 ? remaining : 0;
+      }
+
+      if (remaining <= 0) {
+        card.remove();
+      }
+    });
+  }
+
+  </script>
+
+<script>
+// 自動リロード廃止
+</script>
+<script>
+  window.onload = function() {
+    const scroll = localStorage.getItem('ice_deshap_scroll');
+    if (scroll) {
+      window.scrollTo(0, parseInt(scroll));
+    }
+  };
+</script>
+
+<script>
+  function openHelp() {
+    document.getElementById('helpModal').style.display = 'block';
+    localStorage.setItem('helpVisible', 'true');
+  }
+
+  function closeHelp() {
+    document.getElementById('helpModal').style.display = 'none';
+    localStorage.setItem('helpVisible', 'false');
+  }
+</script>
+<script>
+  // フォーム送信時にスクロール位置を保存
+  document.querySelectorAll('form[action^="/update_status/"]').forEach(form => {
+    form.addEventListener('submit', () => {
+      sessionStorage.setItem('scrollPos', window.scrollY);
+    });
+  });
+
+  // 読み込み後にスクロール位置を復元（1回だけ）
+  window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('scrollPos');
+    if (pos !== null) {
+      window.scrollTo({ top: parseInt(pos), behavior: 'auto' });
+      sessionStorage.removeItem('scrollPos'); // 一度だけ実行
+    }
+  });
+</script>
+<script>
+  setInterval(updateCountdowns, 1000);  // ← 毎秒カウント更新して削除
+</script>
+<script>
+  // 自動更新後、ヘルプが開いていたら再表示
+  window.addEventListener('load', () => {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      const modal = document.getElementById('helpModal');
+      if (modal) {
+        modal.style.display = 'block';
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>役割選択</title>
+    
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .role-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        .common-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+        .common-button:hover {
+            background-color: #0056b3;
+        }
+        .logout-button {
+            background-color: #dc3545;
+            margin-top: 20px;
+        }
+        .logout-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍦 役割選択 🍦</h1>
+    <form method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="FEePdhVG8S1sgm62Jy3PzeD7xEPT046c13RQDsDY32N6DkehBJ56QACrDBDaiMw2">
+        
+        <div class="role-section">
+            <!-- このアイスクリームはアイスを修正して作ったものである。 -->
+            <h2>🍦 アイスクリーム注文 🍦</h2>
+            <p>アイスクリームの注文を受け付けます</p>
+            <button formaction="http://127.0.0.1:8000/ice/register/" class="common-button role-sound">アイスクリームレジ</button>
+            <button formaction="http://127.0.0.1:8000/ice/ice/" class="common-button role-sound">アイスクリーム担当</button>
+            <button formaction="http://127.0.0.1:8000/ice/deshap/" class="common-button role-sound">デシャップ担当</button>
+        </div>
+        
+        <div class="role-section">
+            <h2>🍧 かき氷注文</h2>
+            <p>かき氷の注文を受け付けます</p>
+            <button formaction="http://127.0.0.1:8000/shavedice/register/" class="common-button role-sound">かき氷レジ</button>
+            <button formaction="http://127.0.0.1:8000/shavedice/kitchen/" class="common-button role-sound">かき氷担当</button>
+            <button formaction="http://127.0.0.1:8000/shavedice/deshap/" class="common-button role-sound">かき氷デシャップ担当</button>
+            <button formaction="http://127.0.0.1:8000/shavedice/waittime/" class="common-button role-sound">かき氷待ち時間表示</button>
+        </div>
+        
+        <div class="role-section">
+            <h2>🍗 フード注文</h2>
+            <p>フードの注文を受け付けます</p>
+            <button formaction="http://127.0.0.1:8000/food/register/" class="common-button role-sound">フードレジ</button>
+            <button formaction="http://127.0.0.1:8000/food/kitchen/" class="common-button role-sound">フード担当</button>
+        </div>
+        
+        <button formaction="http://127.0.0.1:8000/logout/" class="common-button logout-button">ログアウト</button>
+    </form>
+</body>
+</html>

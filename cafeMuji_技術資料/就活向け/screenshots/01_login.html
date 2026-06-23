@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン</title>
+    <style>
+  body {
+    animation: fadeIn 0.4s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 480px;
+            margin: auto;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        label {
+            font-size: 16px;
+        }
+        input[type="password"] {
+            font-size: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 14px;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        ul {
+            padding: 0;
+            list-style: none;
+            margin: 0 0 20px 0;
+        }
+        li {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <audio id="role-audio" src="http://127.0.0.1:8000/static/sounds/%E3%83%A1%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%92%E9%96%8B%E3%81%8F5.mp3"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const audio = document.getElementById('role-audio');
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+      }
+    });
+    </script>
+    <h1>従業員ログイン</h1>
+    
+    <form method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="LLkSH4rNKvPTE1jpBPbPX8mTFi2V0ATvCXQ0qFxPzHxQI96LiLkJLYZDODQ4QU2a">
+        <label for="passcode">パスコード:</label>
+        <input type="password" name="passcode" id="passcode" required>
+        <button type="submit" class="common-button">ログイン</button>
+
+    </form>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cafeMuji 注文管理システム - 制作物概要</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 16mm 14mm 18mm 14mm;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: #1a1a1a;
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    .cover {
+      background: linear-gradient(135deg, #2c3e2d 0%, #4a6741 100%);
+      color: #fff;
+      padding: 32px 32px 28px;
+      margin-bottom: 18px;
+    }
+
+    .cover h1 {
+      font-size: 21pt;
+      margin: 0 0 8px;
+    }
+
+    .cover .subtitle {
+      font-size: 11.5pt;
+      opacity: 0.92;
+      margin-bottom: 16px;
+    }
+
+    .cover .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      font-size: 9pt;
+      opacity: 0.9;
+    }
+
+    .content { padding: 0 6px; }
+
+    h2 {
+      font-size: 12pt;
+      color: #2c3e2d;
+      border-left: 4px solid #6b8f71;
+      padding-left: 10px;
+      margin: 20px 0 10px;
+      page-break-after: avoid;
+    }
+
+    p { margin: 0 0 8px; }
+
+    .lead-box {
+      background: #f4f7f4;
+      border: 1px solid #d5e0d6;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      font-size: 10.5pt;
+      line-height: 1.7;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 6px;
+      padding: 11px 13px;
+    }
+
+    .card h3 {
+      font-size: 9.5pt;
+      color: #2c3e2d;
+      margin: 0 0 7px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #d5e0d6;
+    }
+
+    .card ul {
+      margin: 0;
+      padding-left: 17px;
+      font-size: 9.5pt;
+    }
+
+    .card li { margin-bottom: 3px; }
+
+    pre {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 11px 13px;
+      font-family: "SF Mono", "Menlo", "Consolas", monospace;
+      font-size: 8pt;
+      line-height: 1.4;
+      margin: 8px 0 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 9pt;
+    }
+
+    th, td {
+      border: 1px solid #d0d0d0;
+      padding: 6px 9px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef3ee;
+      color: #2c3e2d;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) td { background: #fafafa; }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0 14px;
+    }
+
+    .screenshot-item {
+      border: 1px solid #d8d8d8;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+      page-break-inside: avoid;
+    }
+
+    .screenshot-item img {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid #e8e8e8;
+    }
+
+    .screenshot-item figcaption {
+      padding: 7px 10px;
+      font-size: 8.5pt;
+      color: #444;
+      background: #f7f7f7;
+    }
+
+    .screenshot-item strong {
+      color: #2c3e2d;
+    }
+
+    .screenshot-full {
+      margin: 10px 0 14px;
+      border: 1px solid #d8d8d8;
+      border-radius: 6px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .screenshot-full img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot-full figcaption {
+      padding: 7px 10px;
+      font-size: 8.5pt;
+      color: #444;
+      background: #f7f7f7;
+    }
+
+    .highlight-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .highlight-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 7px;
+      font-size: 9.5pt;
+    }
+
+    .highlight-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #4a6741;
+      font-weight: bold;
+    }
+
+    .page-break { page-break-before: always; }
+
+    ul.compact {
+      margin: 4px 0 8px;
+      padding-left: 18px;
+      font-size: 9.5pt;
+    }
+
+    ul.compact li { margin-bottom: 3px; }
+
+    .footer {
+      margin-top: 18px;
+      padding-top: 8px;
+      border-top: 1px solid #ddd;
+      font-size: 8pt;
+      color: #666;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cover">
+    <h1>cafeMuji 注文管理システム</h1>
+    <div class="subtitle">制作物概要資料</div>
+    <div class="meta">
+      <span><strong>開発者</strong>：村岡 優次郎</span>
+      <span><strong>開発期間</strong>：2025年6月〜2025年10月</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <h2>1. プロジェクト概要</h2>
+    <div class="lead-box">
+      <strong>cafe&amp;meal MUJI の店舗業務を効率化する注文管理Webアプリケーション</strong>です。<br>
+      フード・アイスクリーム・かき氷の注文を一元管理し、レジ・キッチン・各担当者がリアルタイムに注文状況を共有できるシステムを開発しました。企画・設計・実装・クラウドデプロイまで一貫して担当しています。
+    </div>
+
+    <h2>2. 開発背景</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>解決したい課題</h3>
+        <ul>
+          <li>紙や口頭での注文伝達による<strong>伝達ミス</strong></li>
+          <li>商品カテゴリごとに<strong>管理方法が異なる</strong>運用負担</li>
+          <li>繁忙時の<strong>注文進捗の共有</strong>の難しさ</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>アプローチ</h3>
+        <ul>
+          <li>役割ごとに最適化した<strong>専用画面</strong>の設計</li>
+          <li>クリップ色・番号による<strong>現場の運用ルール</strong>への準拠</li>
+          <li>Render.com へのデプロイによる<strong>複数端末からの同時利用</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>3. システム構成</h2>
+    <pre>┌─────────────────────────────────────────────────────────┐
+│              cafeMuji 注文管理システム                    │
+├─────────────┬─────────────┬─────────────┬───────────────┤
+│  フード管理   │ アイス管理    │  かき氷管理   │   REST API    │
+│  (food)     │  (ice)      │ (shavedice) │   (api)       │
+├─────────────┴─────────────┴─────────────┴───────────────┤
+│           Django 5.2 + SQLite / PostgreSQL              │
+├─────────────────────────────────────────────────────────┤
+│              Render.com（クラウドホスティング）            │
+└─────────────────────────────────────────────────────────┘</pre>
+
+    <table>
+      <thead>
+        <tr><th>役割</th><th>画面</th><th>機能</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>レジ担当</td><td>注文登録画面</td><td>メニュー選択、仮注文→本注文、クリップ設定</td></tr>
+        <tr><td>キッチン担当</td><td>キッチン画面</td><td>受注一覧の確認、調理中・完了の更新</td></tr>
+        <tr><td>アイス担当</td><td>注文・詳細画面</td><td>フレーバー選択、OK/STOP/保留の状態管理</td></tr>
+        <tr><td>かき氷担当</td><td>注文・待ち時間画面</td><td>注文受付、待ち時間の表示・案内</td></tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>4. 画面イメージ</h2>
+
+    <div class="screenshot-grid">
+      <figure class="screenshot-item">
+        <img src="screenshots/01_login.png" alt="ログイン画面">
+        <figcaption><strong>ログイン画面</strong> — スタッフ認証</figcaption>
+      </figure>
+      <figure class="screenshot-item">
+        <img src="screenshots/02_role_select.png" alt="役割選択画面">
+        <figcaption><strong>役割選択画面</strong> — 起動後のメイン画面</figcaption>
+      </figure>
+    </div>
+
+    <div class="screenshot-grid">
+      <figure class="screenshot-item">
+        <img src="screenshots/03_ice_register.png" alt="アイスクリーム注文登録画面">
+        <figcaption><strong>アイスクリーム注文登録</strong> — フレーバー・サイズ選択</figcaption>
+      </figure>
+      <figure class="screenshot-item">
+        <img src="screenshots/04_food_register.png" alt="フード注文登録画面">
+        <figcaption><strong>フード注文登録</strong> — 仮注文→本注文のワークフロー</figcaption>
+      </figure>
+    </div>
+
+    <div class="screenshot-grid">
+      <figure class="screenshot-item">
+        <img src="screenshots/05_shavedice_register.png" alt="かき氷注文登録画面">
+        <figcaption><strong>かき氷注文登録</strong> — フレーバー選択・注文受付</figcaption>
+      </figure>
+      <figure class="screenshot-item">
+        <img src="screenshots/06_food_kitchen.png" alt="フードキッチン画面">
+        <figcaption><strong>フードキッチン画面</strong> — 受注一覧と進捗管理</figcaption>
+      </figure>
+    </div>
+
+    <div class="screenshot-grid">
+      <figure class="screenshot-item">
+        <img src="screenshots/07_ice_deshap.png" alt="アイスクリームデシャップ画面">
+        <figcaption><strong>デシャップ画面</strong> — 注文の仕上げ・提供管理</figcaption>
+      </figure>
+      <figure class="screenshot-item">
+        <img src="screenshots/08_shavedice_waittime.png" alt="かき氷待ち時間表示画面">
+        <figcaption><strong>待ち時間表示</strong> — お客様への案内用画面</figcaption>
+      </figure>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>5. 主な機能</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>フード注文管理</h3>
+        <ul>
+          <li>からあげ丼、ルーロー飯</li>
+          <li>仮注文 → 本注文の2段階ワークフロー</li>
+          <li>受注 → 作成中 → 完了の追跡</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>アイスクリーム注文管理</h3>
+        <ul>
+          <li>12種類のフレーバー</li>
+          <li>シングル/ダブル、カップ/コーン</li>
+          <li>OK / STOP / 保留の状態制御</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>かき氷注文管理</h3>
+        <ul>
+          <li>抹茶・いちご・ゆず</li>
+          <li>キッチン画面での進捗管理</li>
+          <li>待ち時間表示</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>共通機能</h3>
+        <ul>
+          <li>セッションによる仮注文の一時保存</li>
+          <li>クリップ色・番号による注文識別</li>
+          <li>完了時刻の自動記録、備考欄</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>6. 技術スタック</h2>
+    <table>
+      <thead><tr><th>区分</th><th>技術</th></tr></thead>
+      <tbody>
+        <tr><td>言語</td><td>Python 3.13</td></tr>
+        <tr><td>フレームワーク</td><td>Django 5.2</td></tr>
+        <tr><td>API</td><td>Django REST Framework 3.14</td></tr>
+        <tr><td>データベース</td><td>SQLite（開発）/ PostgreSQL（本番）</td></tr>
+        <tr><td>フロントエンド</td><td>Django Templates + カスタムCSS</td></tr>
+        <tr><td>デプロイ</td><td>Render.com + gunicorn</td></tr>
+        <tr><td>バージョン管理</td><td>Git / GitHub</td></tr>
+      </tbody>
+    </table>
+
+    <h2>7. 開発における工夫</h2>
+    <ul class="highlight-list">
+      <li><strong>現場の運用に寄り添ったUI設計</strong> — スタッフの作業フローをヒアリングし、役割別画面を設計。クリップ管理や仮注文など現場の運用ルールをそのままデジタル化</li>
+      <li><strong>部分更新によるリアルタイム性</strong> — キッチン画面で変更箇所のみを更新し、繁忙時でも作業が中断されないよう配慮</li>
+      <li><strong>設計から運用まで一貫した開発</strong> — DB設計、REST API、デプロイ・運用マニュアルまで整備</li>
+    </ul>
+
+    <h2>8. 開発成果</h2>
+    <ul class="compact">
+      <li>3カテゴリ（フード・アイス・かき氷）の注文を<strong>1つのシステムに統合</strong></li>
+      <li>REST API エンドポイントの整備（外部連携・将来拡張の基盤）</li>
+      <li>技術資料・運用マニュアルの整備</li>
+      <li>Render.com への本番デプロイと運用</li>
+    </ul>
+
+    <div class="footer">村岡 優次郎</div>
+
+  </div>
+</body>
+</html>

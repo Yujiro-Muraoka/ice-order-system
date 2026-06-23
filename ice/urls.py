@@ -3,6 +3,24 @@ from ice import views
 from common import views_auth
 
 urlpatterns = [
+    path('ice/register/', views.register_view, name='ice_register_prefixed'),
+    path('ice/register', views.register_view),
+    path('ice/ice/', views.ice_view, name='ice_view_prefixed'),
+    path('ice/ice', views.ice_view),
+    path('ice/deshap/', views.deshap_view, name='deshap_prefixed'),
+    path('ice/deshap', views.deshap_view),
+    path('ice/submit_order_group/', views.submit_order_group, name='submit_order_group_prefixed'),
+    path('ice/add_temp_ice/', views.add_temp_ice, name='add_temp_ice_prefixed'),
+    path('ice/add_temp_pudding/', views.add_temp_pudding, name='add_temp_pudding_prefixed'),
+    path('ice/delete_temp_ice/<int:index>/', views.delete_temp_ice, name='delete_temp_ice_prefixed'),
+    path('ice/delete_all_pudding/', views.delete_all_pudding, name='delete_all_pudding_prefixed'),
+    path('ice/complete/<int:order_id>/', views.complete_order, name='complete_order_prefixed'),
+    path('ice/detail/<int:order_id>/', views.order_detail, name='order_detail_prefixed'),
+    path('ice/complete_group/<str:group_id>/', views.complete_group, name='complete_group_prefixed'),
+    path('ice/delete_group/<str:group_id>/', views.delete_group, name='delete_group_prefixed'),
+    path('ice/update_status/<str:group_id>/<str:new_status>/', views.update_status, name='update_status_prefixed'),
+    path('ice/delete_group_from_deshap/<str:group_id>/', views.delete_group_from_deshap, name='delete_group_from_deshap_prefixed'),
+    path('ice/api/active_count/', views.api_active_count, name='api_active_count_prefixed'),
     path('', views.role_select, name='role_select'),
     path('register/', views.register_view, name='register_view'),
     path('register/', views.register_view, name='register'),  # backward compatibility

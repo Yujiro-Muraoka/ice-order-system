@@ -1,0 +1,335 @@
+
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>フード作成担当画面</title>
+  <style>
+  
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f5f5f5;
+    }
+    .order-card {
+      background: #f9f9f9;
+      border: 2px solid #999;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+    .order-card p {
+      margin: 4px 0;
+    }
+    .order-card:hover {
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .order-header {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .status-line {
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    .elapsed-time {
+      color: #666;
+      font-size: 14px;
+    }
+    .complete-button {
+      margin-top: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      border-radius: 10px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+    .complete-button:hover {
+      background-color: #1976D2;
+      transform: scale(0.98);
+    }
+    .disabled-message {
+      color: red;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .clip-id {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .clip-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      color: white;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+
+    .clip-badge.yellow {
+      background-color: #f1c40f;
+    }
+
+    .clip-badge.white {
+      background-color: #bdc3c7;
+    }
+    .item-label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .flavor-strong {
+      font-weight: bold;
+      color: #444;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .logout-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    #helpButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    #helpModal {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;                      /* 横基準を中央に */
+      transform: translateX(-50%);    /* 横方向に自分の幅の半分だけ左にずらす */
+      width: 80%;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+
+    #closeHelp {
+      margin-top: 10px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+@media screen and (max-width: 480px) {
+  body {
+    font-size: 18px;
+  }
+
+  h2, h3, p, li {
+    font-size: 18px;
+  }
+
+  .order-card {
+    font-size: 17px;
+  }
+
+  .complete-button {
+    font-size: 18px;
+    padding: 16px;
+  }
+
+  .clip-id,
+  .status-line,
+  .elapsed-time,
+  .item-label,
+  .flavor-strong {
+    font-size: 17px;
+  }
+
+  .logout-bottom a {
+    font-size: 16px;
+  }
+}
+
+
+  </style>
+  <script src="http://127.0.0.1:8000/static/js/auto-refresh.js"></script>
+</head>
+<body>
+    <audio id="notify-audio" src="http://127.0.0.1:8000/static/sounds/FOG%E3%83%90%E3%83%AC%E9%9F%B3.mp3"></audio>
+    <audio id="silent-audio" src="http://127.0.0.1:8000/static/sounds/silent.mp3"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      // 通知音の再生ロジック
+      const activeCountEl = document.getElementById('food-active-count');
+      const nowItems = Number(activeCountEl?.dataset.activeItems || 0);
+      const prevItems = Number(localStorage.getItem('food_active_items') || 0);
+      if (nowItems > prevItems) {
+        const audio = document.getElementById('notify-audio');
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(e => console.error("Audio play failed:", e));
+        }
+      }
+      localStorage.setItem('food_active_items', nowItems);
+
+      // 自動更新機能を開始
+      new AutoRefresh({
+        storageKey: 'food_refresh_value',
+        interval: 5000,
+        valueSelector: '#food-active-count',
+        scrollStorageKey: 'food_scroll_pos',
+        pollUrl: "/food/kitchen/?format=json"
+      });
+    });
+    </script>
+  <h2>フード注文一覧</h2>
+  <p id="food-active-count"
+     data-auto-refresh-value="1000021"
+     data-active-items="1"
+  >
+    未完了オーダー数: 1グループ / 1件
+  </p>
+  <p>最終更新: 14:53:49</p>
+
+  <p style="font-weight: bold; color: #a52a2a;">🍮 アフォガードプリン待ち: 2個</p>
+
+
+
+<button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+<div id="helpModal">
+  <h3>🧊 アイス作成の流れ</h3>
+  <ul>
+    <li>🟢「作成OK」のオーダーから順に作成してください</li>
+    <li>📦「カップ」「コーン」や「サイズ」「種類」をよく確認してください</li>
+    <li>✅ 完了後は「このオーダーを完了」ボタンを押してください</li>
+    <li>⏱ 完了済みは30秒間表示されます</li>
+    <li>🔴 STOP中のオーダーは「デシャップの許可待ち」です</li>
+  </ul>
+<button id="closeHelp" onclick="closeHelp()">閉じる</button>
+
+</div>
+
+
+  
+<div class="order-card">
+<p class="clip-id">
+  🧾 オーダー番号:
+  <span class="clip-badge yellow">
+    3
+  </span>
+</p>
+
+
+  <p class="status-line">
+    状態:
+    
+      🟢 作成OK
+    
+  </p>
+
+  <p class="elapsed-time">⏳ 経過時間: 458061分</p>
+
+
+<ul>
+  
+    <li>
+      <span class="item-label">からあげ丼</span> × 1個
+      <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+        🥡テイクアウト
+      </span>
+      <form method="post" action="http://127.0.0.1:8000/food/complete_order/21/" style="display:inline; margin-left:8px;">
+        <input type="hidden" name="csrfmiddlewaretoken" value="O6gC9d4jNW7LT64Ebebgw6ejgrwObS0OaK3vcHbsH0wBjVxZbZTpRsHrcasMOSzr">
+        <button type="submit" style="font-size:13px; padding:4px 10px; border-radius:6px; background:#4CAF50; color:white; border:none; cursor:pointer;">この注文だけ完了</button>
+      </form>
+    </li>
+  
+</ul>
+
+
+    
+<form method="post" action="http://127.0.0.1:8000/food/complete_group/1753414320/" onsubmit="return showCompleteMessage();">
+  <input type="hidden" name="csrfmiddlewaretoken" value="O6gC9d4jNW7LT64Ebebgw6ejgrwObS0OaK3vcHbsH0wBjVxZbZTpRsHrcasMOSzr">
+  <button type="submit" class="complete-button">✅ このオーダーを完了</button>
+</form>
+
+    
+  </div>
+
+  <hr>
+  <p>完了済み注文（30秒後に自動で非表示）</p>
+
+  
+
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+
+<script>
+  function updateCountdowns() {
+    const now = new Date().getTime();
+    document.querySelectorAll('.order-card.completed').forEach(card => {
+      const completedAtStr = card.dataset.completed.replace(' ', 'T'); // "2025-05-13 13:10:00"
+      const completedAt = new Date(completedAtStr).getTime();
+
+      const elapsed = Math.floor((now - completedAt) / 1000);
+      const remaining = 30 - elapsed;
+      const countdownEl = card.querySelector('.countdown');
+
+      if (remaining > 0) {
+        countdownEl.textContent = remaining;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+</script>
+
+
+<script>
+  setInterval(updateCountdowns, 1000);  // ← 毎秒1回、カウントダウン更新
+</script>
+
+<script>
+  // 自動更新後、ヘルプが開いていたら再表示
+  window.onload = function() {
+    if (localStorage.getItem('helpVisible') === 'true') {
+      document.getElementById('helpModal').style.display = 'block';
+    } else {
+      document.getElementById('helpModal').style.display = 'none';
+    }
+    // デフォルト選択
+    document.getElementById('karaageBtn').classList.add('selected');
+  };
+</script>
+
+</body>
+</html>

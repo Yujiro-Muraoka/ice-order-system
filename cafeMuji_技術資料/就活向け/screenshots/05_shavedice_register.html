@@ -1,5 +1,5 @@
-{% load custom_filters %}
-{% load static %}
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -365,7 +365,7 @@
 
 </head>
 <body>
-    <!-- <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio> -->
+    <!-- <audio id="role-audio" src="http://127.0.0.1:8000/static/orders/sounds/%E3%83%A1%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%92%E9%96%8B%E3%81%8F5.mp3"></audio> -->
     <!-- window.addEventListener('DOMContentLoaded', ...) で role-audio を再生するJSも削除 -->
   <h1>かき氷注文入力</h1>
 
@@ -397,79 +397,24 @@
 
 <label>かき氷:</label>
 <div class="flavor-grid">
-  {% for value, label in flavor_choices %}
-    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '{{ value }}', this)">{{ label }}</button>
-  {% endfor %}
+  
+    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '🍧いちご🍧', this)">🍧いちご🍧</button>
+  
+    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '🍧抹茶🍧', this)">🍧抹茶🍧</button>
+  
+    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '🍧ほうじ茶🍧', this)">🍧ほうじ茶🍧</button>
+  
+    <button type="button" class="select-btn" data-group="flavor" onclick="selectOption('flavor', '🍧ゆず🍧', this)">🍧ゆず🍧</button>
+  
 </div>
 <form>
     <br>
     <button type="button" onclick="addIce()" class="add-button">かき氷を追加</button> 
 </form>
 
-  {% if temp_ice %}
-  <form method="post" action="/shavedice/submit_order_group/" onsubmit="return validateClipSelection();">
-    {% csrf_token %}
-
-
-    <div class="ice-list">
-      <h3>現在の仮オーダー内容</h3>
-<ul>
-
-
-  {% for ice in temp_ice %}
-    {% if not ice.is_pudding %}
-<li style="margin-bottom: 6px;">
-  <div>
-    <strong class="item-label">アイス:</strong>
-    <span class="item-value">{{ ice.flavor }}</span>
-    <a href="/shavedice/delete_temp_ice/{{ forloop.counter0 }}/" style="color: red; margin-left: 8px;">[削除]</a>
-  </div>
-</li>
-    {% endif %}
-  {% endfor %}
-</ul>
-
-
-<!-- 備考欄追加 -->
-<label for="note">備考：</label>
-<textarea id="note" name="note" rows="4"
-  style="box-sizing: border-box; width: 100%; max-width: 100%; font-size: 16px; padding: 10px; border-radius: 8px;"
-  placeholder="例：アフォのエスプレッソなし、フード注文大量等"></textarea>
-
-
-    </div>
-  <h3>オーダー表 クリップ情報</h3>
-  <strong>色:</strong>
-  <div class="clip-color-row">
-    <button type="button" class="clip-btn" data-clip="yellow" onclick="selectClipColor('yellow', this)">🟡 黄色</button>
-    <button type="button" class="clip-btn" data-clip="white" onclick="selectClipColor('white', this)">⚪️ 白色</button>
-  </div>
-    </div>
-    <br>
-    <strong>番号:</strong><br>
-<!-- 1〜8 -->
-<div class="clip-number-grid">
-  {% for i in clip_numbers_first %}
-    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
-  {% endfor %}
-</div>
-
-<!-- 9〜16 -->
-<div class="clip-number-grid">
-  {% for i in clip_numbers_second %}
-    <button type="button" class="clip-btn" onclick="selectClipNumber({{ i }}, this)">{{ i }}</button>
-  {% endfor %}
-</div>
-
-  </div>
-  <input type="hidden" name="clip_color" id="clip_color_input" required>
-  <input type="hidden" name="clip_number" id="clip_number_input" required>
-  <button type="submit" class="add-button">オーダーを送信</button>
-
-  </form>
-  {% else %}
+  
     <p>まだ何も追加されていません。</p>
-  {% endif %}
+  
 
   <hr>
   <a href="/">← 役割選択へ戻る</a>
