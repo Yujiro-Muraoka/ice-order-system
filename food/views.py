@@ -18,9 +18,37 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from collections import defaultdict, Counter
-from django.db.models import Sum, Max, Q
+from django.db.models import Count, Sum, Max, Q
 from .models import FoodOrder
 import time
+
+FOOD_CATEGORIES = [
+    {
+        'name': 'パンケーキ',
+        'items': ['パンケーキ'],
+    },
+    {
+        'name': '麺・フォー',
+        'items': ['チキンのフォー', 'ソトアヤムのフォー', 'ルーロー麺'],
+    },
+    {
+        'name': 'その他',
+        'items': [
+            'ハンバーグ',
+            'からあげ',
+            'ルーロー飯',
+            'ライスバーガー',
+            'バターチキンカレー',
+            'いわし梅カレー',
+        ],
+    },
+]
+
+FOOD_MENU_NAMES = {
+    menu
+    for category in FOOD_CATEGORIES
+    for menu in category['items']
+}
 
 
 def _split_active_completed(grouped, now):
@@ -47,14 +75,42 @@ def _calculate_food_refresh_metrics():
     aggregates = FoodOrder.objects.aggregate(
         active_items=Sum('quantity', filter=Q(is_completed=False)),
         latest_id=Max('id'),
+        active_stop_groups=Count(
+            'group_id',
+            filter=Q(is_completed=False, status='stop'),
+            distinct=True,
+        ),
     )
     active_order_total = aggregates['active_items'] or 0
     latest_order_id = aggregates['latest_id'] or 0
-    refresh_value = active_order_total * 1_000_000 + latest_order_id
+    active_stop_groups = aggregates['active_stop_groups'] or 0
+    refresh_value = f"{active_order_total}:{latest_order_id}:{active_stop_groups}"
     return {
         'active_order_total': active_order_total,
         'latest_order_id': latest_order_id,
+        'active_stop_groups': active_stop_groups,
         'refresh_value': refresh_value,
+    }
+
+
+def _get_food_order_context():
+    now = timezone.localtime()
+    all_food = FoodOrder.objects.all().order_by('timestamp')
+    for order in all_food:
+        order.elapsed_seconds = int((now - order.timestamp).total_seconds())
+        order.elapsed_minutes = order.elapsed_seconds // 60
+
+    grouped = _group_by_group_id(all_food)
+    active_orders, completed_orders = _split_active_completed(grouped, now)
+    metrics = _calculate_food_refresh_metrics()
+
+    return {
+        'active_orders': active_orders,
+        'completed_orders': completed_orders,
+        'now': now,
+        'active_count': len(active_orders),
+        'active_order_total': metrics['active_order_total'],
+        'refresh_value': metrics['refresh_value'],
     }
 
 
@@ -93,6 +149,7 @@ def food_register(request):
     # テンプレートに渡すデータを準備
     context = {
         'temp_food': temp_food,
+        'food_categories': FOOD_CATEGORIES,
         'karaage_count': counts.get('からあげ丼', 0),
         'lurowfan_count': counts.get('ルーロー飯', 0),
         'clip_color': clip_color,
@@ -132,6 +189,8 @@ def add_temp_food(request):
     
     # 入力値の妥当性チェック
     if not menu or eat_in_str not in ['0', '1']:
+        return redirect('food_register')
+    if menu not in FOOD_MENU_NAMES:
         return redirect('food_register')
     
     # 数量を整数に変換（エラー時は1に設定）
@@ -179,15 +238,9 @@ def food_kitchen(request):
     """
     from ice.models import Order as IceOrder
 
-    now = timezone.now()
-
-    # Food orders
-    all_food = FoodOrder.objects.all().order_by('timestamp')
-    for o in all_food:
-        o.elapsed_seconds = int((now - o.timestamp).total_seconds())
-        o.elapsed_minutes = o.elapsed_seconds // 60
-    food_grouped = _group_by_group_id(all_food)
-    active_orders, completed_orders = _split_active_completed(food_grouped, now)
+    context = _get_food_order_context()
+    now = context['now']
+    active_orders = context['active_orders']
 
     # Ice orders for pudding counts only
     ice_all = IceOrder.objects.order_by('timestamp')
@@ -234,17 +287,10 @@ def food_kitchen(request):
     active_order_total = metrics['active_order_total']
     refresh_value = metrics['refresh_value']
     
-    # テンプレートに渡すデータを準備
-    context = {
-        'active_orders': active_orders,
-        'completed_orders': completed_orders,
-        'now': now,
+    context.update({
         'pudding_count_active': pudding_count_active,
         'pudding_count_completed': pudding_count_completed,
-        'active_count': active_count,
-        'active_order_total': active_order_total,
-        'refresh_value': refresh_value,
-    }
+    })
     
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
         return JsonResponse({
@@ -299,6 +345,52 @@ def complete_food_order(request, order_id):
         except FoodOrder.DoesNotExist:
             pass
     return redirect('food_kitchen')
+
+
+@csrf_exempt
+def food_update_status(request, group_id, new_status):
+    """フードデシャップ画面からグループの状態を更新"""
+    if request.method == 'POST' and new_status in {'ok', 'stop'}:
+        FoodOrder.objects.filter(group_id=group_id, is_completed=False).update(
+            status=new_status
+        )
+    return redirect('food_deshap')
+
+
+def food_deshap_view(request):
+    """フードデシャップ担当画面"""
+    context = _get_food_order_context()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': context['refresh_value'],
+            'refresh_value': context['refresh_value'],
+            'active_order_total': context['active_order_total'],
+            'active_count': context['active_count'],
+            'timestamp': context['now'].isoformat(),
+        })
+    return render(request, "food/food_deshap.html", context)
+
+
+def food_wait_time_view(request):
+    """
+    フードの未完了商品数から待ち時間（1商品1分）を計算して表示するビュー
+    """
+    uncompleted_count = FoodOrder.objects.filter(is_completed=False).aggregate(
+        total=Sum('quantity')
+    )['total'] or 0
+    wait_minutes = uncompleted_count
+    context = {
+        'uncompleted_count': uncompleted_count,
+        'wait_minutes': wait_minutes,
+    }
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse({
+            'value': wait_minutes,
+            'wait_minutes': wait_minutes,
+            'uncompleted_count': uncompleted_count,
+            'timestamp': timezone.now().isoformat(),
+        })
+    return render(request, 'food/food_wait_time.html', context)
 
 
 @csrf_exempt
@@ -390,7 +482,8 @@ def submit_order_group(request):
     # グループIDを現在時刻で生成（一意性を保証）
     group_id = str(int(time.time()))
 
-    
+    has_stop = FoodOrder.objects.filter(is_completed=False, status='stop').exists()
+    status = 'stop' if has_stop else 'ok'
     
     # 仮注文をデータベースに保存
     for item in temp_food:
@@ -402,6 +495,7 @@ def submit_order_group(request):
             clip_number=clip_number,
             note=note,
             group_id=group_id,
+            status=status,
             is_completed=False
         )
     

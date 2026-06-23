@@ -38,8 +38,16 @@
     }
     .menu-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 4%;
       margin-bottom: 12px;
+    }
+    .category-title {
+      margin: 18px 0 8px;
+      font-size: 17px;
+      color: #333;
+      border-left: 4px solid #2196F3;
+      padding-left: 8px;
     }
     .quantity-selector {
       display: flex;
@@ -199,10 +207,14 @@
     <button id="closeHelp" onclick="closeHelp()">閉じる</button>
   </div>
 
-  <div class="menu-row">
-    <button type="button" class="menu-btn" id="karaageBtn" onclick="selectMenu('からあげ丼', this)">🍗 からあげ丼</button>
-    <button type="button" class="menu-btn" id="lurowfanBtn" onclick="selectMenu('ルーロー飯', this)">🐷 ルーロー飯</button>
-  </div>
+  {% for category in food_categories %}
+    <h2 class="category-title">{{ forloop.counter }}. {{ category.name }}</h2>
+    <div class="menu-row">
+      {% for menu in category.items %}
+        <button type="button" class="menu-btn" data-menu="{{ menu }}" onclick="selectMenu('{{ menu }}', this)">{{ menu }}</button>
+      {% endfor %}
+    </div>
+  {% endfor %}
   <div class="quantity-selector">
     <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
     <span id="quantity-value" style="font-size: 20px; min-width: 24px; text-align: center;">1</span>個
@@ -274,12 +286,11 @@
     <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
   </div>
 <script>
-let selectedMenu = 'からあげ丼';
+let selectedMenu = '';
 let selectedEatIn = null;
 function selectMenu(menu, btn) {
   selectedMenu = menu;
-  document.getElementById('karaageBtn').classList.remove('selected');
-  document.getElementById('lurowfanBtn').classList.remove('selected');
+  document.querySelectorAll('.menu-btn[data-menu]').forEach(menuBtn => menuBtn.classList.remove('selected'));
   btn.classList.add('selected');
 }
 function selectEatIn(eatIn, btn) {
@@ -304,6 +315,10 @@ function addFood() {
     return;
   }
   const menu = selectedMenu;
+  if (!menu) {
+    alert('メニューを選択してください');
+    return;
+  }
   const quantity = parseInt(document.getElementById('food-quantity').value);
   const eatIn = document.getElementById('eat-in').value;
   const form = document.createElement('form');
@@ -370,7 +385,11 @@ window.onload = function() {
     document.getElementById('helpModal').style.display = 'block';
   }
   // デフォルト選択
-  document.getElementById('karaageBtn').classList.add('selected');
+  const firstMenu = document.querySelector('.menu-btn[data-menu]');
+  if (firstMenu) {
+    firstMenu.classList.add('selected');
+    selectedMenu = firstMenu.dataset.menu;
+  }
 };
 </script>
 </body>

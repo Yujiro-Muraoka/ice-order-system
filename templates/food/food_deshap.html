@@ -1,0 +1,161 @@
+{% load custom_filters %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フードデシャップ担当画面</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background-color: #f5f5f5; }
+    .order-card { background: #f9f9f9; border: 2px solid #999; border-radius: 12px; margin-bottom: 24px; padding: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
+    .order-card p { margin: 4px 0; }
+    .order-card:hover { box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+    .status-line { font-weight: bold; margin-top: 4px; }
+    .elapsed-time { color: #666; font-size: 14px; }
+    .complete-button { margin-top: 10px; padding: 14px; font-size: 16px; font-weight: bold; width: 100%; border-radius: 10px; background-color: #2196F3; color: white; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); transition: background-color 0.2s ease, transform 0.1s ease; }
+    .complete-button:hover { background-color: #1976D2; transform: scale(0.98); }
+    .stop-button { background-color: #dc3545; }
+    .stop-button:hover { background-color: #c82333; }
+    .ok-button { background-color: #28a745; }
+    .ok-button:hover { background-color: #218838; }
+    .clip-id { font-weight: bold; margin-bottom: 8px; }
+    .clip-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; color: white; font-weight: bold; margin-left: 6px; }
+    .clip-badge.yellow { background-color: #f1c40f; }
+    .clip-badge.white { background-color: #bdc3c7; }
+    .item-label { font-weight: bold; color: #333; }
+    .logout-bottom { text-align: center; margin-top: 30px; }
+    #helpButton { position: fixed; top: 10px; right: 10px; background: #ff9800; color: white; border: none; border-radius: 20px; padding: 10px 16px; font-weight: bold; cursor: pointer; z-index: 999; }
+    #helpModal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 80%; background: white; border: 2px solid #ccc; border-radius: 12px; padding: 20px; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    #closeHelp { margin-top: 10px; background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+  </style>
+  <script src="{% static 'js/auto-refresh.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      new AutoRefresh({
+        storageKey: 'food_deshap_refresh_value',
+        interval: 5000,
+        valueSelector: '#food-deshap-active-count',
+        scrollStorageKey: 'food_deshap_scroll_pos',
+        pollUrl: "{% url 'food_deshap' %}?format=json"
+      });
+    });
+  </script>
+</head>
+<body>
+  <h2>フードデシャップ担当画面</h2>
+  <p id="food-deshap-active-count" data-auto-refresh-value="{{ refresh_value }}">
+    未完了オーダー数: {{ active_count }}グループ / {{ active_order_total }}件
+  </p>
+  <p>最終更新: {{ now|time:"H:i:s" }}</p>
+  <button id="helpButton" onclick="openHelp()">❓ ヘルプ</button>
+  <div id="helpModal">
+    <h3>デシャップ操作ガイド</h3>
+    <ul>
+      <li>STOP中のオーダーはフード作成が保留中です</li>
+      <li>「OK」に切り替えると作成担当画面で完了できます</li>
+      <li>提供タイミングに合わせて状態を切り替えてください</li>
+    </ul>
+    <button id="closeHelp" onclick="closeHelp()">閉じる</button>
+  </div>
+
+  {% for group_id, orders in active_orders.items %}
+    <div class="order-card">
+      <p class="clip-id">
+        🧾 オーダー番号:
+        <span class="clip-badge {% if orders.0.clip_color == 'yellow' %}yellow{% else %}white{% endif %}">
+          {{ orders.0.clip_number }}
+        </span>
+      </p>
+      <p class="status-line">
+        状態:
+        {% if orders.0.status == 'ok' %}
+          🟢 作成OK
+        {% elif orders.0.status == 'stop' %}
+          🔴 STOP中
+        {% endif %}
+      </p>
+      <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+      {% if orders.0.note %}
+        <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+      {% endif %}
+      <ul>
+        {% for order in orders %}
+          <li>
+            <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+            <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+              {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+      <form method="post" action="/food/update_status/{{ group_id }}/stop/">
+        {% csrf_token %}
+        <button type="submit" class="complete-button stop-button">⛔ STOP にする</button>
+      </form>
+      <form method="post" action="/food/update_status/{{ group_id }}/ok/">
+        {% csrf_token %}
+        <button type="submit" class="complete-button ok-button">✅ OK にする</button>
+      </form>
+    </div>
+  {% endfor %}
+
+  <hr>
+  <p>完了済み注文（30秒後に自動で非表示）</p>
+  {% for group_id, orders in completed_orders.items %}
+    {% with latest=orders|last %}
+      <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+        <p>🧾 オーダー番号:
+          {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
+        </p>
+        <p>✅ 完了済み</p>
+        {% if orders.0.note %}
+          <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
+        {% endif %}
+        <p class="countdown-text">⏳ このオーダーは <span class="countdown">30</span> 秒後に消えます</p>
+        <ul>
+          {% for order in orders %}
+            <li>
+              <span class="item-label">{{ order.menu }}</span> × {{ order.quantity }}個
+              <span style="margin-left: 10px; font-weight: bold; color: #2196F3;">
+                {{ order.eat_in|yesno:'🍽️店内,🥡テイクアウト' }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endwith %}
+  {% endfor %}
+
+  <hr>
+  <a href="/">← 役割選択へ戻る</a>
+  <div class="logout-bottom">
+    <a href="/logout/" style="font-weight: bold; color: #5a00a3;">ログアウト</a>
+  </div>
+  <script>
+    function openHelp() {
+      document.getElementById('helpModal').style.display = 'block';
+      localStorage.setItem('helpVisible', 'true');
+    }
+    function closeHelp() {
+      document.getElementById('helpModal').style.display = 'none';
+      localStorage.setItem('helpVisible', 'false');
+    }
+    setInterval(function() {
+      document.querySelectorAll('.order-card.completed').forEach(card => {
+        const completedAtStr = card.dataset.completed.replace(' ', 'T');
+        const completedAt = new Date(completedAtStr).getTime();
+        const elapsed = Math.floor((Date.now() - completedAt) / 1000);
+        const remaining = 30 - elapsed;
+        const countdownEl = card.querySelector('.countdown');
+        if (countdownEl) {
+          countdownEl.textContent = remaining > 0 ? remaining : 0;
+        }
+        if (remaining <= 0) {
+          card.remove();
+        }
+      });
+    }, 1000);
+  </script>
+</body>
+</html>

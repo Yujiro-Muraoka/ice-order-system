@@ -53,12 +53,35 @@
         .logout-button:hover {
             background-color: #c82333;
         }
+        .disabled-section {
+            opacity: 0.55;
+        }
+        .disabled-button {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+        .disabled-button:hover {
+            background-color: #888;
+        }
+        .season-note {
+            color: #d00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1>🍦 役割選択 🍦</h1>
     <form method="post">
         {% csrf_token %}
+
+        <div class="role-section">
+            <h2>🍗 フード注文</h2>
+            <p>フードの注文を受け付けます</p>
+            <button formaction="/food/register/" class="common-button role-sound">フードレジ</button>
+            <button formaction="/food/kitchen/" class="common-button role-sound">フード担当</button>
+            <button formaction="/food/deshap/" class="common-button role-sound">フードデシャップ担当</button>
+            <button formaction="/food/waittime/" class="common-button role-sound">フード待ち時間表示</button>
+        </div>
         
         <div class="role-section">
             <!-- このアイスクリームはアイスを修正して作ったものである。 -->
@@ -69,20 +92,13 @@
             <button formaction="/ice/deshap/" class="common-button role-sound">デシャップ担当</button>
         </div>
         
-        <div class="role-section">
+        <div class="role-section disabled-section" aria-disabled="true">
             <h2>🍧 かき氷注文</h2>
-            <p>かき氷の注文を受け付けます</p>
-            <button formaction="/shavedice/register/" class="common-button role-sound">かき氷レジ</button>
-            <button formaction="/shavedice/kitchen/" class="common-button role-sound">かき氷担当</button>
-            <button formaction="/shavedice/deshap/" class="common-button role-sound">かき氷デシャップ担当</button>
-            <button formaction="/shavedice/waittime/" class="common-button role-sound">かき氷待ち時間表示</button>
-        </div>
-        
-        <div class="role-section">
-            <h2>🍗 フード注文</h2>
-            <p>フードの注文を受け付けます</p>
-            <button formaction="/food/register/" class="common-button role-sound">フードレジ</button>
-            <button formaction="/food/kitchen/" class="common-button role-sound">フード担当</button>
+            <p class="season-note">現在は使用期間外です</p>
+            <button type="button" class="common-button disabled-button" disabled>かき氷レジ</button>
+            <button type="button" class="common-button disabled-button" disabled>かき氷担当</button>
+            <button type="button" class="common-button disabled-button" disabled>かき氷デシャップ担当</button>
+            <button type="button" class="common-button disabled-button" disabled>かき氷待ち時間表示</button>
         </div>
         
         <button formaction="/logout/" class="common-button logout-button">ログアウト</button>

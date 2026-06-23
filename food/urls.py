@@ -31,6 +31,8 @@ urlpatterns = [
     # キッチン画面（キッチン担当者用）
     # 未完了注文の一覧表示、完了済み注文の表示（30秒間）
     path('kitchen/', views.food_kitchen, name='food_kitchen'),
+    path('deshap/', views.food_deshap_view, name='food_deshap'),
+    path('waittime/', views.food_wait_time_view, name='food_wait_time'),
     
     # 注文完了処理（POST専用）
     # 指定されたグループIDの注文を一括で完了状態に更新
@@ -54,4 +56,5 @@ urlpatterns = [
 
     # 個別注文完了処理
     path('complete_order/<int:order_id>/', views.complete_food_order, name='complete_food_order'),
+    path('update_status/<str:group_id>/<str:new_status>/', views.food_update_status, name='food_update_status'),
 ]

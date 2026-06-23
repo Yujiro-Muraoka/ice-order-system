@@ -11,7 +11,7 @@ class FoodOrderModelTest(TestCase):
     def setUp(self):
         """テスト用データの準備"""
         self.food_order = FoodOrder.objects.create(
-            menu='からあげ丼',
+            menu='からあげ',
             quantity=2,
             eat_in=True,
             clip_color='yellow',
@@ -23,7 +23,7 @@ class FoodOrderModelTest(TestCase):
     
     def test_food_order_creation(self):
         """注文作成のテスト"""
-        self.assertEqual(self.food_order.menu, 'からあげ丼')
+        self.assertEqual(self.food_order.menu, 'からあげ')
         self.assertEqual(self.food_order.quantity, 2)
         self.assertTrue(self.food_order.eat_in)
         self.assertEqual(self.food_order.status, 'ok')
@@ -34,7 +34,7 @@ class FoodOrderModelTest(TestCase):
     
     def test_food_order_str_method(self):
         """文字列表現のテスト"""
-        expected = "からあげ丼 ×2 [test_group_001]"
+        expected = "からあげ ×2 [test_group_001]"
         self.assertEqual(str(self.food_order), expected)
     
     def test_food_order_completion(self):
@@ -67,7 +67,7 @@ class FoodOrderViewTest(TestCase):
         """テスト用クライアントとデータの準備"""
         self.client = Client()
         self.test_order = FoodOrder.objects.create(
-            menu='からあげ丼',
+            menu='からあげ',
             quantity=1,
             clip_color='yellow',
             clip_number=1,
@@ -78,13 +78,15 @@ class FoodOrderViewTest(TestCase):
         """注文登録画面のテスト"""
         response = self.client.get(reverse('food_register'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'からあげ丼')
+        self.assertContains(response, 'ハンバーグ')
+        self.assertContains(response, 'からあげ')
         self.assertContains(response, 'ルーロー飯')
+        self.assertContains(response, 'パンケーキ')
     
     def test_add_temp_food_valid_data(self):
         """仮注文追加（有効データ）のテスト"""
         response = self.client.post(reverse('add_temp_food'), {
-            'menu': 'からあげ丼',
+            'menu': 'からあげ',
             'eat_in': '1'
         })
         self.assertEqual(response.status_code, 302)  # リダイレクト
@@ -124,7 +126,7 @@ class FoodOrderSessionTest(TestCase):
         """仮注文のセッション保存テスト"""
         # 仮注文を追加
         self.client.post(reverse('add_temp_food'), {
-            'menu': 'からあげ丼',
+            'menu': 'からあげ',
             'eat_in': '1'
         })
         
@@ -132,14 +134,14 @@ class FoodOrderSessionTest(TestCase):
         session = self.client.session
         self.assertIn('temp_food', session)
         self.assertEqual(len(session['temp_food']), 1)
-        self.assertEqual(session['temp_food'][0]['menu'], 'からあげ丼')
+        self.assertEqual(session['temp_food'][0]['menu'], 'からあげ')
     
     def test_submit_temp_food_orders(self):
         """仮注文の本注文化テスト"""
         # 仮注文をセッションに追加
         session = self.client.session
         session['temp_food'] = [{
-            'menu': 'からあげ丼',
+            'menu': 'からあげ',
             'eat_in': True
         }]
         session.save()
@@ -155,4 +157,4 @@ class FoodOrderSessionTest(TestCase):
         # データベースに保存されているかチェック
         orders = FoodOrder.objects.all()
         self.assertEqual(orders.count(), 1)
-        self.assertEqual(orders.first().menu, 'からあげ丼')
+        self.assertEqual(orders.first().menu, 'からあげ')
