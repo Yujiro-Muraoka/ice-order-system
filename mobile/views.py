@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from food.models import FoodOrder
-import time
+from uuid import uuid4
 
 
 def mobile_order_entry(request):
@@ -34,7 +34,7 @@ def submit_mobile_order(request):
         except (ValueError, TypeError):
             return redirect('mobile_order')
         
-        group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
+        group_id = uuid4().hex[:20]
         
         for _ in range(quantity):
             FoodOrder.objects.create(

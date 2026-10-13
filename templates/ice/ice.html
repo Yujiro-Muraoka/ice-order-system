@@ -9,6 +9,8 @@
 
   <title>アイス担当画面</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
   
     body {
       font-family: sans-serif;
@@ -189,6 +191,8 @@
 }
 
 
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
   <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
@@ -266,7 +270,7 @@ window.addEventListener('DOMContentLoaded', function() {
   </p>
 
 
-  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+  <p class="elapsed-time" data-ordered-at="{{ orders.0.timestamp|date:'c' }}">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
 {% if orders.0.note %}
   <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
 {% endif %}
@@ -286,7 +290,7 @@ window.addEventListener('DOMContentLoaded', function() {
     {% if not order.is_pudding %}
       <li>
         <span class="flavor-label">フレーバー</span>
-        <span class="flavor-strong">{{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+        <span class="flavor-strong">{{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</span>
       </li>
     {% endif %}
   {% endfor %}
@@ -311,7 +315,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   {% for group_id, orders in completed_orders.items %}
     {% with latest=orders|last %}
-    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+    <div class="order-card completed" data-completed="{{ latest.group_completed_at|date:'c' }}">
       <p>🧾 オーダー番号:
         {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
       </p>
@@ -344,7 +348,7 @@ window.addEventListener('DOMContentLoaded', function() {
           {% else %}{{ order.container }}{% endif %}
         </span><br>
         
-        <span class="flavor-strong">フレーバー→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+        <span class="flavor-strong">フレーバー→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</span>
       </li>
     {% endif %}
   {% endfor %}

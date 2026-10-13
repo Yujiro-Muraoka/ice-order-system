@@ -1,3 +1,4 @@
+from common.orders import migrate_legacy_cart, visible_orders
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
@@ -9,7 +10,7 @@ from datetime import timedelta
 from .models import Order, FLAVOR_CHOICES
 from food.models import FoodOrder
 from django.db.models import Count, Max, Q
-import time
+from uuid import uuid4
 
 # 共有パスコード
 SHARED_PASSCODE = "1234"
@@ -37,6 +38,8 @@ def _separate_active_completed(grouped_orders, now):
         if all(o.is_completed for o in sorted_orders):
             completed_times = [o.completed_at for o in sorted_orders if o.completed_at]
             if completed_times and now - max(completed_times) <= timedelta(seconds=30):
+                for order in sorted_orders:
+                    order.group_completed_at = max(completed_times)
                 completed[group_id] = sorted_orders
         else:
             active[group_id] = sorted_orders
@@ -46,14 +49,14 @@ def _separate_active_completed(grouped_orders, now):
 def _update_hold_status():
     pending_groups = list(
         Order.objects.filter(is_completed=False, status='hold')
-        .values_list('group_id', flat=True)
+        .order_by().values_list('group_id', flat=True)
         .distinct()
     )
     if not pending_groups:
         return
     new_status = 'ok' if len(pending_groups) <= 3 else 'stop'
     now = timezone.now()
-    Order.objects.filter(group_id__in=pending_groups).update(
+    Order.objects.filter(group_id__in=pending_groups, is_completed=False).update(
         status=new_status,
         status_modified_at=now,
     )
@@ -119,6 +122,7 @@ def role_select(request):
 @csrf_exempt
 def add_temp_ice(request):
     """仮注文をセッションに追加"""
+    migrate_legacy_cart(request.session)
     if request.method != 'POST':
         return JsonResponse(
             {
@@ -169,6 +173,7 @@ def add_temp_ice(request):
 @require_POST
 def add_temp_pudding(request):
     """仮注文リストにアフォガードプリンを追加"""
+    migrate_legacy_cart(request.session)
     temp_ice = request.session.get('temp_ice', [])
     temp_ice.append({'is_pudding': True})
     request.session['temp_ice'] = temp_ice
@@ -179,6 +184,7 @@ def add_temp_pudding(request):
 @csrf_exempt
 def submit_order_group(request):
     """仮注文を本注文としてDBに保存"""
+    migrate_legacy_cart(request.session)
     if request.method != 'POST':
         return redirect('register_view')
     
@@ -199,17 +205,18 @@ def submit_order_group(request):
         return redirect('register_view')
     
     # グループID生成
-    group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
+    group_id = uuid4().hex[:20]
     
     # 状態判定
     has_stop = Order.objects.filter(is_completed=False, status='stop').exists()
     status = 'stop' if has_stop else 'ok'
     auto_stopped = has_stop
     
+    orders = []
     # 注文をDBに保存
     for ice in temp_ice_list:
         if ice.get('is_pudding'):
-            Order.objects.create(
+            orders.append(Order(
                 is_pudding=True,
                 clip_color=clip_color,
                 clip_number=clip_number,
@@ -217,9 +224,9 @@ def submit_order_group(request):
                 status=status,
                 is_auto_stopped=auto_stopped,
                 note=note
-            )
+            ))
         else:
-            Order.objects.create(
+            orders.append(Order(
                 size=ice['size'],
                 container=ice['container'],
                 flavor1=ice['flavor1'],
@@ -230,8 +237,10 @@ def submit_order_group(request):
                 status=status,
                 is_auto_stopped=auto_stopped,
                 note=note,
-            )
+            ))
     
+    Order.objects.bulk_create(orders)
+
     # セッション初期化
     request.session['temp_ice'] = []
     request.session.pop('clip_color', None)
@@ -242,6 +251,7 @@ def submit_order_group(request):
 
 def register_view(request):
     """注文登録画面を表示"""
+    migrate_legacy_cart(request.session)
     temp_ice = request.session.get('temp_ice', [])
     
     # アフォガードプリンの数をカウント
@@ -270,8 +280,8 @@ def ice_view(request):
     """アイスクリーム一覧画面を表示"""
     now = timezone.localtime()
     
-    # 全注文を取得
-    all_orders = Order.objects.order_by('timestamp')
+    # 表示対象のグループのみ取得
+    all_orders = visible_orders(Order, now)
     
     # グループ化
     grouped_orders = {}
@@ -294,6 +304,8 @@ def ice_view(request):
                 default=None
             )
             if latest_completion and now - latest_completion <= timedelta(seconds=30):
+                for order in orders:
+                    order.group_completed_at = latest_completion
                 completed_orders[group_id] = orders
         else:
             active_orders[group_id] = orders
@@ -365,17 +377,10 @@ def complete_order(request, order_id):
 def complete_group(request, group_id):
     """指定グループの注文を一括完了"""
     if request.method == 'POST':
-        try:
-            orders = Order.objects.filter(group_id=group_id, is_completed=False)
-            now = timezone.now()
-            
-            for order in orders:
-                order.is_completed = True
-                order.completed_at = now
-                order.status = 'hold'
-                order.save()
-        except Exception as e:
-            print("[complete_group error]", e)
+        now = timezone.now()
+        Order.objects.filter(group_id=group_id, is_completed=False).update(
+            is_completed=True, completed_at=now, status='hold', status_modified_at=now,
+        )
 
     return redirect('ice_view')
 
@@ -437,6 +442,7 @@ def order_detail(request, order_id):
 
 def delete_temp_ice(request, index):
     """仮注文リストから指定インデックスの注文を削除"""
+    migrate_legacy_cart(request.session)
     temp_ice = request.session.get('temp_ice', [])
     if 0 <= index < len(temp_ice):
         del temp_ice[index]
@@ -451,7 +457,7 @@ def deshap_view(request):
     _update_hold_status()
     now = timezone.now()
 
-    grouped_orders = _group_orders_by_id(Order.objects.order_by('timestamp'))
+    grouped_orders = _group_orders_by_id(visible_orders(Order, now))
     active_orders, completed_orders = _separate_active_completed(grouped_orders, now)
 
     active_count = len(active_orders)
@@ -487,6 +493,7 @@ def deshap_view(request):
 
 def delete_all_pudding(request):
     """仮注文リストからアフォガードプリンを全て削除"""
+    migrate_legacy_cart(request.session)
     temp_ice = request.session.get('temp_ice', [])
     temp_ice = [item for item in temp_ice if not item.get('is_pudding')]
     request.session['temp_ice'] = temp_ice
@@ -498,9 +505,10 @@ def delete_all_pudding(request):
 @csrf_exempt
 def update_status(request, group_id, new_status):
     """指定グループの状態を更新"""
-    if request.method == 'POST':
-        Order.objects.filter(group_id=group_id).update(
+    if request.method == 'POST' and new_status in {'ok', 'stop', 'hold'}:
+        Order.objects.filter(group_id=group_id, is_completed=False).update(
             status=new_status,
+            is_auto_stopped=False,
             status_modified_at=timezone.now(),
         )
 

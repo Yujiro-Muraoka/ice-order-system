@@ -1,11 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注文詳細</title>
 </head>
 <body>
-    <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio>
+    <audio id="role-audio" src="{% static 'sounds/メニューを開く5.mp3' %}"></audio>
     <script>
     window.addEventListener('DOMContentLoaded', function() {
       const audio = document.getElementById('role-audio');

@@ -1,3 +1,4 @@
+from common.orders import migrate_legacy_cart
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -9,7 +10,7 @@ from django.contrib import messages
 from .models import ShavedIceOrder
 from food.models import FoodOrder
 from django.db.models import Count, Max, Q
-import time
+from uuid import uuid4
 
 
 def _calculate_shavedice_refresh_metrics():
@@ -39,7 +40,7 @@ def _get_order_context():
     
     # 注文を取得
     active_orders = ShavedIceOrder.objects.filter(is_completed=False).order_by('timestamp')
-    completed_orders = ShavedIceOrder.objects.filter(is_completed=True).order_by('-completed_at')
+    completed_orders = ShavedIceOrder.objects.filter(is_completed=True, completed_at__gte=now - timedelta(seconds=30)).order_by('completed_at')
     
     # グループ化
     grouped_active = {}
@@ -69,7 +70,8 @@ def _get_order_context():
 
 def shavedice_register(request):
     """かき氷注文登録画面を表示"""
-    temp_ice = request.session.get("temp_ice", [])
+    migrate_legacy_cart(request.session)
+    temp_ice = request.session.get("temp_shavedice", [])
     
     flavor_choices = ShavedIceOrder.FLAVOR_CHOICES
     
@@ -86,6 +88,7 @@ def shavedice_register(request):
 @csrf_exempt
 def add_temp_ice(request):
     """仮注文をセッションに追加"""
+    migrate_legacy_cart(request.session)
     if request.method != 'POST':
         return JsonResponse({
             'status': 'error', 
@@ -101,9 +104,9 @@ def add_temp_ice(request):
     
     # 仮注文を作成
     ice = {'flavor': flavor}
-    temp_ice = request.session.get('temp_ice', [])
+    temp_ice = request.session.get('temp_shavedice', [])
     temp_ice.append(ice)
-    request.session['temp_ice'] = temp_ice
+    request.session['temp_shavedice'] = temp_ice
     request.session.modified = True
     
     # クリップ情報も保存
@@ -124,10 +127,11 @@ def add_temp_ice(request):
 @csrf_exempt
 def submit_order_group(request):
     """仮注文を本注文としてDBに保存"""
+    migrate_legacy_cart(request.session)
     if request.method != 'POST':
         return redirect('shavedice_register')
     
-    temp_ice_list = request.session.get('temp_ice', [])
+    temp_ice_list = request.session.get('temp_shavedice', [])
     clip_color = request.POST.get('clip_color', 'white')
     clip_number_str = request.POST.get('clip_number', '0')
     note = request.POST.get('note', "")
@@ -142,19 +146,20 @@ def submit_order_group(request):
         clip_number = 0
     
     # グループID生成
-    group_id = f"{clip_color}-{clip_number}-{int(time.time() * 1000)}"
+    group_id = uuid4().hex[:20]
     
     # 状態判定
     has_stop = ShavedIceOrder.objects.filter(is_completed=False, status='stop').exists()
     status = 'stop' if has_stop else 'ok'
     auto_stopped = has_stop
     
+    orders = []
     # 注文をDBに保存
     for ice in temp_ice_list:
         flavor = ice.get('flavor')
         if not flavor:
             continue
-        ShavedIceOrder.objects.create(
+        orders.append(ShavedIceOrder(
             flavor=flavor,
             clip_color=clip_color,
             clip_number=clip_number,
@@ -162,10 +167,12 @@ def submit_order_group(request):
             status=status,
             is_auto_stopped=auto_stopped,
             note=note
-        )
+        ))
     
+    ShavedIceOrder.objects.bulk_create(orders)
+
     # セッション初期化
-    request.session['temp_ice'] = []
+    request.session['temp_shavedice'] = []
     request.session.pop('clip_color', None)
     request.session.pop('clip_number', None)
     request.session.modified = True
@@ -175,7 +182,6 @@ def submit_order_group(request):
 def shavedice_kitchen(request):
     """かき氷キッチン画面を表示"""
     context = _get_order_context()
-    context["debug"] = True 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
         return JsonResponse({
             'value': context['refresh_value'],
@@ -189,47 +195,7 @@ def shavedice_kitchen(request):
 
 def ice_view(request):
     """かき氷一覧画面を表示"""
-    now = timezone.localtime()
-    
-    # 全注文を取得
-    all_orders = ShavedIceOrder.objects.order_by('timestamp')
-    
-    # グループ化
-    grouped_orders = {}
-    for order in all_orders:
-        grouped_orders.setdefault(order.group_id, []).append(order)
-    
-    # 未完了・完了注文を分離
-    active_orders = {}
-    completed_orders = {}
-    
-    for group_id, orders in grouped_orders.items():
-        # 経過時間を計算
-        for o in orders:
-            o.elapsed_seconds = int((now - o.timestamp).total_seconds())
-            o.elapsed_minutes = o.elapsed_seconds // 60
-        
-        if all(o.is_completed for o in orders):
-            latest_completion = max(
-                (o.completed_at for o in orders if o.completed_at), 
-                default=None
-            )
-            if latest_completion and now - latest_completion <= timedelta(seconds=30):
-                completed_orders[group_id] = orders
-        else:
-            active_orders[group_id] = orders
-    
-    active_count = len(active_orders)
-    
-    context = {
-        'grouped_orders': active_orders,
-        'completed_orders': completed_orders,
-        'now': now,
-        'active_count': active_count,
-    }
-    
-    context['is_logged_in'] = request.session.get('logged_in', False)
-    return render(request, 'shavedice/ice.html', context)
+    return shavedice_kitchen(request)
 
 
 @require_POST
@@ -273,10 +239,11 @@ def order_detail(request, order_id):
 
 def delete_temp_ice(request, index):
     """仮注文リストから指定インデックスの注文を削除"""
-    temp_ice = request.session.get('temp_ice', [])
+    migrate_legacy_cart(request.session)
+    temp_ice = request.session.get('temp_shavedice', [])
     if 0 <= index < len(temp_ice):
         del temp_ice[index]
-        request.session['temp_ice'] = temp_ice
+        request.session['temp_shavedice'] = temp_ice
         request.session.modified = True
     
     return redirect('shavedice_register')
@@ -285,9 +252,10 @@ def delete_temp_ice(request, index):
 @csrf_exempt
 def shavedice_update_status(request, group_id, new_status):
     """かき氷デシャップ画面からグループの状態を更新"""
-    if request.method == 'POST':
-        ShavedIceOrder.objects.filter(group_id=group_id).update(
+    if request.method == 'POST' and new_status in {'ok', 'stop', 'hold'}:
+        ShavedIceOrder.objects.filter(group_id=group_id, is_completed=False).update(
             status=new_status,
+            is_auto_stopped=False,
             status_modified_at=timezone.now(),
         )
     return redirect('shavedice_deshap')

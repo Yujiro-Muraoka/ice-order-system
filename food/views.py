@@ -14,6 +14,7 @@ cafeMuji - フード注文管理システム
 適切な処理を行ってレスポンスを返します。
 """
 
+from common.orders import visible_orders
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
@@ -21,7 +22,7 @@ from django.utils import timezone
 from collections import defaultdict, Counter
 from django.db.models import Count, Sum, Max, Q
 from .models import FoodOrder
-import time
+from uuid import uuid4
 
 FOOD_CATEGORIES = [
     {
@@ -59,6 +60,8 @@ def _split_active_completed(grouped, now):
         if all(o.is_completed for o in ords):
             latest = max((o.completed_at for o in ords if o.completed_at), default=None)
             if latest and now - latest <= timezone.timedelta(seconds=30):
+                for order in ords:
+                    order.group_completed_at = latest
                 completed[gid] = ords
         else:
             active[gid] = ords
@@ -96,7 +99,7 @@ def _calculate_food_refresh_metrics():
 
 def _get_food_order_context():
     now = timezone.localtime()
-    all_food = FoodOrder.objects.all().order_by('timestamp')
+    all_food = visible_orders(FoodOrder, now)
     for order in all_food:
         order.elapsed_seconds = int((now - order.timestamp).total_seconds())
         order.elapsed_minutes = order.elapsed_seconds // 60
@@ -146,7 +149,7 @@ def food_register(request):
     # メニューごとの合計数を計算（表示用）
     counts = Counter()
     for item in temp_food:
-        counts[item['menu']] += item['quantity']
+        counts[item['menu']] += item.get('quantity', 1)
     
     # セッションからクリップ情報を取得
     clip_color = request.session.get('clip_color', '')
@@ -440,15 +443,16 @@ def submit_order_group(request):
     except (ValueError, TypeError):
         return redirect('food_register')
     
-    # グループIDを現在時刻で生成（一意性を保証）
-    group_id = str(int(time.time()))
+    # 同時注文でも衝突しないグループIDを生成
+    group_id = uuid4().hex[:20]
 
     has_stop = FoodOrder.objects.filter(is_completed=False, status='stop').exists()
     status = 'stop' if has_stop else 'ok'
     
+    orders = []
     # 仮注文をデータベースに保存
     for item in temp_food:
-        FoodOrder.objects.create(
+        orders.append(FoodOrder(
             menu=item['menu'],
             quantity=item.get('quantity', 1),
             eat_in=item.get('eat_in', True),
@@ -458,8 +462,10 @@ def submit_order_group(request):
             group_id=group_id,
             status=status,
             is_completed=False
-        )
+        ))
     
+    FoodOrder.objects.bulk_create(orders)
+
     # セッションを初期化（注文完了）
     request.session['temp_food'] = []
     request.session['clip_color'] = ''

@@ -80,7 +80,6 @@ class AutoRefresh {
         return;
       }
       this.failureCount = 0;
-      this.resetFallbackTimer();
       if (this.lastValue === null) {
         this.lastValue = latestValue;
         return;
@@ -165,3 +164,15 @@ class AutoRefresh {
 }
 
 window.AutoRefresh = AutoRefresh;
+
+// Keep elapsed labels current even when the order count does not change.
+function updateOrderElapsedTimes() {
+  document.querySelectorAll('[data-ordered-at]').forEach(el => {
+    const orderedAt = Date.parse(el.dataset.orderedAt);
+    if (Number.isFinite(orderedAt)) {
+      const minutes = Math.max(0, Math.floor((Date.now() - orderedAt) / 60000));
+      el.textContent = `⏳ 経過時間: ${minutes}分`;
+    }
+  });
+}
+setInterval(updateOrderElapsedTimes, 1000);

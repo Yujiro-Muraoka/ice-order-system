@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>かき氷デシャップ担当画面</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
     body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background-color: #f5f5f5; }
     .order-card { background: #f9f9f9; border: 2px solid #999; border-radius: 12px; margin-bottom: 24px; padding: 16px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
     .order-card p { margin: 4px 0; }
@@ -25,6 +27,8 @@
     #helpButton { position: fixed; top: 10px; right: 10px; background: #ff9800; color: white; border: none; border-radius: 20px; padding: 10px 16px; font-weight: bold; cursor: pointer; z-index: 999; }
     #helpModal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 80%; background: white; border: 2px solid #ccc; border-radius: 12px; padding: 20px; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     #closeHelp { margin-top: 10px; background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
 </head>
 <body>
@@ -83,7 +87,7 @@
   <p>完了済み注文（30秒後に自動で非表示）</p>
   {% for group_id, orders in completed_orders.items %}
     {% with latest=orders|last %}
-    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'c' }}">
       <p>🧾 オーダー番号:
         {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
       </p>

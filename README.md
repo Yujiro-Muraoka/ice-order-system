@@ -181,3 +181,22 @@ ALLOWED_HOSTS=.onrender.com
 | v2.0.1 | 2025-10-01 | 互換性パッチ、アクセス制御調整、セッション安定化、psycopg2-binary 2.9.9 |
 | v2.0.0 | 2025-09-30 | REST API・テストスイート・パフォーマンス/監視強化 |
 | v1.0.0 | 2025-07-25 | 初回リリース、Web UI、Renderデプロイ |
+
+
+## 不具合修正（2026-10-13）
+
+- 注文詳細・モバイル画面のテンプレートエラー、かき氷一覧の参照先を修正。
+- アイスとかき氷のURL名と仮注文を分離。既存の混在した仮注文も種類ごとに引き継ぎ。
+- 注文グループIDをランダム生成に変更し、同時注文の混同とアイスのDB桁数超過を防止。
+- 完了した商品の表示、完了グループの30秒カウントダウン、経過時間の更新を修正。
+- 狭い画面でヘルプボタンが商品に重なる問題と、幅・余白のはみ出しを修正。
+- 一覧の取得対象を未完了・直近完了のグループに限定。注文保存と一括完了のDB書き込みをまとめて実行。
+- WhiteNoiseを追加し、Gunicorn起動時にもCSS・JavaScript・音声を配信。
+
+更新後は実行環境で `python -m pip install -r requirements.txt` と
+`python manage.py collectstatic --noinput` を実行し、サーバーを再起動してください。
+今回の変更に追加のDBマイグレーションはありません。Renderでは既存の `build.sh` が依存関係の更新と静的ファイルの収集を行います。
+ローカル開発で静的ファイルを直接配信する場合は `DEBUG=True python manage.py runserver` を使用できます。
+
+回帰テストは `python manage.py test`、自動更新JavaScriptのテストは
+`node --test tests/auto-refresh.test.js` で実行できます。

@@ -9,6 +9,8 @@
 
   <title>フード作成担当画面</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
   
     body {
       font-family: sans-serif;
@@ -180,6 +182,8 @@
 }
 
 
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
 </head>
 <body>
@@ -240,12 +244,12 @@
           if (latestItems > foodActiveItems || latestId > foodLatestOrderId) {
             playNewOrderSound();
           }
-          updateFoodSummary(payload);
-          replaceFoodOrders(payload.html);
           foodRefreshValue = payload.refresh_value;
           foodActiveItems = latestItems;
           foodLatestOrderId = latestId;
         }
+        updateFoodSummary(payload);
+        replaceFoodOrders(payload.html);
       } catch (error) {
         console.warn('Food partial refresh failed:', error);
       } finally {
@@ -257,12 +261,15 @@
       const submitter = form.querySelector('button[type="submit"]');
       if (submitter) submitter.disabled = true;
       try {
-        await fetch(form.action, {
+        const response = await fetch(form.action, {
           method: 'POST',
           body: new FormData(form),
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
         });
+        if (!response.ok) throw new Error(`操作に失敗しました (${response.status})`);
         await refreshFoodOrders({ force: true });
+      } catch (error) {
+        alert('更新できませんでした。通信状態を確認して再度お試しください。');
       } finally {
         if (submitter) submitter.disabled = false;
       }

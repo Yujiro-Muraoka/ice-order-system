@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>デシャップ担当画面</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
     body { 
       font-family: sans-serif; 
       padding: 20px; 
@@ -150,6 +152,8 @@
 
 
     .logout-bottom { text-align: center; margin-top: 30px; }
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
   <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
@@ -227,7 +231,7 @@
           {% elif order.container == 'cone' %}コーン
           {% else %}-{% endif %}
         </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+        <span class="flavor-strong">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</span>
       </li>
     {% endif %}
   {% endfor %}
@@ -252,7 +256,7 @@
 
   {% for group_id, orders in completed_orders.items %}
     {% with latest=orders|last %}
-    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+    <div class="order-card completed" data-completed="{{ latest.group_completed_at|date:'c' }}">
       <p>🧾 オーダー番号: {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}</p>
       <p>✅ 完了済み（残り <span class="countdown">30</span> 秒）</p>
 {% if orders.0.note %}
@@ -275,7 +279,7 @@
           {% elif order.container == 'cone' %}コーン
           {% else %}-{% endif %}
         </span><br>
-        <span class="flavor-strong">→ {{ order.flavor1 }}{% if order.flavor2 %} ＋ {{ order.flavor2 }}{% endif %}</span>
+        <span class="flavor-strong">→ {{ order.get_flavor1_display }}{% if order.flavor2 %} ＋ {{ order.get_flavor2_display }}{% endif %}</span>
       </li>
     {% endif %}
   {% endfor %}

@@ -77,6 +77,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',             # CORS対応（最上位）
     'django.middleware.security.SecurityMiddleware',      # セキュリティ
+    'whitenoise.middleware.WhiteNoiseMiddleware',          # 本番の静的ファイル配信
     'django.contrib.sessions.middleware.SessionMiddleware', # セッション
     'django.middleware.common.CommonMiddleware',          # 共通処理
     'django.middleware.csrf.CsrfViewMiddleware',          # CSRF保護
@@ -163,7 +164,7 @@ USE_TZ = True     # タイムゾーン対応
 # ==================== 静的ファイル設定 ====================
 
 # 静的ファイルのURLパス
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # 静的ファイルの検索ディレクトリ
 STATICFILES_DIRS = [

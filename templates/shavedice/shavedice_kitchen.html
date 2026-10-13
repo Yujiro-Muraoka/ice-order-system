@@ -9,6 +9,8 @@
 
   <title>かき氷担当画面</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
   
     body {
       font-family: sans-serif;
@@ -265,6 +267,8 @@
 }
 
 
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
   <script src="{% static 'js/auto-refresh.js' %}"></script>
 </head>
@@ -298,7 +302,7 @@
       });
     });
     </script>
-  <h2>かき氷注文一覧（ごとに更新）</h2>
+  <h2>かき氷注文一覧</h2>
   <p id="shavedice-active-count"
      data-auto-refresh-value="{{ refresh_value }}"
      data-active-items="{{ active_order_total }}"
@@ -339,7 +343,7 @@
     {% endif %}
   </p>
 
-  <p class="elapsed-time">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
+  <p class="elapsed-time" data-ordered-at="{{ orders.0.timestamp|date:'c' }}">⏳ 経過時間: {{ orders.0.elapsed_minutes }}分</p>
 {% if orders.0.note %}
   <p style="color: red; font-weight: bold;">📝 備考: {{ orders.0.note }}</p>
 {% endif %}
@@ -370,7 +374,7 @@
 
   {% for group_id, orders in completed_orders.items %}
     {% with latest=orders|last %}
-    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'Y-m-d H:i:s' }}">
+    <div class="order-card completed" data-completed="{{ latest.completed_at|date:'c' }}">
       <p>🧾 オーダー番号:
         {% if orders.0.clip_color == 'yellow' %}🟡{% else %}⚪️{% endif %}{{ orders.0.clip_number }}
       </p>

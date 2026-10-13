@@ -7,6 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レジ担当 - かき氷注文</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
     body {
       font-family: sans-serif;
       padding: 16px;
@@ -21,7 +23,7 @@
       font-weight: bold;
       display: block;
       margin-top: 12px;
-    }q
+    }
     .btn, .clip-btn {
       width: 100%;
       padding: 16px;
@@ -245,6 +247,8 @@
       outline: none !important;
     }
 
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
   <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -365,7 +369,7 @@
 
 </head>
 <body>
-    <!-- <audio id="role-audio" src="{% static 'orders/sounds/メニューを開く5.mp3' %}"></audio> -->
+    <!-- <audio id="role-audio" src="{% static 'sounds/メニューを開く5.mp3' %}"></audio> -->
     <!-- window.addEventListener('DOMContentLoaded', ...) で role-audio を再生するJSも削除 -->
   <h1>かき氷注文入力</h1>
 

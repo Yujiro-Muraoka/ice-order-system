@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レジ担当 - アイス注文</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    .order-card, .ice-list { overflow-wrap: anywhere; }
     body {
       font-family: sans-serif;
       padding: 16px;
@@ -267,6 +269,8 @@
       background: #e0e0e0;
     }
 
+
+    #helpButton { position: static; display: block; margin: 0 0 12px auto; width: auto; }
   </style>
   <script>
   document.addEventListener('DOMContentLoaded', function () {
